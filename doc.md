@@ -47,6 +47,10 @@ Acc-ID mod 6 | Arrangement
 ⇒ `10565740_RobTop_71`
 ⇒ `a64d21f4231096a3e0064a84f1ebf5567a40258d`
 
+### But what about people playing without an account?
+
+Not getting in the database. That's it. The mod won't even try to submit anything if it knows that there is no account.
+
 ## API
 
 **Base URL**: `https://deathmarkers.masp005.dev/`

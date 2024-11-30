@@ -1,10 +1,29 @@
 const DATABASE_FILENAME = "example.db";
 const PORT = 8048;
 
+const ARRANGEMENTS = [
+  `A_L_I`,
+  `A_I_L`,
+  `I_L_A`,
+  `I_A_L`,
+  `L_I_A`,
+  `L_A_I`
+];
+
 const db = require("better-sqlite3")(DATABASE_FILENAME);
 const expr = require("express");
 const app = expr();
 const crypto = require("crypto");
+
+function createUserIdent(accountid, accountname, levelid) {
+  let source = ARRANGEMENTS[accountid % ARRANGEMENTS.length];
+
+  source = source.replace("L", levelid)
+    .replace("I", accountid)
+    .replace("A", accountname);
+
+  return crypto.createHash("sha1").update(source).digest("hex");
+}
 
 db.prepare("CREATE TABLE IF NOT EXISTS deaths (" +
   "userident CHAR(40) NOT NULL," +
@@ -39,8 +58,7 @@ app.post("/deathmarkers/submit", expr.raw(), (req, res) => {
     if (!req.body.userident) {
       if (!req.body.playername || !req.body.accountid)
         return res.status(400).send("neither userident nor playername and accountid were supplied");
-      let source = `${req.body.playername}_${req.body.levelid}_${req.body.accountid}`
-      req.body.userident = crypto.createHash("sha1").update(source).digest("hex");
+      req.body.userident = createUserIdent(req.body.accountid, req.body.playername, req.body.levelid);
     }
     if (!req.body.x || !req.body.y) return res.sendStatus(400);
     if (!req.body.percentage) return res.sendStatus(400);

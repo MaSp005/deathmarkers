@@ -10,5 +10,13 @@
 	"name": "DeathMarkers",
 	"version": "v0.1.0",
 	"developer": "YourLocalIdiot",
-	"description": "lorem ipsum"
+	"description": "lorem ipsum",
+	"settings": {
+		"share-deaths": {
+			"type": "boolean",
+			"name": "Share my deaths",
+			"description": "Contributes to the ecosystem. Your deaths are anonymous.",
+			"default": true
+		}
+	}
 }
