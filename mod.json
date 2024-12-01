@@ -13,10 +13,28 @@
 	"description": "lorem ipsum",
 	"settings": {
 		"share-deaths": {
-			"type": "boolean",
+			"type": "bool",
 			"name": "Share my deaths",
-			"description": "Contributes to the ecosystem. Your deaths are anonymous.",
+			"description": "Contributes to the ecosystem of level creators trying to gain insight on their gameplay. Your deaths remain anonymous. Visit the GitHub for more information.",
 			"default": true
+		},
+		"ingame-heatmap": {
+			"type": "bool",
+			"name": "Show a heatmap in-game",
+			"description": "Shows a heatmap, like it does in the editor, in-game as well, instead of individual Markers.",
+			"default": false
+		},
+		"always-show": {
+			"type": "bool",
+			"name": "Always show Markers in-game",
+			"description": "Draws Markers in-game even while playing normally. May impede visibility and performance. You should not normally use this.",
+			"default": false
 		}
-	}
+	},
+	"tags": [
+		"online",
+		"utility",
+		"editor",
+		"gameplay"
+	]
 }

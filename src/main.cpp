@@ -2,21 +2,28 @@
  * Include the Geode headers.
  */
 #include <Geode/Geode.hpp>
+#include <Geode/utils/web.hpp>
 #include <vector>
 #include <string>
 
 using namespace geode::prelude;
 
-#define DEATH_MARKERS_API_BASE "https://deathmarkers.masp005.dev/"
+std::string const HTTP_AGENT =
+"Geode-DeathMarkers-" + Mod::get()->getVersion().toVString(true);
+std::string const API_BASE = "https://deathmarkers.masp005.dev/";
 
-class DeathEvent : public Event {};
+// CLASSES
 
 class DeathLocationMin {
+public:
 	double x;
 	double y;
 };
 
 class DeathLocationOut : public DeathLocationMin {
+public:
+	double x;
+	double y;
 	int percentage;
 	bool coin1;
 	bool coin2;
@@ -24,133 +31,167 @@ class DeathLocationOut : public DeathLocationMin {
 	int itemdata;
 };
 
-class DeathLocation : public DeathLocationOut {
+class DeathLocation : public DeathLocationMin {
+public:
 	std::string userIdent;
+	double x;
+	double y;
 	int percentage;
 	bool coin1;
 	bool coin2;
 	bool coin3;
 	int itemdata;
 };
+
+class DeathsAnalyser {
+	std::vector<DeathLocation> deaths;
+};
+
+// DATA HOLDERS
 
 struct {
 	std::string username;
 	long int accountid;
 } playerData;
 
-// GET /list
-std::vector<DeathLocationMin> listDeathsOfID(long int levelid) {
+struct {
+	long int levelid;
+	int levelversion;
+	std::vector<DeathLocationMin> deaths;
+} playingLevel;
+
+std::optional<DeathsAnalyser> analyser = std::optional<DeathsAnalyser>();
+
+struct Fields {
+	EventListener<web::WebTask> m_listener;
+};
+
+// FUNCTIONS
+
+void listDeathsOfID(long int levelid) {
 	std::vector<DeathLocationMin> list;
-	std::string url = *DEATH_MARKERS_API_BASE + "list";
+	std::string url = API_BASE + "list";
 	// TODO: fetch stuff
-	return list;
+	// GET /list
+	// write into playingLevel.deaths
 };
 
-// GET /analyse
-std::vector<DeathLocation> analyseDeathsOfID(long int levelid) {
+void analyseDeathsOfID(long int levelid) {
 	std::vector<DeathLocation> list;
-	std::string url = *DEATH_MARKERS_API_BASE + "analyse";
+	std::string url = API_BASE + "analyse";
 	// TODO: fetch stuff
-	return list;
+	// GET /analyse
+	// analyser.value().deaths;
 };
 
-// GET /submit
-bool postDeath(DeathLocationOut deathLoc, long int levelid) {
-	std::string url = *DEATH_MARKERS_API_BASE + "submit";
+void postDeath(DeathLocationOut const& deathLoc, long int levelid) {
+	bool sharingEnabled = Mod::get()->getSettingValue<bool>("share-deaths");
+	if (!sharingEnabled) return;
+
+	playingLevel.deaths.push_back((DeathLocationMin) deathLoc);
+
+	// Initiate Listener
+	EventListener<web::WebTask> listener;
+
+	listener.bind([](web::WebTask::Event* e) {
+		if (web::WebResponse* res = e->getValue()) {
+			if (!res->ok())
+				log::info(
+					"Posting Death failed: {}",
+					res->string().unwrapOr("Body could not be read.")
+				);
+		}
+		else if (e->isCancelled()) {
+			log::info("The request was cancelled... So sad :(");
+		};
+	});
+
+	// Build the HTTP Request
+	web::WebRequest req = web::WebRequest();
+
+	auto myjson = matjson::Value();
+	myjson.set("levelid", matjson::Value(playingLevel.levelid));
+	myjson.set("playername", matjson::Value(playerData.username));
+	myjson.set("accountid", matjson::Value(playerData.accountid));
+	myjson.set("x", matjson::Value(deathLoc.x));
+
+	req.bodyJSON(myjson);
+
+	req.userAgent(HTTP_AGENT);
+
+	req.header("Content-Type", "application/json");
+	req.header("Accept", "application/json");
+
+	req.timeout(std::chrono::seconds(10));
+
+	std::string url = API_BASE + "submit";
+	log::info("{}", url);
+	//auto task = req.post(url);
+	//listener.setFilter(task);
+
 	// TODO: fetch stuff
-	return true;
+	// POST /submit
 };
 
-/**
- * `$modify` lets you extend and modify GD's classes.
- * To hook a function in Geode, simply $modify the class
- * and write a new function definition with the signature of
- * the function you want to hook.
- *
- * Here we use the overloaded `$modify` macro to set our own class name,
- * so that we can use it for button callbacks.
- *
- * Notice the header being included, you *must* include the header for
- * the class you are modifying, or you will get a compile error.
- */
+// MODIFY UI
+
 #include <Geode/modify/MenuLayer.hpp>
 class $modify(MyMenuLayer, MenuLayer) {
-	/**
-	 * Typically classes in GD are initialized using the `init` function,
-	 * (though not always!), so here we use it to add our own button to the
-	 * bottom menu.
-	 *
-	 * Note that for all hooks, your signature has to *match exactly*,
-	 * `void init()` would not place a hook!
-	 */
+
 	bool init() {
-		/**
-		 * We call the original init function so that the
-		 * original class is properly initialized.
-		 */
+
 		if (!MenuLayer::init()) {
 			return false;
 		}
 
-		/**
-		 * See this page for more info about buttons
-		 * https://docs.geode-sdk.org/tutorials/buttons
-		 */
 		auto myButton = CCMenuItemSpriteExtra::create(
 			CCSprite::createWithSpriteFrameName("miniSkull_001.png"), this,
-			/**
-			 * Here we use the name we set earlier for our modify class.
-			 */
-			menu_selector(MyMenuLayer::onMyButton));
+			menu_selector(MyMenuLayer::onMyButton)
+		);
 
-		/**
-		 * Here we access the `bottom-menu` node by its ID, and add our button to it.
-		 * Node IDs are a Geode feature, see this page for more info about it:
-		 * https://docs.geode-sdk.org/tutorials/nodetree
-		 */
 		auto menu = this->getChildByID("bottom-menu");
 		menu->addChild(myButton);
-
-		/**
-		 * The `_spr` string literal operator just prefixes the string with
-		 * your mod id followed by a slash. This is good practice for setting your own
-		 * node ids.
-		 */
 		myButton->setID("my-button"_spr);
 
-		/**
-		 * We update the layout of the menu to ensure that our button properly
-		 * placed. This is yet another Geode feature, see this page more info about
-		 * it: https://docs.geode-sdk.org/tutorials/layouts
-		 */
 		menu->updateLayout(true);
 
-		/**
-		 * We return `true` to indicate that the class was properly
-		initialized.
-		 */
 		return true;
 	}
 
-	/**
-	 * This is the callback function for the button we created earlier.
-	 * The signature for button callbacks must always be the same,
-	 * return type `void` and taking a `CCObject*`.
-	 */
 	void onMyButton(CCObject*) {
-		DeathEvent().post();
+		// Fires a DeathEvent
+		log::info("{}", HTTP_AGENT);
 	}
 }
 ;
 
-$execute {
+#include <Geode/modify/PlayLayer.hpp>
+#include <Geode/modify/GJBaseGameLayer.hpp>
+class $modify(DeathMarkersPlayLayer, PlayLayer) {
 
-	new EventListener<EventFilter<DeathEvent>>(+[](DeathEvent* ev) {
-		log::info("911 whos this");
+	bool init(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
 
-		listDeathsOfID(9823493);
-		// Propagate event
-		return ListenerResult::Propagate;
-	});
+		// level->getCamera for figuring out what to draw
+		// playingLevel.levelid = level->m_levelID;
+		// playingLevel.levelversion = level->m_levelVersion;
 
+		//log::info(level->isPlatformer() ? "platformer" : "classic");
+
+		if (!PlayLayer::init(level, useReplay, dontCreateObjects)) {
+			return false;
+		}
+
+		// Listen to deaths in here? (and then fire the global event)
+
+		return true;
+	};
+
+	void destroyPlayer(PlayerObject * player, GameObject * object) override {
+		log::info("haha i hooked your death");
+
+		PlayLayer::destroyPlayer(player, object);
+
+		//postDeath()
+	};
 }
+;
