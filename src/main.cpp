@@ -1,6 +1,4 @@
-/**
- * Include the Geode headers.
- */
+// Include utility headers
 #include <Geode/Geode.hpp>
 #include <Geode/utils/web.hpp>
 #include <vector>
@@ -10,124 +8,236 @@ using namespace geode::prelude;
 
 std::string const HTTP_AGENT =
 "Geode-DeathMarkers-" + Mod::get()->getVersion().toVString(true);
-std::string const API_BASE = "https://deathmarkers.masp005.dev/";
+//std::string const API_BASE = "https://deathmarkers.masp005.dev/";
+std::string const API_BASE = "http://localhost:8048/";
 
 // CLASSES
 
 class DeathLocationMin {
 public:
-	double x;
-	double y;
+	float x;
+	float y;
+
+	DeathLocationMin(float x, float y) {
+		this->x = x;
+		this->y = y;
+	}
 };
 
-class DeathLocationOut : public DeathLocationMin {
+class DeathLocationOut {
 public:
-	double x;
-	double y;
-	int percentage;
-	bool coin1;
-	bool coin2;
-	bool coin3;
-	int itemdata;
+	DeathLocationOut(float x, float y) {
+		this->x = x;
+		this->y = y;
+	}
+
+	float x;
+	float y;
+	int percentage = 0;
+	bool coin1 = false;
+	bool coin2 = false;
+	bool coin3 = false;
+	int itemdata = 0;
+
+	DeathLocationMin toMin() const {
+		return DeathLocationMin(this->x, this->y);
+	}
+
+	void addToJSON(matjson::Value* json) const {
+		json->set("x", matjson::Value(this->x));
+		json->set("y", matjson::Value(this->y));
+		json->set("percentage", matjson::Value(this->percentage));
+		json->set("coins", matjson::Value(this->coin1 | this->coin2 << 1 | this->coin3 << 2));
+		json->set("itemdata", matjson::Value(this->itemdata));
+	}
 };
 
-class DeathLocation : public DeathLocationMin {
+class DeathLocation {
 public:
 	std::string userIdent;
-	double x;
-	double y;
+	float x;
+	float y;
 	int percentage;
 	bool coin1;
 	bool coin2;
 	bool coin3;
 	int itemdata;
+
+	DeathLocationMin toMin() const {
+		return DeathLocationMin(this->x, this->y);
+	}
 };
 
 class DeathsAnalyser {
+protected:
+	DeathsAnalyser(std::vector<DeathLocation>& deaths) {
+		this->deaths = deaths;
+	}
+
 	std::vector<DeathLocation> deaths;
+
+public:
+	void setDeaths(std::vector<DeathLocation>& deaths) {
+		this->deaths = deaths;
+	}
 };
 
 // DATA HOLDERS
 
 struct {
 	std::string username;
-	long int accountid;
+	long int userid;
 } playerData;
 
 struct {
 	long int levelid;
 	int levelversion;
 	std::vector<DeathLocationMin> deaths;
+	cocos2d::CCCamera* camera;
+	bool practice;
+	bool platformer;
+	bool testmode;
 } playingLevel;
-
-std::optional<DeathsAnalyser> analyser = std::optional<DeathsAnalyser>();
-
-struct Fields {
-	EventListener<web::WebTask> m_listener;
-};
 
 // FUNCTIONS
 
-void listDeathsOfID(long int levelid) {
+static void printData() {
+	return;
+	log::info("levelid {}", playingLevel.levelid);
+	log::info("levelversion {}", playingLevel.levelversion);
+	log::info("platformer {}", playingLevel.platformer);
+	log::info("practice {}", playingLevel.practice);
+	log::info("testmode {}", playingLevel.testmode);
+}
+
+static bool shouldSubmit() {
+	// Ignore Testmode and local Levels
+	if (playingLevel.testmode) return false;
+	if (playingLevel.levelid == 0) return false;
+
+	// Respect User Setting
+	auto sharingEnabled = Mod::get()->getSettingValue<bool>("share-deaths");
+	if (!sharingEnabled) return false;
+
+	return true;
+};
+
+static bool shouldDraw() {
+	auto playLayer = PlayLayer::get();
+	if (!playLayer) return false;
+	if (playingLevel.levelid == 0) return false;
+
+	auto mod = Mod::get();
+	auto scale = mod->getSettingValue<double>("marker-scale");
+	if (scale == 0) return false;
+
+	// TODO: Settings for whether to draw in practice etc
+
+	return true;
+};
+
+static void listDeaths() {
 	std::vector<DeathLocationMin> list;
-	std::string url = API_BASE + "list";
-	// TODO: fetch stuff
-	// GET /list
-	// write into playingLevel.deaths
-};
-
-void analyseDeathsOfID(long int levelid) {
-	std::vector<DeathLocation> list;
-	std::string url = API_BASE + "analyse";
-	// TODO: fetch stuff
-	// GET /analyse
-	// analyser.value().deaths;
-};
-
-void postDeath(DeathLocationOut const& deathLoc, long int levelid) {
-	bool sharingEnabled = Mod::get()->getSettingValue<bool>("share-deaths");
-	if (!sharingEnabled) return;
-
-	playingLevel.deaths.push_back((DeathLocationMin) deathLoc);
 
 	// Initiate Listener
 	EventListener<web::WebTask> listener;
 
 	listener.bind([](web::WebTask::Event* e) {
-		if (web::WebResponse* res = e->getValue()) {
-			if (!res->ok())
+		log::info("so something happened ig");
+		auto res = e->getValue();
+		if (res) {
+			if (!res->ok()) {
 				log::info(
 					"Posting Death failed: {}",
 					res->string().unwrapOr("Body could not be read.")
 				);
-		}
-		else if (e->isCancelled()) {
+			} else {
+				log::info("Posted Death.");
+			}
+		} else if (e->isCancelled()) {
 			log::info("The request was cancelled... So sad :(");
 		};
 	});
 
 	// Build the HTTP Request
+	std::string const url = API_BASE + "list";
 	web::WebRequest req = web::WebRequest();
 
-	auto myjson = matjson::Value();
-	myjson.set("levelid", matjson::Value(playingLevel.levelid));
-	myjson.set("playername", matjson::Value(playerData.username));
-	myjson.set("accountid", matjson::Value(playerData.accountid));
-	myjson.set("x", matjson::Value(deathLoc.x));
-
-	req.bodyJSON(myjson);
-
+	req.param("levelid", (playingLevel.levelid));
 	req.userAgent(HTTP_AGENT);
 
-	req.header("Content-Type", "application/json");
-	req.header("Accept", "application/json");
+	req.timeout(std::chrono::seconds(60));
 
-	req.timeout(std::chrono::seconds(10));
+	log::info("I said... {}", url);
+	listener.setFilter(req.get(url));
+	log::info("???");
+};
 
-	std::string url = API_BASE + "submit";
-	log::info("{}", url);
-	//auto task = req.post(url);
+static void analyseDeaths(DeathsAnalyser *analyser) {
+	std::vector<DeathLocation> list;
+	std::string url = API_BASE + "analyse";
+	// TODO: fetch stuff
+	// GET /analyse
+	// write into *analyser.deaths;
+};
+
+static void postDeath(DeathLocationOut const& deathLoc) {
+
+	printData();
+	log::info("Posting...");
+
+	// Initiate Listener
+	EventListener<web::WebTask> listener;
+
+	listener.bind([](web::WebTask::Event* e) {
+		log::info("so something happened ig");
+		auto res = e->getValue();
+		if (res) {
+			if (!res->ok())
+				log::info(
+					"Posting Death failed: {}",
+					res->string().unwrapOr("Body could not be read.")
+				);
+			else
+				log::info("Posted Death.");
+		} else if (e->isCancelled()) {
+			log::info("The request was cancelled... So sad :(");
+		};
+	});
+
+	// Build the HTTP Request
+	std::string const url = API_BASE + "submit";
+	auto myjson = matjson::Value();
+	myjson.set("levelid", matjson::Value(playingLevel.levelid));
+	myjson.set("levelversion", matjson::Value(playingLevel.levelversion));
+	myjson.set("practice", matjson::Value(playingLevel.practice));
+	myjson.set("playername", matjson::Value(playerData.username));
+	myjson.set("userid", matjson::Value(playerData.userid));
+	deathLoc.addToJSON(&myjson);
+	log::info("JSON body: {}", myjson.dump(matjson::NO_INDENTATION));
+
+	//web::WebRequest req = web::WebRequest();
+	//req.bodyJSON(myjson);
+
+	//req.param("levelid", (playingLevel.levelid));
+	//req.param("levelversion", (playingLevel.levelversion));
+	//req.param("practice", (playingLevel.practice));
+	//req.param("playername", (playerData.username));
+	//req.param("userid", (playerData.userid));
+
+	//req.userAgent(HTTP_AGENT);
+
+	//req.header("Content-Type", "application/json");
+	//req.header("Accept", "application/json");
+
+	//req.timeout(std::chrono::seconds(10));
+
+	log::info("I said... {}", url);
+
+	//auto task = req.get(url);
 	//listener.setFilter(task);
+	listener.setFilter(web::WebRequest().get(url));
+	log::info("???");
 
 	// TODO: fetch stuff
 	// POST /submit
@@ -135,63 +245,149 @@ void postDeath(DeathLocationOut const& deathLoc, long int levelid) {
 
 // MODIFY UI
 
-#include <Geode/modify/MenuLayer.hpp>
-class $modify(MyMenuLayer, MenuLayer) {
-
-	bool init() {
-
-		if (!MenuLayer::init()) {
-			return false;
-		}
-
-		auto myButton = CCMenuItemSpriteExtra::create(
-			CCSprite::createWithSpriteFrameName("miniSkull_001.png"), this,
-			menu_selector(MyMenuLayer::onMyButton)
-		);
-
-		auto menu = this->getChildByID("bottom-menu");
-		menu->addChild(myButton);
-		myButton->setID("my-button"_spr);
-
-		menu->updateLayout(true);
-
-		return true;
-	}
-
-	void onMyButton(CCObject*) {
-		// Fires a DeathEvent
-		log::info("{}", HTTP_AGENT);
-	}
-}
-;
-
 #include <Geode/modify/PlayLayer.hpp>
-#include <Geode/modify/GJBaseGameLayer.hpp>
+#include <Geode/modify/GJGameLevel.hpp>
 class $modify(DeathMarkersPlayLayer, PlayLayer) {
 
 	bool init(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
 
-		// level->getCamera for figuring out what to draw
-		// playingLevel.levelid = level->m_levelID;
-		// playingLevel.levelversion = level->m_levelVersion;
+		if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
 
-		//log::info(level->isPlatformer() ? "platformer" : "classic");
+		// for figuring out what to draw
+		playingLevel.camera = level->getCamera();
+		playingLevel.levelid = level->m_levelID;
+		playingLevel.levelversion = level->m_levelVersion;
+		playingLevel.platformer = level->isPlatformer();
+		playingLevel.practice = this->m_isPracticeMode;
+		playingLevel.testmode = this->m_isTestMode;
 
-		if (!PlayLayer::init(level, useReplay, dontCreateObjects)) {
-			return false;
-		}
-
-		// Listen to deaths in here? (and then fire the global event)
+		log::info("Listing...");
+		listDeaths();
 
 		return true;
+
 	};
 
-	void destroyPlayer(PlayerObject * player, GameObject * object) override {
-		log::info("haha i hooked your death");
+	void togglePracticeMode(bool toggle) {
 
-		PlayLayer::destroyPlayer(player, object);
+		PlayLayer::togglePracticeMode(toggle);
+		playingLevel.practice = toggle;
 
-		//postDeath()
-	};
+	}
+
 }
 ;
+
+#include <Geode/modify/PlayerObject.hpp>
+class $modify(ModifiedPlayerObject, PlayerObject) {
+
+	static void onModify(auto & self) {
+		// Hook before QOLMod (-6969) hook that completely overrides playerDestroyed
+		if (!self.setHookPriority("PlayerObject::playerDestroyed", -6970)) {
+			log::error("Failed to set hook priority of PlayerObject::playerDestroyed to -6970 (somehow)");
+		}
+	}
+
+	void playerDestroyed(bool secondPlr) {
+		// Forward to original
+		PlayerObject::playerDestroyed(secondPlr);
+		if (secondPlr) return;
+
+		auto playLayer = static_cast<DeathMarkersPlayLayer*>(GameManager::get()->getPlayLayer());
+		if (!playLayer) return;
+
+		auto deathloc = DeathLocationOut(this->getPositionX(), this->getPositionY());
+		deathloc.percentage = playLayer->getCurrentPercentInt();
+		// deathloc.coin1 = ...;
+		// deathloc.coin2 = ...;
+		// deathloc.coin3 = ...;
+		// deathloc.itemdata = ...;
+
+		// Add own death to current level's list
+		playingLevel.deaths.push_back(deathloc.toMin());
+
+		if (shouldSubmit()) postDeath(deathloc);
+
+		if (!shouldDraw()) return;
+
+		log::info("Drawing... (nothing actually)");
+
+		//	playLayer->m_fields->m_respawnTimeSum = 0; // super hacky
+		//	playLayer->m_fields->m_deathSprites->runAction(
+		//		CCRepeatForever::create(CCSequence::createWithTwoActions(
+		//			CCDelayTime::create(0),
+		//			CCCallFunc::create(playLayer, callfunc_selector(ModifiedPlayLayer::updateCalcRespawnTime)))
+		//		)
+		//	);
+
+		//	auto& deathPoints = playLayer->m_fields->m_deathPoints;
+		//	auto deathSprites = playLayer->m_fields->m_deathSprites;
+		//	deathPoints.push_back(this->getPosition());
+
+		//	float& totalTime = playLayer->m_fields->m_deathMarkerAnimTime;
+		//	totalTime = 0;
+
+		//	bool animateMarkers = mod->getSettingValue<bool>("animate-markers");
+		//	double markerScale = mod->getSettingValue<double>("marker-scale");
+		//	double markerScaleThisDeath = markerScale * mod->getSettingValue<double>("marker-scale-thisdeath");
+
+		//	DeathPoints visiblePoints; visiblePoints.reserve(deathPoints.size());
+		//	int thisDeathIdx = -1;
+		//	for (auto iter = deathPoints.rbegin(); iter != deathPoints.rend(); iter++) {
+		//		auto& point = *iter;
+		//		if (shouldRender(point, deathSprites)) {
+		//			if (std::distance(iter, deathPoints.rbegin()) == 0) {
+		//				thisDeathIdx = 0;
+		//			}
+
+		//			visiblePoints.push_back(point);
+		//		}
+		//	}
+
+		//	int idx = 0;
+		//	float interval = mod->getSettingValue<double>("marker-anim-time") / visiblePoints.size();
+		//	for (auto& point : visiblePoints) {
+		//		auto sprite = CCSprite::create("death-marker.png"_spr);
+		//		sprite->setScale(markerScale);
+		//		sprite->setAnchorPoint({ 0.5f, 0.0f });
+
+		//		if (idx == thisDeathIdx) {
+		//			sprite->setZOrder(99999);
+		//			sprite->setScale(markerScaleThisDeath);
+		//		}
+
+		//		if (animateMarkers)
+		//		{
+		//			sprite->setPosition(point + CCPoint(0.0f, 20.0f));
+		//			sprite->setOpacity(0);
+		//			sprite->runAction(CCSequence::createWithTwoActions(
+		//				CCDelayTime::create(idx * interval),
+		//				CCSpawn::createWithTwoActions(
+		//					CCMoveTo::create(0.25f, point),
+		//					CCFadeIn::create(0.25f)
+		//				)
+		//			));
+		//			totalTime += interval;
+		//		}
+		//		else {
+		//			sprite->setPosition(point);
+		//		}
+
+		//		deathSprites->addChild(sprite);
+		//		idx++;
+		//	}
+
+		//	totalTime += mod->getSettingValue<double>("marker-time");
+		//}
+	}
+
+};
+
+$execute{
+	/*
+		If the player changes accounts (refreshes login) after starting up,
+		this would not be changed, but honestly i do not care lmao
+	*/
+	playerData.userid = GameManager::get()->m_playerUserID.value();
+	playerData.username = GameManager::get()->m_playerName.data();
+}

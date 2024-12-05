@@ -2,15 +2,15 @@
 	"geode": "4.0.1",
 	"gd": {
 		"win": "2.2074",
-		"android": "2.2074",
-		"mac": "2.2074",
-		"ios": "2.2074"
+		"_android": "2.2074",
+		"_mac": "2.2074",
+		"_ios": "2.2074"
 	},
 	"id": "yourlocalidiot.deathmarkers",
 	"name": "DeathMarkers",
 	"version": "v0.1.0",
 	"developer": "YourLocalIdiot",
-	"description": "lorem ipsum",
+	"description": "Online death collection for creators and players",
 	"settings": {
 		"share-deaths": {
 			"type": "bool",
@@ -18,17 +18,25 @@
 			"description": "Contributes to the ecosystem of level creators trying to gain insight on their gameplay. Your deaths remain anonymous. Visit the GitHub for more information.",
 			"default": true
 		},
-		"ingame-heatmap": {
-			"type": "bool",
-			"name": "Show a heatmap in-game",
-			"description": "Shows a heatmap, like it does in the editor, in-game as well, instead of individual Markers.",
-			"default": false
-		},
 		"always-show": {
 			"type": "bool",
 			"name": "Always show Markers in-game",
 			"description": "Draws Markers in-game even while playing normally. May impede visibility and performance. You should not normally use this.",
 			"default": false
+		},
+		"marker-scale": {
+			"type": "float",
+			"name": "Marker Scale",
+			"description": "In Units, 1 = Normal Player height, 0 to disable.",
+			"default": 0.7,
+			"min": 0,
+			"max": 1.5,
+			"control": {
+				"slider": true,
+				"slider-step": 0.1,
+				"arrows": false,
+				"big-arrows": false
+			}
 		}
 	},
 	"tags": [

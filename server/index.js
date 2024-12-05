@@ -15,11 +15,11 @@ const expr = require("express");
 const app = expr();
 const crypto = require("crypto");
 
-function createUserIdent(accountid, accountname, levelid) {
-  let source = ARRANGEMENTS[accountid % ARRANGEMENTS.length];
+function createUserIdent(userid, accountname, levelid) {
+  let source = ARRANGEMENTS[userid % ARRANGEMENTS.length];
 
   source = source.replace("L", levelid)
-    .replace("I", accountid)
+    .replace("I", userid)
     .replace("A", accountname);
 
   return crypto.createHash("sha1").update(source).digest("hex");
@@ -35,30 +35,34 @@ db.prepare("CREATE TABLE IF NOT EXISTS deaths (" +
   "itemdata DOUBLE DEFAULT 0" +
   ")").run();
 
-app.get("/deathmarkers/list", (req, res) => {
+app.get("/list", (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   const deaths = db.prepare("SELECT x,y FROM deaths WHERE levelid = ?;").all(req.query.levelid);
   res.json(deaths.map(d => ([d.x, d.y])));
 });
 
-app.get("/deathmarkers/analysis", (req, res) => {
+app.get("/analysis", (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   const deaths = db.prepare("SELECT userident,x,y,percentage,coins,itemdata FROM deaths WHERE levelid = ?;").all(req.query.levelid);
   res.json(deaths);
 });
 
-app.post("/deathmarkers/submit", expr.raw(), (req, res) => {
+app.all("/submit", expr.text({
+  type: "*/*"
+}), (req, res) => {
+  console.log(req.query);
   try {
-    req.body = JSON.parse(req.body);
+    console.log(req.body);
+    req.body = JSON.parse(req.body.toString());
   } catch {
     return res.status(400).send("Wrongly formatted JSON");
   }
   try {
     if (!req.body.levelid) return res.status(400).send("levelid is not supplied");
     if (!req.body.userident) {
-      if (!req.body.playername || !req.body.accountid)
-        return res.status(400).send("neither userident nor playername and accountid were supplied");
-      req.body.userident = createUserIdent(req.body.accountid, req.body.playername, req.body.levelid);
+      if (!req.body.playername || !req.body.userid)
+        return res.status(400).send("neither userident nor playername and userid were supplied");
+      req.body.userident = createUserIdent(req.body.userid, req.body.playername, req.body.levelid);
     }
     if (!req.body.x || !req.body.y) return res.sendStatus(400);
     if (!req.body.percentage) return res.sendStatus(400);
@@ -74,9 +78,16 @@ app.post("/deathmarkers/submit", expr.raw(), (req, res) => {
   }
 
   try {
-    db.prepare("INSERT INTO deaths (userident, levelid, x, y, percentage, coins, itemdata) VALUES " +
-      `(${req.body.userident}, ${req.body.levelid}, ${req.body.x}, ${req.body.y}, ${req.body.percentage}, ${req.body.coins}, ${req.body.itemdata});`
-    ).run();
+    db.prepare("INSERT INTO deaths (userident, levelid, x, y, percentage, coins, itemdata) VALUES (?, ?, ?, ?, ?, ?, ?)").run(
+      req.body.userident,
+      req.body.levelid,
+      req.body.x,
+      req.body.y,
+      req.body.percentage,
+      req.body.coins,
+      req.body.itemdata
+    );
+    res.sendStatus(204);
   } catch {
     return res.status(500).send("Error writing to the database. May be due to wrongly formatted input. Try again.");
   }
