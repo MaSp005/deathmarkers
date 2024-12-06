@@ -37,6 +37,12 @@
 				"arrows": false,
 				"big-arrows": false
 			}
+		},
+		"console-debug": {
+			"type": "bool",
+			"name": "Console Debug",
+			"description": "Whether to spam the console with debug stuff. Only really relevant for developers who might be offput by the ungodly spam this mod could create.",
+			"default": false
 		}
 	},
 	"tags": [

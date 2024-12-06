@@ -1,8 +1,14 @@
 // Include utility headers
 #include <Geode/Geode.hpp>
 #include <Geode/utils/web.hpp>
+#include <Geode/loader/Event.hpp>
 #include <vector>
 #include <string>
+
+// TODO: Toggle Debug
+// TODO: Parse result from list
+// TODO: Bar chart thingie on progress bar (and setting)
+// TODO: death markers?
 
 using namespace geode::prelude;
 
@@ -10,6 +16,7 @@ std::string const HTTP_AGENT =
 "Geode-DeathMarkers-" + Mod::get()->getVersion().toVString(true);
 //std::string const API_BASE = "https://deathmarkers.masp005.dev/";
 std::string const API_BASE = "http://localhost:8048/";
+auto const HTTP_TIMEOUT = std::chrono::seconds(15);
 
 // CLASSES
 
@@ -136,44 +143,7 @@ static bool shouldDraw() {
 	return true;
 };
 
-static void listDeaths() {
-	std::vector<DeathLocationMin> list;
-
-	// Initiate Listener
-	EventListener<web::WebTask> listener;
-
-	listener.bind([](web::WebTask::Event* e) {
-		log::info("so something happened ig");
-		auto res = e->getValue();
-		if (res) {
-			if (!res->ok()) {
-				log::info(
-					"Posting Death failed: {}",
-					res->string().unwrapOr("Body could not be read.")
-				);
-			} else {
-				log::info("Posted Death.");
-			}
-		} else if (e->isCancelled()) {
-			log::info("The request was cancelled... So sad :(");
-		};
-	});
-
-	// Build the HTTP Request
-	std::string const url = API_BASE + "list";
-	web::WebRequest req = web::WebRequest();
-
-	req.param("levelid", (playingLevel.levelid));
-	req.userAgent(HTTP_AGENT);
-
-	req.timeout(std::chrono::seconds(60));
-
-	log::info("I said... {}", url);
-	listener.setFilter(req.get(url));
-	log::info("???");
-};
-
-static void analyseDeaths(DeathsAnalyser *analyser) {
+static void analyseDeaths(DeathsAnalyser* analyser) {
 	std::vector<DeathLocation> list;
 	std::string url = API_BASE + "analyse";
 	// TODO: fetch stuff
@@ -181,73 +151,15 @@ static void analyseDeaths(DeathsAnalyser *analyser) {
 	// write into *analyser.deaths;
 };
 
-static void postDeath(DeathLocationOut const& deathLoc) {
-
-	printData();
-	log::info("Posting...");
-
-	// Initiate Listener
-	EventListener<web::WebTask> listener;
-
-	listener.bind([](web::WebTask::Event* e) {
-		log::info("so something happened ig");
-		auto res = e->getValue();
-		if (res) {
-			if (!res->ok())
-				log::info(
-					"Posting Death failed: {}",
-					res->string().unwrapOr("Body could not be read.")
-				);
-			else
-				log::info("Posted Death.");
-		} else if (e->isCancelled()) {
-			log::info("The request was cancelled... So sad :(");
-		};
-	});
-
-	// Build the HTTP Request
-	std::string const url = API_BASE + "submit";
-	auto myjson = matjson::Value();
-	myjson.set("levelid", matjson::Value(playingLevel.levelid));
-	myjson.set("levelversion", matjson::Value(playingLevel.levelversion));
-	myjson.set("practice", matjson::Value(playingLevel.practice));
-	myjson.set("playername", matjson::Value(playerData.username));
-	myjson.set("userid", matjson::Value(playerData.userid));
-	deathLoc.addToJSON(&myjson);
-	log::info("JSON body: {}", myjson.dump(matjson::NO_INDENTATION));
-
-	//web::WebRequest req = web::WebRequest();
-	//req.bodyJSON(myjson);
-
-	//req.param("levelid", (playingLevel.levelid));
-	//req.param("levelversion", (playingLevel.levelversion));
-	//req.param("practice", (playingLevel.practice));
-	//req.param("playername", (playerData.username));
-	//req.param("userid", (playerData.userid));
-
-	//req.userAgent(HTTP_AGENT);
-
-	//req.header("Content-Type", "application/json");
-	//req.header("Accept", "application/json");
-
-	//req.timeout(std::chrono::seconds(10));
-
-	log::info("I said... {}", url);
-
-	//auto task = req.get(url);
-	//listener.setFilter(task);
-	listener.setFilter(web::WebRequest().get(url));
-	log::info("???");
-
-	// TODO: fetch stuff
-	// POST /submit
-};
-
 // MODIFY UI
 
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/GJGameLevel.hpp>
 class $modify(DeathMarkersPlayLayer, PlayLayer) {
+
+	struct Fields {
+		EventListener<web::WebTask> m_listener;
+	};
 
 	bool init(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
 
@@ -261,8 +173,39 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 		playingLevel.practice = this->m_isPracticeMode;
 		playingLevel.testmode = this->m_isTestMode;
 
-		log::info("Listing...");
-		listDeaths();
+		log::info("Listing Deaths...");
+
+		std::vector<DeathLocationMin> list;
+
+		m_fields->m_listener.bind([](web::WebTask::Event* e) {
+			auto res = e->getValue();
+			if (res) {
+				if (!res->ok()) {
+					log::error(
+						"Listing Deaths failed: {}",
+						res->string().unwrapOr("Body could not be read.")
+					);
+				}
+				else {
+					log::info("Recieved something: {}",
+						res->string().unwrapOr("Body could not be read."));
+				}
+			}
+			else if (e->isCancelled()) {
+				log::error("The request was cancelled... So sad :(");
+			};
+		});
+
+		// Build the HTTP Request
+		std::string const url = API_BASE + "list";
+		web::WebRequest req = web::WebRequest();
+
+		req.param("levelid", (playingLevel.levelid));
+		req.userAgent(HTTP_AGENT);
+
+		req.timeout(HTTP_TIMEOUT);
+
+		m_fields->m_listener.setFilter(req.get(url));
 
 		return true;
 
@@ -281,6 +224,10 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 #include <Geode/modify/PlayerObject.hpp>
 class $modify(ModifiedPlayerObject, PlayerObject) {
 
+	struct Fields {
+		EventListener<web::WebTask> m_listener;
+	};
+
 	static void onModify(auto & self) {
 		// Hook before QOLMod (-6969) hook that completely overrides playerDestroyed
 		if (!self.setHookPriority("PlayerObject::playerDestroyed", -6970)) {
@@ -296,17 +243,64 @@ class $modify(ModifiedPlayerObject, PlayerObject) {
 		auto playLayer = static_cast<DeathMarkersPlayLayer*>(GameManager::get()->getPlayLayer());
 		if (!playLayer) return;
 
-		auto deathloc = DeathLocationOut(this->getPositionX(), this->getPositionY());
-		deathloc.percentage = playLayer->getCurrentPercentInt();
+		auto deathLoc = DeathLocationOut(this->getPositionX(), this->getPositionY());
+		deathLoc.percentage = playLayer->getCurrentPercentInt();
 		// deathloc.coin1 = ...;
 		// deathloc.coin2 = ...;
 		// deathloc.coin3 = ...;
 		// deathloc.itemdata = ...;
 
 		// Add own death to current level's list
-		playingLevel.deaths.push_back(deathloc.toMin());
+		playingLevel.deaths.push_back(deathLoc.toMin());
 
-		if (shouldSubmit()) postDeath(deathloc);
+		if (shouldSubmit()) {
+
+			printData();
+
+			m_fields->m_listener.bind([](web::WebTask::Event* e) {
+				auto res = e->getValue();
+				if (res) {
+					if (!res->ok())
+						log::error(
+							"Posting Death failed: {}",
+							res->string().unwrapOr("Body could not be read.")
+						);
+					else log::info("Posted Death.");
+				} else if (e->isCancelled())
+					log::error("Posting Death was cancelled");
+			});
+
+			// Build the HTTP Request
+			std::string const url = API_BASE + "submit";
+			auto myjson = matjson::Value();
+			myjson.set("levelid", matjson::Value(playingLevel.levelid));
+			myjson.set("levelversion", matjson::Value(playingLevel.levelversion));
+			myjson.set("practice", matjson::Value(playingLevel.practice));
+			myjson.set("playername", matjson::Value(playerData.username));
+			myjson.set("userid", matjson::Value(playerData.userid));
+			deathLoc.addToJSON(&myjson);
+			//log::info("JSON body: {}", myjson.dump(matjson::NO_INDENTATION));
+
+			web::WebRequest req = web::WebRequest();
+			req.bodyJSON(myjson);
+
+			req.param("levelid", (playingLevel.levelid));
+			req.param("levelversion", (playingLevel.levelversion));
+			req.param("practice", (playingLevel.practice));
+			req.param("playername", (playerData.username));
+			req.param("userid", (playerData.userid));
+
+			req.userAgent(HTTP_AGENT);
+
+			req.header("Content-Type", "application/json");
+			req.header("Accept", "application/json");
+
+			req.timeout(HTTP_TIMEOUT);
+
+			auto task = req.get(url);
+			m_fields->m_listener.setFilter(task);
+
+		}
 
 		if (!shouldDraw()) return;
 
@@ -382,6 +376,19 @@ class $modify(ModifiedPlayerObject, PlayerObject) {
 	}
 
 };
+
+#include <Geode/modify/GJAccountManager.hpp>
+class $modify(HookedGJAccountManager, GJAccountManager) {
+
+	void onLoginAccountCompleted(gd::string p0, gd::string p1) {
+		playerData.userid = GameManager::get()->m_playerUserID.value();
+		playerData.username = GameManager::get()->m_playerName.data();
+
+		log::info("loggedin ig {} and {}", p0, p1);
+	}
+
+}
+;
 
 $execute{
 	/*

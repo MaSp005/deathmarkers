@@ -24,7 +24,7 @@ When a player finishes the level, an entry with `percentage = 100` is added. Alt
 
 The `userident` is used to group together deaths from an individual player playing a specific level. This is anonymized in order to make grouping across levels difficult.
 
-> Since the level id is known for a specific userident, it is possible to brute-force to figure out the username that was encoded. If we add another parameter to the identificator, said parameter can then be brute-forced if the player name is known (e.g. from tracking down a specific death entry of a streamer), so we cannot use sensitive data for it. Instead, we'll add the *User ID* of the player. Although this means it can still be brute-forced, it is infinitely more tedious than trying every possible string of letters for the account name, as the Username and ID have to match up and be queried from the GD Servers to create a valid `userident`.
+> Since the level id is known for a specific userident, it is possible to brute-force to figure out the username that was encoded. If we add another parameter to the identificator, said parameter can in turn be brute-forced if the player name is known (e.g. from tracking down a specific death entry of a streamer), so we cannot use sensitive data for it. Instead, we'll add the *User ID* of the player. Although this means it can still be brute-forced, it is infinitely more tedious than trying every possible string of letters for the account name, as the Username and ID have to match up and be queried from the GD Servers to create a valid `userident`.
 
 In total, the three identification components are: **Account Name**, **Level ID**, **User ID**.
 
