@@ -5,10 +5,11 @@
 #include <vector>
 #include <string>
 
-// TODO: Toggle Debug
 // TODO: Parse result from list
 // TODO: Bar chart thingie on progress bar (and setting)
-// TODO: death markers?
+// TODO: death markers themselves?
+// TODO: 100% -> 99%
+// TODO: send completion "death"
 
 using namespace geode::prelude;
 
@@ -28,6 +29,14 @@ public:
 	DeathLocationMin(float x, float y) {
 		this->x = x;
 		this->y = y;
+	}
+
+	CCNode* createNode() {
+		auto sprite = CCSprite::create("death-marker.png"_spr);
+		sprite->setID("marker"_spr);
+		sprite->setPositionX(this->x);
+		sprite->setPositionY(this->y);
+		return sprite;
 	}
 };
 
@@ -92,30 +101,21 @@ public:
 // DATA HOLDERS
 
 struct {
-	std::string username;
-	long int userid;
+	std::string username = "";
+	long int userid = 0;
 } playerData;
 
 struct {
-	long int levelid;
-	int levelversion;
+	long int levelid = 0;
+	int levelversion = 0;
 	std::vector<DeathLocationMin> deaths;
-	cocos2d::CCCamera* camera;
-	bool practice;
-	bool platformer;
-	bool testmode;
+	cocos2d::CCCamera* camera = nullptr;
+	bool practice = false;
+	bool platformer = false;
+	bool testmode = false;
 } playingLevel;
 
 // FUNCTIONS
-
-static void printData() {
-	return;
-	log::info("levelid {}", playingLevel.levelid);
-	log::info("levelversion {}", playingLevel.levelversion);
-	log::info("platformer {}", playingLevel.platformer);
-	log::info("practice {}", playingLevel.practice);
-	log::info("testmode {}", playingLevel.testmode);
-}
 
 static bool shouldSubmit() {
 	// Ignore Testmode and local Levels
@@ -159,11 +159,18 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 
 	struct Fields {
 		EventListener<web::WebTask> m_listener;
+		CCNode* m_dmNode;
 	};
 
 	bool init(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
 
 		if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
+
+		// refetch on level start in case it changed
+		playerData.userid = GameManager::get()->m_playerUserID.value();
+		playerData.username = GameManager::get()->m_playerName.data();
+
+		auto mod = Mod::get();
 
 		// for figuring out what to draw
 		playingLevel.camera = level->getCamera();
@@ -173,26 +180,32 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 		playingLevel.practice = this->m_isPracticeMode;
 		playingLevel.testmode = this->m_isTestMode;
 
-		log::info("Listing Deaths...");
+		if (mod->getSettingValue<bool>("console-debug")) log::info("Listing Deaths...");
 
 		std::vector<DeathLocationMin> list;
 
-		m_fields->m_listener.bind([](web::WebTask::Event* e) {
+		m_fields->m_listener.bind([mod, this](web::WebTask::Event* const e) {
 			auto res = e->getValue();
 			if (res) {
 				if (!res->ok()) {
-					log::error(
-						"Listing Deaths failed: {}",
-						res->string().unwrapOr("Body could not be read.")
-					);
-				}
-				else {
-					log::info("Recieved something: {}",
-						res->string().unwrapOr("Body could not be read."));
+					log::error("Listing Deaths failed: {}", res->string().unwrapOr("Body could not be read."));
+				} else {
+					if (Mod::get()->getSettingValue<bool>("console-debug"))
+						log::info("Recieved something: {}",
+							res->string().unwrapOr("Body could not be read."));
+
+					auto decoded = res->json();
+					if (decoded.isErr())
+						return log::error("Error reading list response: Body could not be read.");
+
+					auto const result = decoded.ok().value();
+					DeathMarkersPlayLayer::parseDeathList(result);
+						
+					// TODO: Add each as CCNode to PlayLayer
 				}
 			}
 			else if (e->isCancelled()) {
-				log::error("The request was cancelled... So sad :(");
+				log::error("Death Listing Request was cancelled.");
 			};
 		});
 
@@ -205,11 +218,49 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 
 		req.timeout(HTTP_TIMEOUT);
 
-		m_fields->m_listener.setFilter(req.get(url));
+		this->m_fields->m_listener.setFilter(req.get(url));
+
+		// Prepare UI
+		auto dmNode = CCNode::create();
+		dmNode->setID("markers"_spr);
+		this->m_fields->m_dmNode = dmNode;
+		this->addChild(this->m_fields->m_dmNode);
 
 		return true;
 
 	};
+
+	void parseDeathList(matjson::Value const& list) {
+
+		if (!list.isArray())
+			return log::error("Unexpected Non-Array response listing deaths: {}", list.dump(matjson::NO_INDENTATION));
+
+		auto items = list.asArray().unwrap(); // [[#,#],[#,#],...]
+
+		for (int i = 0; i < items.size(); i++) {
+			auto item = items.at(i);
+			if (!list.isArray())
+				return log::error("Unexpected Non-Array item listing deaths: {}", item.dump(matjson::NO_INDENTATION));
+
+			auto coords = item.asArray().unwrap(); // [#, #]
+			if (coords.size() != 2)
+				return log::error("Unexpected Non-2-Tuple item listing deaths: {}, size {}", item.dump(matjson::NO_INDENTATION), coords.size());
+
+			auto x = coords.at(0);
+			auto y = coords.at(1);
+			if (!x.isNumber() || !y.isNumber())
+				return log::error("Unexpected Non-Number coordinate listing deaths: {}", item.dump(matjson::NO_INDENTATION));
+
+			auto deathLoc = DeathLocationMin(x.asDouble().unwrap(), y.asDouble().unwrap());
+			this->addDeathMarker(deathLoc);
+			playingLevel.deaths.push_back(deathLoc);
+		}
+
+	}
+
+	void addDeathMarker(DeathLocationMin deathLoc) {
+		this->m_fields->m_dmNode->addChild(deathLoc.createNode());
+	}
 
 	void togglePracticeMode(bool toggle) {
 
@@ -222,7 +273,7 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 ;
 
 #include <Geode/modify/PlayerObject.hpp>
-class $modify(ModifiedPlayerObject, PlayerObject) {
+class $modify(PlayerObject) {
 
 	struct Fields {
 		EventListener<web::WebTask> m_listener;
@@ -236,13 +287,14 @@ class $modify(ModifiedPlayerObject, PlayerObject) {
 	}
 
 	void playerDestroyed(bool secondPlr) {
-		// Forward to original
+		// Forward to original, we dont want noclip in here
 		PlayerObject::playerDestroyed(secondPlr);
 		if (secondPlr) return;
 
 		auto playLayer = static_cast<DeathMarkersPlayLayer*>(GameManager::get()->getPlayLayer());
 		if (!playLayer) return;
 
+		auto mod = Mod::get();
 		auto deathLoc = DeathLocationOut(this->getPositionX(), this->getPositionY());
 		deathLoc.percentage = playLayer->getCurrentPercentInt();
 		// deathloc.coin1 = ...;
@@ -252,12 +304,11 @@ class $modify(ModifiedPlayerObject, PlayerObject) {
 
 		// Add own death to current level's list
 		playingLevel.deaths.push_back(deathLoc.toMin());
+		// TODO: Add as CCNode to PlayLayer
 
 		if (shouldSubmit()) {
 
-			printData();
-
-			m_fields->m_listener.bind([](web::WebTask::Event* e) {
+			m_fields->m_listener.bind([mod](web::WebTask::Event* e) {
 				auto res = e->getValue();
 				if (res) {
 					if (!res->ok())
@@ -265,10 +316,11 @@ class $modify(ModifiedPlayerObject, PlayerObject) {
 							"Posting Death failed: {}",
 							res->string().unwrapOr("Body could not be read.")
 						);
-					else log::info("Posted Death.");
-				} else if (e->isCancelled())
+					else if (mod->getSettingValue<bool>("console-debug")) log::info("Posted Death.");
+				}
+				else if (e->isCancelled())
 					log::error("Posting Death was cancelled");
-			});
+				});
 
 			// Build the HTTP Request
 			std::string const url = API_BASE + "submit";
@@ -279,7 +331,7 @@ class $modify(ModifiedPlayerObject, PlayerObject) {
 			myjson.set("playername", matjson::Value(playerData.username));
 			myjson.set("userid", matjson::Value(playerData.userid));
 			deathLoc.addToJSON(&myjson);
-			//log::info("JSON body: {}", myjson.dump(matjson::NO_INDENTATION));
+			if (mod->getSettingValue<bool>("console-debug")) log::info("JSON body: {}", myjson.dump(matjson::NO_INDENTATION));
 
 			web::WebRequest req = web::WebRequest();
 			req.bodyJSON(myjson);
@@ -302,9 +354,8 @@ class $modify(ModifiedPlayerObject, PlayerObject) {
 
 		}
 
+		// Render Death Markers
 		if (!shouldDraw()) return;
-
-		log::info("Drawing... (nothing actually)");
 
 		//	playLayer->m_fields->m_respawnTimeSum = 0; // super hacky
 		//	playLayer->m_fields->m_deathSprites->runAction(
@@ -377,24 +428,5 @@ class $modify(ModifiedPlayerObject, PlayerObject) {
 
 };
 
-#include <Geode/modify/GJAccountManager.hpp>
-class $modify(HookedGJAccountManager, GJAccountManager) {
-
-	void onLoginAccountCompleted(gd::string p0, gd::string p1) {
-		playerData.userid = GameManager::get()->m_playerUserID.value();
-		playerData.username = GameManager::get()->m_playerName.data();
-
-		log::info("loggedin ig {} and {}", p0, p1);
-	}
-
-}
-;
-
-$execute{
-	/*
-		If the player changes accounts (refreshes login) after starting up,
-		this would not be changed, but honestly i do not care lmao
-	*/
-	playerData.userid = GameManager::get()->m_playerUserID.value();
-	playerData.username = GameManager::get()->m_playerName.data();
-}
+// PauseLayer -> left-button-menu
+// PlayLayer -> progress-bar

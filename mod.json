@@ -45,6 +45,11 @@
 			"default": false
 		}
 	},
+	"resources": {
+		"sprites": [
+			"resources/death-marker.png"
+		]
+	},
 	"tags": [
 		"online",
 		"utility",
