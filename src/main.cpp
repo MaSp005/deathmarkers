@@ -4,6 +4,7 @@
 #include <Geode/loader/Event.hpp>
 #include <vector>
 #include <string>
+#include <stdio.h>
 
 // TODO: Parse result from list
 // TODO: Bar chart thingie on progress bar (and setting)
@@ -18,6 +19,7 @@ std::string const HTTP_AGENT =
 //std::string const API_BASE = "https://deathmarkers.masp005.dev/";
 std::string const API_BASE = "http://localhost:8048/";
 auto const HTTP_TIMEOUT = std::chrono::seconds(15);
+auto const FORMAT_VERSION = 1;
 
 // CLASSES
 
@@ -31,11 +33,19 @@ public:
 		this->y = y;
 	}
 
-	CCNode* createNode() {
+	CCNode* createNode(bool isCurrent) {
 		auto sprite = CCSprite::create("death-marker.png"_spr);
-		sprite->setID("marker"_spr);
+		std::string const id = "marker"_spr;
+		float markerScale = Mod::get()->getSettingValue<double>("marker-scale");
+		//sprite->setID(id);
 		sprite->setPositionX(this->x);
 		sprite->setPositionY(this->y);
+		sprite->setScale(markerScale);
+		sprite->setAnchorPoint({ 0.5f, 0.0f });
+		if (isCurrent) {
+			sprite->setZOrder(99999);
+			sprite->setScale(markerScale * 1.5);
+		}
 		return sprite;
 	}
 };
@@ -159,12 +169,16 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 
 	struct Fields {
 		EventListener<web::WebTask> m_listener;
-		CCNode* m_dmNode;
+		CCNode* m_dmNode = CCNode::create();
 	};
 
 	bool init(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
 
 		if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
+
+		// Prepare UI
+		this->m_fields->m_dmNode->setID("markers"_spr);
+		this->addChild(this->m_fields->m_dmNode);
 
 		// refetch on level start in case it changed
 		playerData.userid = GameManager::get()->m_playerUserID.value();
@@ -180,28 +194,50 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 		playingLevel.practice = this->m_isPracticeMode;
 		playingLevel.testmode = this->m_isTestMode;
 
+		// Don't even list if we're not going to show them anyway
+		if (!shouldDraw()) return true;
+
 		if (mod->getSettingValue<bool>("console-debug")) log::info("Listing Deaths...");
+		playingLevel.deaths.clear();
 
-		std::vector<DeathLocationMin> list;
-
+		// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
 		m_fields->m_listener.bind([mod, this](web::WebTask::Event* const e) {
 			auto res = e->getValue();
 			if (res) {
-				if (!res->ok()) {
+				if (!res->ok())
 					log::error("Listing Deaths failed: {}", res->string().unwrapOr("Body could not be read."));
-				} else {
+				else {
 					if (Mod::get()->getSettingValue<bool>("console-debug"))
 						log::info("Recieved something: {}",
 							res->string().unwrapOr("Body could not be read."));
 
-					auto decoded = res->json();
-					if (decoded.isErr())
+					auto const body = res->json();
+					if (body.isErr())
 						return log::error("Error reading list response: Body could not be read.");
 
-					auto const result = decoded.ok().value();
-					DeathMarkersPlayLayer::parseDeathList(result);
-						
-					// TODO: Add each as CCNode to PlayLayer
+					auto const okObj = body.ok();
+					matjson::Value parsed = okObj.value();
+					if (!parsed.isArray())
+						return log::error("Unexpected Non-Array response listing deaths: {}", parsed.dump(matjson::NO_INDENTATION));
+
+					auto const& list = parsed.asArray().unwrap(); // [[#,#],[#,#],...]
+					for (int i = 0; i < list.size(); i++) {
+						auto const& item = list.at(i);
+						if (!item.isArray())
+							return log::error("Unexpected Non-Array item listing deaths: {}", item.dump(matjson::NO_INDENTATION));
+
+						auto const& coords = item.asArray().unwrap(); // [#, #]
+						if (coords.size() != 2)
+							return log::error("Unexpected Non-2-Tuple item listing deaths: {}, size {}", item.dump(matjson::NO_INDENTATION), coords.size());
+
+						auto const& x = coords.at(0);
+						auto const& y = coords.at(1);
+						if (!x.isNumber() || !y.isNumber())
+							return log::error("Unexpected Non-Number coordinate listing deaths: {}", item.dump(matjson::NO_INDENTATION));
+
+						auto deathLoc = DeathLocationMin(x.asDouble().unwrap(), y.asDouble().unwrap());
+						playingLevel.deaths.push_back(deathLoc);
+					}
 				}
 			}
 			else if (e->isCancelled()) {
@@ -215,52 +251,33 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 
 		req.param("levelid", (playingLevel.levelid));
 		req.userAgent(HTTP_AGENT);
-
 		req.timeout(HTTP_TIMEOUT);
 
 		this->m_fields->m_listener.setFilter(req.get(url));
-
-		// Prepare UI
-		auto dmNode = CCNode::create();
-		dmNode->setID("markers"_spr);
-		this->m_fields->m_dmNode = dmNode;
-		this->addChild(this->m_fields->m_dmNode);
 
 		return true;
 
 	};
 
-	void parseDeathList(matjson::Value const& list) {
-
-		if (!list.isArray())
-			return log::error("Unexpected Non-Array response listing deaths: {}", list.dump(matjson::NO_INDENTATION));
-
-		auto items = list.asArray().unwrap(); // [[#,#],[#,#],...]
-
-		for (int i = 0; i < items.size(); i++) {
-			auto item = items.at(i);
-			if (!list.isArray())
-				return log::error("Unexpected Non-Array item listing deaths: {}", item.dump(matjson::NO_INDENTATION));
-
-			auto coords = item.asArray().unwrap(); // [#, #]
-			if (coords.size() != 2)
-				return log::error("Unexpected Non-2-Tuple item listing deaths: {}, size {}", item.dump(matjson::NO_INDENTATION), coords.size());
-
-			auto x = coords.at(0);
-			auto y = coords.at(1);
-			if (!x.isNumber() || !y.isNumber())
-				return log::error("Unexpected Non-Number coordinate listing deaths: {}", item.dump(matjson::NO_INDENTATION));
-
-			auto deathLoc = DeathLocationMin(x.asDouble().unwrap(), y.asDouble().unwrap());
-			this->addDeathMarker(deathLoc);
-			playingLevel.deaths.push_back(deathLoc);
-		}
-
+	void resetLevel() {
+		PlayLayer::resetLevel();
+		m_fields->m_dmNode->removeAllChildrenWithCleanup(true);
+		m_fields->m_dmNode->cleanup();
 	}
 
-	void addDeathMarker(DeathLocationMin deathLoc) {
-		this->m_fields->m_dmNode->addChild(deathLoc.createNode());
-	}
+	//void delayedResetLevel() { // Override the delayed reset
+	//	PlayLayer::delayedResetLevel();
+
+	//	if (m_fields->m_deathMarkerAnimTime > m_fields->m_respawnTimeSum) {
+	//		m_fields->m_deathSprites->runAction(CCSequence::createWithTwoActions(
+	//			CCDelayTime::create(m_fields->m_deathMarkerAnimTime - m_fields->m_respawnTimeSum),
+	//			CCCallFunc::create(this, callfunc_selector(PlayLayer::delayedResetLevel))
+	//		));
+	//	}
+	//	else {
+	//		PlayLayer::delayedResetLevel();
+	//	}
+	//}
 
 	void togglePracticeMode(bool toggle) {
 
@@ -269,93 +286,7 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 
 	}
 
-}
-;
-
-#include <Geode/modify/PlayerObject.hpp>
-class $modify(PlayerObject) {
-
-	struct Fields {
-		EventListener<web::WebTask> m_listener;
-	};
-
-	static void onModify(auto & self) {
-		// Hook before QOLMod (-6969) hook that completely overrides playerDestroyed
-		if (!self.setHookPriority("PlayerObject::playerDestroyed", -6970)) {
-			log::error("Failed to set hook priority of PlayerObject::playerDestroyed to -6970 (somehow)");
-		}
-	}
-
-	void playerDestroyed(bool secondPlr) {
-		// Forward to original, we dont want noclip in here
-		PlayerObject::playerDestroyed(secondPlr);
-		if (secondPlr) return;
-
-		auto playLayer = static_cast<DeathMarkersPlayLayer*>(GameManager::get()->getPlayLayer());
-		if (!playLayer) return;
-
-		auto mod = Mod::get();
-		auto deathLoc = DeathLocationOut(this->getPositionX(), this->getPositionY());
-		deathLoc.percentage = playLayer->getCurrentPercentInt();
-		// deathloc.coin1 = ...;
-		// deathloc.coin2 = ...;
-		// deathloc.coin3 = ...;
-		// deathloc.itemdata = ...;
-
-		// Add own death to current level's list
-		playingLevel.deaths.push_back(deathLoc.toMin());
-		// TODO: Add as CCNode to PlayLayer
-
-		if (shouldSubmit()) {
-
-			m_fields->m_listener.bind([mod](web::WebTask::Event* e) {
-				auto res = e->getValue();
-				if (res) {
-					if (!res->ok())
-						log::error(
-							"Posting Death failed: {}",
-							res->string().unwrapOr("Body could not be read.")
-						);
-					else if (mod->getSettingValue<bool>("console-debug")) log::info("Posted Death.");
-				}
-				else if (e->isCancelled())
-					log::error("Posting Death was cancelled");
-				});
-
-			// Build the HTTP Request
-			std::string const url = API_BASE + "submit";
-			auto myjson = matjson::Value();
-			myjson.set("levelid", matjson::Value(playingLevel.levelid));
-			myjson.set("levelversion", matjson::Value(playingLevel.levelversion));
-			myjson.set("practice", matjson::Value(playingLevel.practice));
-			myjson.set("playername", matjson::Value(playerData.username));
-			myjson.set("userid", matjson::Value(playerData.userid));
-			deathLoc.addToJSON(&myjson);
-			if (mod->getSettingValue<bool>("console-debug")) log::info("JSON body: {}", myjson.dump(matjson::NO_INDENTATION));
-
-			web::WebRequest req = web::WebRequest();
-			req.bodyJSON(myjson);
-
-			req.param("levelid", (playingLevel.levelid));
-			req.param("levelversion", (playingLevel.levelversion));
-			req.param("practice", (playingLevel.practice));
-			req.param("playername", (playerData.username));
-			req.param("userid", (playerData.userid));
-
-			req.userAgent(HTTP_AGENT);
-
-			req.header("Content-Type", "application/json");
-			req.header("Accept", "application/json");
-
-			req.timeout(HTTP_TIMEOUT);
-
-			auto task = req.get(url);
-			m_fields->m_listener.setFilter(task);
-
-		}
-
-		// Render Death Markers
-		if (!shouldDraw()) return;
+	void renderDeaths() {
 
 		//	playLayer->m_fields->m_respawnTimeSum = 0; // super hacky
 		//	playLayer->m_fields->m_deathSprites->runAction(
@@ -424,6 +355,110 @@ class $modify(PlayerObject) {
 
 		//	totalTime += mod->getSettingValue<double>("marker-time");
 		//}
+	}
+
+};
+
+#include <Geode/modify/PlayerObject.hpp>
+class $modify(PlayerObject) {
+
+	struct Fields {
+		EventListener<web::WebTask> m_listener;
+	};
+
+	static void onModify(auto & self) {
+		// Hook before QOLMod (-6969) hook that completely overrides playerDestroyed
+		if (!self.setHookPriority("PlayerObject::playerDestroyed", -6970)) {
+			log::error("Failed to set hook priority of PlayerObject::playerDestroyed to -6970 (somehow)");
+		}
+	}
+
+	void playerDestroyed(bool secondPlr) {
+		// Forward to original, we dont want noclip in here
+		PlayerObject::playerDestroyed(secondPlr);
+		if (secondPlr) return;
+
+		auto playLayer = static_cast<DeathMarkersPlayLayer*>(GameManager::get()->getPlayLayer());
+		if (!playLayer) return;
+
+		auto mod = Mod::get();
+		auto deathLoc = DeathLocationOut(this->getPositionX(), this->getPositionY());
+		deathLoc.percentage = playLayer->getCurrentPercentInt();
+		playLayer->m_fields->m_dmNode->addChild(deathLoc.toMin().createNode(false));
+		// deathloc.coin1 = ...; // This stuff is complicated... prolly gonna pr Weebifying/coins-in-pause-menu-geode to make it api public and depend on it here or sm
+		// deathloc.coin2 = ...;
+		// deathloc.coin3 = ...;
+		// deathloc.itemdata = ...; // where the hell are the counters
+
+		auto res00 = GJBaseGameLayer::get()->getItemValue(0, 0);
+		auto test00 = reinterpret_cast<void*>(&res00);
+		log::info("00 result {:x} {:x}", reinterpret_cast<int>(test00), *reinterpret_cast<int*>(test00));
+		auto res01 = GJBaseGameLayer::get()->getItemValue(0, 1);
+		auto test01 = reinterpret_cast<void*>(&res01);
+		log::info("01 result {:x} {:x}", reinterpret_cast<int>(test01), *reinterpret_cast<int*>(test01));
+		auto res10 = GJBaseGameLayer::get()->getItemValue(1, 0);
+		auto test10 = reinterpret_cast<void*>(&res10);
+		log::info("10 result {:x} {:x}", reinterpret_cast<int>(test10), *reinterpret_cast<int*>(test10));
+		auto res11 = GJBaseGameLayer::get()->getItemValue(1, 1);
+		auto test11 = reinterpret_cast<void*>(&res11);
+		log::info("11 result {:x} {:x}", reinterpret_cast<int>(test11), *reinterpret_cast<int*>(test11));
+		
+		// Add own death to current level's list
+		playingLevel.deaths.push_back(deathLoc.toMin());
+		// TODO: Add as CCNode to PlayLayer
+
+		if (shouldSubmit()) {
+
+			m_fields->m_listener.bind([mod](web::WebTask::Event* e) {
+				auto res = e->getValue();
+				if (res) {
+					if (!res->ok())
+						log::error(
+							"Posting Death failed: {}",
+							res->string().unwrapOr("Body could not be read.")
+						);
+					else if (mod->getSettingValue<bool>("console-debug")) log::info("Posted Death.");
+				}
+				else if (e->isCancelled())
+					log::error("Posting Death was cancelled");
+			});
+
+			// Build the HTTP Request
+			std::string const url = API_BASE + "submit";
+			auto myjson = matjson::Value();
+			myjson.set("levelid", matjson::Value((int)playLayer->m_level->m_levelID));
+			myjson.set("levelversion", matjson::Value(playLayer->m_level->m_levelVersion));
+			myjson.set("practice", matjson::Value(playLayer->m_isPracticeMode));
+			myjson.set("playername", matjson::Value(playerData.username));
+			myjson.set("userid", matjson::Value(playerData.userid));
+			myjson.set("format", matjson::Value(FORMAT_VERSION));
+			deathLoc.addToJSON(&myjson);
+			if (mod->getSettingValue<bool>("console-debug")) log::info("JSON body: {}", myjson.dump(matjson::NO_INDENTATION));
+
+			web::WebRequest req = web::WebRequest();
+			req.bodyJSON(myjson);
+
+			req.param("levelid", (playingLevel.levelid));
+			req.param("levelversion", (playingLevel.levelversion));
+			req.param("practice", (playingLevel.practice));
+			req.param("playername", (playerData.username));
+			req.param("userid", (playerData.userid));
+
+			req.userAgent(HTTP_AGENT);
+
+			req.header("Content-Type", "application/json");
+			req.header("Accept", "application/json");
+
+			req.timeout(HTTP_TIMEOUT);
+
+			auto task = req.get(url);
+			m_fields->m_listener.setFilter(task);
+
+		}
+
+		// Render Death Markers
+		if (shouldDraw()) playLayer->renderDeaths();
+
 	}
 
 };
