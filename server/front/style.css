@@ -1,0 +1,36 @@
+@font-face {
+  font-family: 'Red Hat Display';
+  src: url(/RedHatDisplay.ttf);
+}
+
+body {
+  background-color: #1c1722;
+  font-family: 'Red Hat Display', 'Helvetica Neue', Helvetica, 'Segoe UI', Arial, sans-serif;
+}
+
+main {
+  max-width: 40em;
+  margin: 2em auto;
+  padding: 1em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: white;
+  text-decoration: underline gray 2px;
+}
+
+p {
+  color: #aaaaaa;
+  letter-spacing: .5;
+  word-spacing: 1;
+  line-height: 1.5;
+}
+
+strong {
+  color: #cecece;
+}

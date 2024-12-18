@@ -14,6 +14,10 @@ const db = require("better-sqlite3")(DATABASE_FILENAME);
 const expr = require("express");
 const app = expr();
 const crypto = require("crypto");
+const path = require("path");
+const fs = require("fs");
+const md = require("markdown-it")({ html: true, breaks: true })
+  .use(require('markdown-it-named-headings'));
 
 function createUserIdent(userid, accountname, levelid) {
   let source = ARRANGEMENTS[userid % ARRANGEMENTS.length];
@@ -92,5 +96,12 @@ app.all("/submit", expr.text({
     return res.status(500).send("Error writing to the database. May be due to wrongly formatted input. Try again.");
   }
 })
+
+app.get("/", (req, res) => {
+  res.setHeader("Link", "<style.css>;rel=stylesheet;media=all");
+  res.send(md.render(fs.readFileSync("guide.md", "utf8")));
+});
+
+app.use(expr.static("front"));
 
 app.listen(PORT, () => { console.log("Listening on :" + PORT) });
