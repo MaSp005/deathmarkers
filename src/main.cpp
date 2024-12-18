@@ -25,12 +25,14 @@ auto const FORMAT_VERSION = 1;
 
 class DeathLocationMin {
 public:
-	float x;
-	float y;
+	CCPoint pos;
 
 	DeathLocationMin(float x, float y) {
-		this->x = x;
-		this->y = y;
+		this->pos = CCPoint(x, y);
+	}
+
+	DeathLocationMin(CCPoint pos) {
+		this->pos = CCPoint(pos);
 	}
 
 	CCNode* createNode(bool isCurrent) {
@@ -38,8 +40,7 @@ public:
 		std::string const id = "marker"_spr;
 		float markerScale = Mod::get()->getSettingValue<double>("marker-scale");
 		//sprite->setID(id);
-		sprite->setPositionX(this->x);
-		sprite->setPositionY(this->y);
+		sprite->setPosition(this->pos);
 		sprite->setScale(markerScale);
 		sprite->setAnchorPoint({ 0.5f, 0.0f });
 		if (isCurrent) {
@@ -52,26 +53,28 @@ public:
 
 class DeathLocationOut {
 public:
-	DeathLocationOut(float x, float y) {
-		this->x = x;
-		this->y = y;
-	}
-
-	float x;
-	float y;
+	CCPoint pos;
 	int percentage = 0;
 	bool coin1 = false;
 	bool coin2 = false;
 	bool coin3 = false;
 	int itemdata = 0;
 
+	DeathLocationOut(float x, float y) {
+		this->pos = CCPoint(x, y);
+	}
+
+	DeathLocationOut(CCPoint pos) {
+		this->pos = CCPoint(pos);
+	}
+
 	DeathLocationMin toMin() const {
-		return DeathLocationMin(this->x, this->y);
+		return DeathLocationMin(this->pos);
 	}
 
 	void addToJSON(matjson::Value* json) const {
-		json->set("x", matjson::Value(this->x));
-		json->set("y", matjson::Value(this->y));
+		json->set("x", matjson::Value(this->pos.x));
+		json->set("y", matjson::Value(this->pos.y));
 		json->set("percentage", matjson::Value(this->percentage));
 		json->set("coins", matjson::Value(this->coin1 | this->coin2 << 1 | this->coin3 << 2));
 		json->set("itemdata", matjson::Value(this->itemdata));
@@ -81,16 +84,23 @@ public:
 class DeathLocation {
 public:
 	std::string userIdent;
-	float x;
-	float y;
-	int percentage;
-	bool coin1;
-	bool coin2;
-	bool coin3;
-	int itemdata;
+	CCPoint pos;
+	int percentage = 0;
+	bool coin1 = false;
+	bool coin2 = false;
+	bool coin3 = false;
+	int itemdata = 0;
+
+	DeathLocation(float x, float y) {
+		this->pos = CCPoint(x, y);
+	}
+
+	DeathLocation(CCPoint pos) {
+		this->pos = CCPoint(pos);
+	}
 
 	DeathLocationMin toMin() const {
-		return DeathLocationMin(this->x, this->y);
+		return DeathLocationMin(this->pos);
 	}
 };
 
@@ -389,19 +399,6 @@ class $modify(PlayerObject) {
 		// deathloc.coin2 = ...;
 		// deathloc.coin3 = ...;
 		// deathloc.itemdata = ...; // where the hell are the counters
-
-		auto res00 = GJBaseGameLayer::get()->getItemValue(0, 0);
-		auto test00 = reinterpret_cast<void*>(&res00);
-		log::info("00 result {:x} {:x}", reinterpret_cast<int>(test00), *reinterpret_cast<int*>(test00));
-		auto res01 = GJBaseGameLayer::get()->getItemValue(0, 1);
-		auto test01 = reinterpret_cast<void*>(&res01);
-		log::info("01 result {:x} {:x}", reinterpret_cast<int>(test01), *reinterpret_cast<int*>(test01));
-		auto res10 = GJBaseGameLayer::get()->getItemValue(1, 0);
-		auto test10 = reinterpret_cast<void*>(&res10);
-		log::info("10 result {:x} {:x}", reinterpret_cast<int>(test10), *reinterpret_cast<int*>(test10));
-		auto res11 = GJBaseGameLayer::get()->getItemValue(1, 1);
-		auto test11 = reinterpret_cast<void*>(&res11);
-		log::info("11 result {:x} {:x}", reinterpret_cast<int>(test11), *reinterpret_cast<int*>(test11));
 		
 		// Add own death to current level's list
 		playingLevel.deaths.push_back(deathLoc.toMin());
