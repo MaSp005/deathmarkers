@@ -98,7 +98,6 @@ app.all("/submit", expr.text({
 })
 
 app.get("/", (req, res) => {
-  res.setHeader("Link", "<style.css>;rel=stylesheet;media=all");
   res.send(md.render(fs.readFileSync("guide.md", "utf8")));
 });
 

@@ -12,9 +12,11 @@ but also for <cg>in-depth analysis of gameplay</c>.
 - Built-in analysis <cg>helper tools</c>
 - (minimal) Player path tracing
 
-You can <cr>prevent</c> the mod from sharing your deaths and still show others' deaths in the settings, although it is recommended to <cg>keep (anonymous) sharing on</c> for creators seeking to use the data to improve their levels.
+## Disclaimer
 
-**For transparency**: The mod makes use of your *username and user ID* to create an identifier for you. This identifier <cy>can not be traced back to you</c>; it is unique to you for the purpose of grouping together attempts (/deaths) that were from the same player.
+The mod makes use of your *username and user ID* to create an identifier for you. <cg>This identifier **can not be traced back to you**</c>; it is unique to you for the purpose of grouping together attempts (/deaths) that were from the same player. Your identifier is *different* for every level you play, so your deaths *cannot* be grouped together across levels.
+
+You can <cr>prevent</c> the mod from sharing your deaths and still show others' deaths in the settings, although it is recommended to <cg>keep (anonymous) sharing on</c> for creators seeking to use the data to improve their levels.
 
 # Special Thanks
 

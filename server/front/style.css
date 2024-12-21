@@ -5,12 +5,15 @@
 
 body {
   background-color: #1c1722;
+  background-image: linear-gradient(to bottom right, #1f1b27, #2d1f35);
+  min-height: 100vh;
+  margin: 0;
   font-family: 'Red Hat Display', 'Helvetica Neue', Helvetica, 'Segoe UI', Arial, sans-serif;
 }
 
 main {
   max-width: 40em;
-  margin: 2em auto;
+  margin: 0 auto 2em;
   padding: 1em;
 }
 
@@ -20,17 +23,39 @@ h3,
 h4,
 h5,
 h6 {
-  color: white;
-  text-decoration: underline gray 2px;
+  color: #eef6f8;
+  text-decoration: underline #fff8 2px;
+  margin-top: 2em;
 }
 
 p {
-  color: #aaaaaa;
+  color: #b0b2b8;
   letter-spacing: .5;
   word-spacing: 1;
   line-height: 1.5;
 }
 
+blockquote {
+  display: block;
+  padding: .5em 1em;
+  color: #b0b2b8;
+  background-color: #07070788;
+  border-left: 2px solid #bbb2c488;
+}
+
+blockquote > p {
+  margin: 0;
+}
+
+a {
+  color: #3babdb;
+  text-decoration-thickness: 1px;
+}
+
 strong {
-  color: #cecece;
+  color: #ccd3d6;
+}
+
+h1 a {
+  text-decoration: none;
 }
