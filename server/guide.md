@@ -31,7 +31,6 @@ This stuff is not self-explanatory, though, which is why this document walks you
 
 > Last updated: Dec 18, 2024<br>Changes: uh
 
-<!-- TODO: automate probably -->
 <?>TOC
 
 ## Interface
@@ -42,13 +41,23 @@ For the rest of the guide, we'll need to lay some ground rules about **vocabular
 
 A **death** is the event of a player dying to an obstacle in the level. A **death location** is the location of that death and a **death marker** consists of said location along with other data. These are collected and can be displayed.
 
+![Explanatory graphic on new/matched bests and setbacks](front/bests-setbacks.webp)
+
 A **new best** is a death in which the player reached their new highest progress. This implies that they have never seen that location before. A **matched best** is a death in which the player dies in the vicinity of their current best. 
 
 A **setback** is a death in which the player dies significantly earlier than their current best. Setbacks can be split into two groups: **new setbacks** are the first time that a player has died at that location, but they have previously beat it the first time they encountered it. **Old setbacks** are players dying to a location which was a new best (or new setback) previously, despite having passed it before.
 
-<!-- TODO: Explanatory graphic on new/matched bests and setbacks (maybe even a gif) -->
+**Sightreading** is the practice of entirely (and confidently) predicting the upcoming gameplay by sight (or rhythmic anticipation) alone. Blind button spamming with no understanding of the gameplay is not sightreading. **Blind Jumps** are required inputs that are not reasonably able to be sightread, e.g. a jump instantly after landing a long fall.
 
-**Sightreading** is the practice of entirely predicting the upcoming gameplay by sight (or rhythmic anticipation) alone. Blind button spamming with no understanding of the gameplay is not sightreading. **Blind Jumps** are required inputs that are not reasonably able to be sightread. E.g. a spike directly after a long fall.
+**Anticipated jumps** are a combination of inputs in which the first input can be hit at any timing with no direct consequences, and will still allow the second input to happen, but limit the timing window to one where death is guaranteed. These combinations can be of any length, where a slightly missed timing on the first input guarantees death at least by the last input.
+
+<!-- TODO: Explanatory graphic on Anticipated Jumps (maybe even a gif) -->
+
+#### uh
+
+### hm
+
+## uhuh
 
 </main>
 

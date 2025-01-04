@@ -1,22 +1,40 @@
 This document explains the data formats of server communication and the database.
 
+# Formats
+
+The system works with format numbers, starting from 1 as the first version. They differentiate themselves by the organization and quantity of features that can be stored with them.
+
+- **Format 1**
+  - Stores: `userident`, `levelid`, `levelversion`, `practice`, `x`, `y`, `percentage`
+  - Sends for list: `x`, `y`, `percentage`
+  - Sends for analysis: `userident`, `levelversion`, `practice`, `x`, `y`, `percentage`
+
+- **Format 2**
+  - Additionally Stores: `coins`, `itemdata`
+  - Additionally sends for analysis: `coins`, `itemdata`
+  - Currently unused by the mod, but available
+
 # Database
 
 The server works with [`better-sqlite3`](https://www.npmjs.com/package/better-sqlite3) and thus has only one database and no login.
 
-## Table `DEATHS`
+The database contains one table per format version, in order to store the corresponding incoming deaths in the correct version table, and sending deaths combined from all formats.
+
+## Table `format1`
 
 | Column Name | Data Type | Constraints | Description |
 |-|-|-|-|
-| userident | CHAR(40) | NOT NULL | A unique identificator of player & level. See [§ userident](#userident) |
+| userident | CHAR(40) | NOT NULL | A unique identification of player & level. See [§ userident](#userident) |
 | levelid | INT | UNSIGNED NOT NULL | The id of the level.
 | levelversion | TINYINT | UNSIGNED DEFAULT 0 | Version number of the level. |
 | practice | BOOLEAN | DEFAULT 0 | If the death was done in practice. |
 | x | FLOAT(10,2) | NOT NULL | The x-position of the player at the time of death. |
 | y | FLOAT(10,2) | NOT NULL | The y-position of the player at the time of death. |
 | percentage | SMALLINT | UNSIGNED NOT NULL | For normal levels, the percentage of the player 0-100.<br>For platformer levels, the time of death in seconds.
+<!--
 | coins | TINYINT | DEFAULT 0 | Bitfield:<br>`1 << 0` = 1st coin,<br>`1 << 1` = 2nd coin,<br>`1 << 2` = 3rd coin. |
 | itemdata | DOUBLE | DEFAULT 0 | The value of item 0 at the time of death. Can be used by level creators to encode specific information about the player. |
+-->
 
 When a player finishes the level, an entry with `percentage = 100` is added. Although this is not a death in the sense of the word, it serves an analytical purpose for detecting if a given player (based on `userident`) has ended up beating the level, as well as discovering potential unintended secret ways.
 
@@ -24,7 +42,7 @@ When a player finishes the level, an entry with `percentage = 100` is added. Alt
 
 The `userident` is used to group together deaths from an individual player playing a specific level. This is anonymized in order to make grouping across levels difficult.
 
-> Since the level id is known for a specific userident, it is possible to brute-force to figure out the username that was encoded. If we add another parameter to the identificator, said parameter can in turn be brute-forced if the player name is known (e.g. from tracking down a specific death entry of a streamer), so we cannot use sensitive data for it. Instead, we'll add the *User ID* of the player. Although this means it can still be brute-forced, it is infinitely more tedious than trying every possible string of letters for the account name, as the Username and ID have to match up and be queried from the GD Servers to create a valid `userident`.
+> Since the level id is known for a specific userident, it is possible to brute-force to figure out the username that was encoded. If we add another parameter to the identification, said parameter can in turn be brute-forced if the player name is known (e.g. from tracking down a specific death entry of a streamer), so we cannot use sensitive data for it. Instead, we'll add the *User ID* of the player. Although this means it can still be brute-forced, it is infinitely more tedious than trying every possible string of letters for the account name, as the Username and ID have to match up and be queried from the GD Servers to create a valid `userident`.
 
 In total, the three identification components are: **Account Name**, **Level ID**, **User ID**.
 
@@ -41,13 +59,13 @@ Acc-ID mod 6 | Arrangement
 
 ### Example
 
-- Player: **RobTop** (Acc-ID **71**)
+- Player: **RobTop** (User-ID **16**)
 - Level: Bloodbath, ID **10565740**
 
-`71 % 6 = 5`
-⇒ `[level id]_[account name]_[account id]`
-⇒ `10565740_RobTop_71`
-⇒ `a64d21f4231096a3e0064a84f1ebf5567a40258d`
+`16 % 6 = 4`
+⇒ `[level id]_[user id]_[account name]`
+⇒ `10565740_16_RobTop`
+⇒ `4d5e0d019855e24a4c66a68cbce4e3453db8bc6d`
 
 ### But what about people playing without an account?
 
@@ -57,7 +75,7 @@ Not getting in the database. That's it. The mod won't even try to submit anythin
 
 **Base URL**: `https://deathmarkers.masp005.dev/`
 
-Every request and response body is in the format **JSON**.
+Every request and response body is in the format **JSON** (MIME-Type `application/json`).
 
 ### GET `/list`
 
@@ -65,12 +83,12 @@ Parameter(s):
 - `levelid`: The ID of the level requested.
 - Optional: `levelversion` (int): Filters to only the specified version if provided.
 
-Delivers: `[[float, float], [...], ...]` (Pairs of [x, y] coordinates)
+Delivers: `[[float, float, int], [...], ...]` (Groups of [x, y, %])
 
 Example: `https://deathmarkers.masp005.dev/list?levelid=10565740`
-⇒ `[[52.12, 9241.23], ...]`
+⇒ `[[52.12, 9241.23, 4], ...]`
 
-This endpoint is intended for a regular playthrough to display Mario Maker-style death pins.
+This endpoint is intended for a regular playthrough to display Mario Maker-style death pins and a bar graph on the percentage.
 
 ### GET `/analysis`
 
@@ -79,18 +97,19 @@ Parameter(s):
 - Optional: `levelversion` (int): Filters to only the specified version if provided.
 
 Delivers: `[{"userident":string, "levelversion":int, "practice":bool, "x":float, "y":float, "percentage":int, "coins":int, "itemdata": double}, {...}]`
-See [§ Table DEATHS](#table-deaths) for information on each property.
+See [§ Table DEATHS](#table-format1) for information on each property.
 
 Example: `https://deathmarkers.masp005.dev/analysis?levelid=10565740`
 ⇒ `[{"userident":"89a7s2...", "levelversion":2, "practice":true, "x":52.12, "y":9241.23, "percentage":12, "coins":0, "itemdata": 0},...]`
 
-This endpoint is intended for level creators to analyse the deaths in their level to improve the gameplay. It is not restricted to the actual level creator to allow anyone to learn from others' levels
+This endpoint is intended for level creators to analyze the deaths in their level to improve the gameplay. It is not restricted to the actual level creator to allow anyone to learn from others' levels
 
 ### POST `/submit`
 
 > This parameter in particular is not meant for public access. It should only be used by the mod and is only documented for contributors.
 
 Body Data:
+- `format`: (int): Format Version Number, for the following always 1.
 - `levelid` (string): The ID of the level requested.
 - Optional: `levelversion` (int): Version number of the level. Assumed to be 0 if omitted.
 - Optional: `practice` (bool): Whether you were in practice. Assumed to be false if omitted.
@@ -102,6 +121,7 @@ Body Data:
 - `x` (float): x-position
 - `y` (float): y-position
 - `percentage` (int): For normal levels, the percentage of the player 0-100. For platformer levels, the time of death in seconds.
+<!--
 - Optional: One of:
   1. `coins` (int): Integer Bitfield, see above.
   2. - `coin1` (boolean): Whether coin 1 was collected.
@@ -109,5 +129,6 @@ Body Data:
      - `coin3` (boolean): Whether coin 3 was collected.
      Each of these are optional, assuming `false` if omitted.
 - Optional: `itemdata` (double): Value of Item ID 0.
+-->
 
 Delivers: `400`, `500` or `204` Status. `400` responses supply a human-readable error source.

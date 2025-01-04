@@ -12,7 +12,7 @@ body {
 }
 
 main {
-  max-width: 40em;
+  max-width: 80ch;
   margin: 0 auto 2em;
   padding: 1em;
 }
@@ -28,7 +28,8 @@ h6 {
   margin-top: 2em;
 }
 
-p {
+p,
+li {
   color: #b0b2b8;
   letter-spacing: .5;
   word-spacing: 1;
@@ -58,4 +59,12 @@ strong {
 
 h1 a {
   text-decoration: none;
+}
+
+img {
+  height: 6lh;
+  max-width: 100%;
+  width: auto;
+  float: right;
+  margin-left: 1ch;
 }
