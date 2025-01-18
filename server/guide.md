@@ -53,12 +53,6 @@ A **setback** is a death in which the player dies significantly earlier than the
 
 <!-- TODO: Explanatory graphic on Anticipated Jumps (maybe even a gif) -->
 
-#### uh
-
-### hm
-
-## uhuh
-
 </main>
 
 > **LEGAL STUFF**<br>See [my homepage](https://masp005.dev/legal) regarding hosting and contact. This page does not collect any data. As for the mod, see the [GitHub repository](https://github.com/MaSp005/deathmarkers).
