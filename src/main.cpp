@@ -60,7 +60,6 @@ public:
 		auto sprite = CCSprite::create("death-marker.png"_spr);
 		std::string const id = "marker"_spr;
 		float markerScale = Mod::get()->getSettingValue<double>("marker-scale");
-		//sprite->setID(id);
 		if (isCurrent) {
 			sprite->setScale(markerScale * 1.5);
 			sprite->setZOrder(2 << 29);
@@ -182,17 +181,20 @@ static bool shouldSubmit() {
 
 static bool shouldDraw() {
 	auto playLayer = PlayLayer::get();
-	if (!playLayer) return false;
-	if (playingLevel.levelid == 0) return false;
-
 	auto mod = Mod::get();
+
+	if (!playLayer) return false;
+	if (playingLevel.levelid == 0) return false; // Don't draw on local levels
+
+	bool isPractice = playingLevel.practice || playingLevel.testmode;
+	auto drawInPractice = mod->getSettingValue<bool>("draw-in-practice");
+	if (isPractice && !drawInPractice) return false;
+
 	auto scale = mod->getSettingValue<double>("marker-scale");
 	if (scale != 0) return true;
 
 	int histHeight = mod->getSettingValue<int>("prog-bar-hist-height");
 	if (histHeight != 0) return true;
-
-	// TODO: Settings for whether to draw in practice etc
 
 	return true;
 };
@@ -245,7 +247,7 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 		// Don't even continue to list if we're not going to show them anyway
 		if (!shouldDraw()) return true;
 
-		if (mod->getSettingValue<bool>("console-debug")) log::info("Listing Deaths...");
+		log::info("Listing Deaths...");
 		this->m_fields->m_deaths.clear();
 
 		// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
@@ -255,9 +257,8 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 				if (!res->ok())
 					log::error("Listing Deaths failed: {}", res->string().unwrapOr("Body could not be read."));
 				else {
-					if (Mod::get()->getSettingValue<bool>("console-debug"))
-						log::info("Received something: {}",
-							res->string().unwrapOr("Body could not be read."));
+					log::info("Received something: {}",
+						res->string().unwrapOr("Body could not be read."));
 
 					auto const body = res->json();
 					if (body.isErr())
@@ -388,72 +389,6 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 			this->m_fields->m_chartNode->drawRect(rect, color, 0.0f, color);
 		}
 
-		//	playLayer->m_fields->m_respawnTimeSum = 0; // super hacky
-		//	playLayer->m_fields->m_deathSprites->runAction(
-		//		CCRepeatForever::create(CCSequence::createWithTwoActions(
-		//			CCDelayTime::create(0),
-		//			CCCallFunc::create(playLayer, callfunc_selector(ModifiedPlayLayer::updateCalcRespawnTime)))
-		//		)
-		//	);
-
-		//	auto& deathPoints = playLayer->m_fields->m_deathPoints;
-		//	auto deathSprites = playLayer->m_fields->m_deathSprites;
-		//	deathPoints.push_back(this->getPosition());
-
-		//	float& totalTime = playLayer->m_fields->m_deathMarkerAnimTime;
-		//	totalTime = 0;
-
-		//	bool animateMarkers = mod->getSettingValue<bool>("animate-markers");
-		//	double markerScale = mod->getSettingValue<double>("marker-scale");
-		//	double markerScaleThisDeath = markerScale * mod->getSettingValue<double>("marker-scale-thisdeath");
-
-		//	DeathPoints visiblePoints; visiblePoints.reserve(deathPoints.size());
-		//	int thisDeathIdx = -1;
-		//	for (auto iter = deathPoints.rbegin(); iter != deathPoints.rend(); iter++) {
-		//		auto& point = *iter;
-		//		if (shouldRender(point, deathSprites)) {
-		//			if (std::distance(iter, deathPoints.rbegin()) == 0) {
-		//				thisDeathIdx = 0;
-		//			}
-		//			visiblePoints.push_back(point);
-		//		}
-		//	}
-
-		//	int idx = 0;
-		//	float interval = mod->getSettingValue<double>("marker-anim-time") / visiblePoints.size();
-		//	for (auto& point : visiblePoints) {
-		//		auto sprite = CCSprite::create("death-marker.png"_spr);
-		//		sprite->setScale(markerScale);
-		//		sprite->setAnchorPoint({ 0.5f, 0.0f });
-
-		//		if (idx == thisDeathIdx) {
-		//			sprite->setZOrder(99999);
-		//			sprite->setScale(markerScaleThisDeath);
-		//		}
-
-		//		if (animateMarkers)
-		//		{
-		//			sprite->setPosition(point + CCPoint(0.0f, 20.0f));
-		//			sprite->setOpacity(0);
-		//			sprite->runAction(CCSequence::createWithTwoActions(
-		//				CCDelayTime::create(idx * interval),
-		//				CCSpawn::createWithTwoActions(
-		//					CCMoveTo::create(0.25f, point),
-		//					CCFadeIn::create(0.25f)
-		//				)
-		//			));
-		//			totalTime += interval;
-		//		}
-		//		else {
-		//			sprite->setPosition(point);
-		//		}
-
-		//		deathSprites->addChild(sprite);
-		//		idx++;
-		//	}
-
-		//	totalTime += mod->getSettingValue<double>("marker-time");
-		//}
 	}
 
 };
@@ -484,7 +419,6 @@ class $modify(DMPlayerObject, PlayerObject) {
 		if (!playLayer) return;
 
 		auto deathLoc = DeathLocationOut(this->getPosition(), playLayer->getCurrentPercentInt());
-		playLayer->m_fields->m_dmNode->addChild(deathLoc.toMin().createAnimatedNode(true, 0));
 		// deathLoc.coin1 = ...; // This stuff is complicated... prolly gonna pr Weebifying/coins-in-pause-menu-geode to make it api public and depend on it here or sm
 		// deathLoc.coin2 = ...;
 		// deathLoc.coin3 = ...;
@@ -493,7 +427,10 @@ class $modify(DMPlayerObject, PlayerObject) {
 		if (shouldSubmit()) submitDeath(deathLoc);
 
 		// Render Death Markers
-		if (shouldDraw()) playLayer->renderDeaths();
+		if (shouldDraw()) {
+			playLayer->renderDeaths();
+			playLayer->m_fields->m_dmNode->addChild(deathLoc.toMin().createAnimatedNode(true, 0));
+		}
 
 		// Add own death to current level's list
 		// after rendering because the current death's CCNode already exists
@@ -514,7 +451,7 @@ class $modify(DMPlayerObject, PlayerObject) {
 						"Posting Death failed: {}",
 						res->string().unwrapOr("Body could not be read.")
 					);
-				else if (mod->getSettingValue<bool>("console-debug")) log::info("Posted Death.");
+				else log::info("Posted Death.");
 			}
 			else if (e->isCancelled())
 				log::error("Posting Death was cancelled");
@@ -530,16 +467,10 @@ class $modify(DMPlayerObject, PlayerObject) {
 		myjson.set("userid", matjson::Value(playerData.userid));
 		myjson.set("format", matjson::Value(FORMAT_VERSION));
 		deathLoc.addToJSON(&myjson);
-		if (mod->getSettingValue<bool>("console-debug")) log::info("JSON body: {}", myjson.dump(matjson::NO_INDENTATION));
+		log::info("JSON body: {}", myjson.dump(matjson::NO_INDENTATION));
 
 		web::WebRequest req = web::WebRequest();
 		req.bodyJSON(myjson);
-
-		req.param("levelid", (playingLevel.levelid));
-		req.param("levelversion", (playingLevel.levelversion));
-		req.param("practice", (playingLevel.practice));
-		req.param("playername", (playerData.username));
-		req.param("userid", (playerData.userid));
 
 		req.userAgent(HTTP_AGENT);
 
