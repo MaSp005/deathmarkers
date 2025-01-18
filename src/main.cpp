@@ -8,10 +8,9 @@
 #include <geode/Utils.hpp>
 
 // TODO: Parse result from list
-// TODO: Bar chart thingie on progress bar (and setting)
-// TODO: death markers themselves?
 // TODO: 100% -> 99%
 // TODO: send completion "death"
+// TODO: "always-show" setting
 
 using namespace geode::prelude;
 
@@ -45,7 +44,7 @@ public:
 
 	CCNode* createAnimatedNode(bool isCurrent, double delay) const {
 		auto node = this->createNode(isCurrent, true);
-		/*node->runAction(CCSequence::createWithTwoActions(
+		node->runAction(CCSequence::createWithTwoActions(
 			CCDelayTime::create(delay),
 			CCSpawn::createWithTwoActions(
 				CCEaseBounceOut::create(
@@ -53,11 +52,10 @@ public:
 				),
 				CCFadeIn::create(0.25f)
 			)
-		));*/
+		));
 		return node;
 	}
 
-private:
 	CCNode* createNode(bool isCurrent, bool preAnim) const {
 		auto sprite = CCSprite::create("death-marker.png"_spr);
 		std::string const id = "marker"_spr;
@@ -85,8 +83,7 @@ private:
 	}
 };
 
-// FYI i too would like to inherit DeathLocationMin here but c++ is messing
-// around with it
+// FYI i too would like to inherit DeathLocationMin here but c++ is messing around with it
 class DeathLocationOut {
 public:
 	CCPoint pos;
@@ -190,7 +187,10 @@ static bool shouldDraw() {
 
 	auto mod = Mod::get();
 	auto scale = mod->getSettingValue<double>("marker-scale");
-	if (scale == 0) return false;
+	if (scale != 0) return true;
+
+	int histHeight = mod->getSettingValue<int>("prog-bar-hist-height");
+	if (histHeight != 0) return true;
 
 	// TODO: Settings for whether to draw in practice etc
 
@@ -214,6 +214,8 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 	struct Fields {
 		EventListener<web::WebTask> m_listener;
 		CCNode* m_dmNode = CCNode::create();
+		CCDrawNode* m_chartNode = nullptr;
+		bool m_chartAttached = false;
 		std::vector<DeathLocationMin> m_deaths;
 	};
 
@@ -307,24 +309,24 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 	};
 
 	void resetLevel() {
+
 		PlayLayer::resetLevel();
+
 		m_fields->m_dmNode->removeAllChildrenWithCleanup(true);
 		m_fields->m_dmNode->cleanup();
+
+		if (!this->m_fields->m_chartAttached) return;
+		this->m_fields->m_chartNode->clear();
+		this->m_fields->m_chartNode->cleanup();
+
 	}
 
-	//void delayedResetLevel() { // Override the delayed reset
-	//	PlayLayer::delayedResetLevel();
+	void levelComplete() {
 
-	//	if (m_fields->m_deathMarkerAnimTime > m_fields->m_respawnTimeSum) {
-	//		m_fields->m_deathSprites->runAction(CCSequence::createWithTwoActions(
-	//			CCDelayTime::create(m_fields->m_deathMarkerAnimTime - m_fields->m_respawnTimeSum),
-	//			CCCallFunc::create(this, callfunc_selector(PlayLayer::delayedResetLevel))
-	//		));
-	//	}
-	//	else {
-	//		PlayLayer::delayedResetLevel();
-	//	}
-	//}
+		PlayLayer::levelComplete();
+		log::info("LEVEL COMPLETE TRIGGERED");
+
+	}
 
 	void togglePracticeMode(bool toggle) {
 
@@ -334,15 +336,56 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 	}
 
 	void onQuit() {
+
 		this->m_fields->m_deaths.clear();
 		PlayLayer::onQuit();
+
 	}
 
 	void renderDeaths() {
 
+		int histHeight = Mod::get()->getSettingValue<int>("prog-bar-hist-height");
+		int hist[101] = { 0 };
+
 		for (auto& deathLoc : this->m_fields->m_deaths) {
 			auto node = deathLoc.createAnimatedNode(false, (static_cast<float>(rand()) / RAND_MAX) * .25f);
 			this->m_fields->m_dmNode->addChild(node);
+			hist[deathLoc.percentage]++;
+		}
+
+		// Only Draw Histogram if requested
+		if (histHeight == 0) return;
+
+		if (!this->m_fields->m_chartAttached) {
+			auto progBarNode = this->getChildByID("progress-bar");
+			if (progBarNode == nullptr) return;
+
+			this->m_fields->m_chartNode = CCDrawNode::create();
+			this->m_fields->m_chartNode->setID("chart"_spr);
+			this->m_fields->m_chartNode->setZOrder(-2);
+			this->m_fields->m_chartNode->setPosition(2, 4);
+			this->m_fields->m_chartNode->setContentWidth(progBarNode->getContentWidth() - 4);
+			progBarNode->addChild(this->m_fields->m_chartNode);
+			this->m_fields->m_chartAttached = true;
+		}
+
+		int maximum = hist[0];
+		float width = this->m_fields->m_chartNode->getContentWidth() / 100;
+
+		for (int i = 1; i <= 100; i++) {
+			if (hist[i] > maximum)
+				maximum = hist[i];
+		}
+
+		this->m_fields->m_chartNode->clear();
+		for (int i = 0; i <= 100; i++) {
+			if (hist[i] == 0) continue;
+
+			float distrib = static_cast<float>(hist[i]) / maximum;
+			auto rect = CCRect(width * i, 0, width, -(distrib * histHeight));
+			auto color = _ccColor4F(distrib, 1 - distrib, 0, 1);
+
+			this->m_fields->m_chartNode->drawRect(rect, color, 0.0f, color);
 		}
 
 		//	playLayer->m_fields->m_respawnTimeSum = 0; // super hacky
@@ -416,20 +459,23 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 };
 
 #include <Geode/modify/PlayerObject.hpp>
-class $modify(PlayerObject) {
+class $modify(DMPlayerObject, PlayerObject) {
 
 	struct Fields {
 		EventListener<web::WebTask> m_listener;
 	};
 
 	static void onModify(auto & self) {
+
 		// Hook before QOLMod (-6969) hook that completely overrides playerDestroyed
 		if (!self.setHookPriority("PlayerObject::playerDestroyed", -6970)) {
 			log::error("Failed to set hook priority of PlayerObject::playerDestroyed to -6970 (somehow)");
 		}
+
 	}
 
 	void playerDestroyed(bool secondPlr) {
+
 		// Forward to original, we dont want noclip in here
 		PlayerObject::playerDestroyed(secondPlr);
 		if (secondPlr) return;

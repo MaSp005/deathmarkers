@@ -1,5 +1,5 @@
 {
-	"geode": "4.1.1",
+	"geode": "4.2.0",
 	"gd": {
 		"win": "2.2074",
 		"_android": "2.2074",
@@ -23,6 +23,20 @@
 			"name": "Always show Markers in-game",
 			"description": "Draws Markers in-game even while playing normally. May impede visibility and performance. You should not normally use this.",
 			"default": false
+		},
+		"prog-bar-hist-height": {
+			"type": "int",
+			"name": "Death histogram height",
+			"description": "Draws a Graph of the distribution of deaths by percentage beneath the progress bar upon death. 0 to disable",
+			"default": 30,
+			"min": 0,
+			"max": 100,
+			"control": {
+				"slider": true,
+				"slider-step": 1,
+				"arrows": false,
+				"big-arrows": false
+			}
 		},
 		"marker-scale": {
 			"type": "float",
