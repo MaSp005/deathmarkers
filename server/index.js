@@ -1,4 +1,4 @@
-const DATABASE_FILENAME = "example.db";
+const DATABASE_FILENAME = "deaths.db";
 const PORT = 8048;
 // TODO: Differentiate Formats
 
@@ -19,6 +19,8 @@ const crypto = require("crypto");
 const fs = require("fs");
 const md = require("markdown-it")({ html: true, breaks: true })
   .use(require('markdown-it-named-headings'));
+
+app.use(expr.static("front"));
 
 let guideHtml = "";
 let guideLastRead = 0;
@@ -64,6 +66,14 @@ db.prepare("CREATE TABLE IF NOT EXISTS format1 (\
   levelid INT UNSIGNED NOT NULL,\
   x DOUBLE NOT NULL,\
   y DOUBLE NOT NULL,\
+  percentage SMALLINT UNSIGNED NOT NULL\
+  )").run();
+
+db.prepare("CREATE TABLE IF NOT EXISTS format2 (\
+  userident CHAR(40) NOT NULL,\
+  levelid INT UNSIGNED NOT NULL,\
+  x DOUBLE NOT NULL,\
+  y DOUBLE NOT NULL,\
   percentage SMALLINT UNSIGNED NOT NULL,\
   coins TINYINT DEFAULT 0,\
   itemdata DOUBLE DEFAULT 0\
@@ -72,7 +82,10 @@ db.prepare("CREATE TABLE IF NOT EXISTS format1 (\
 app.get("/list", (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
-  const deaths = db.prepare("SELECT x,y,percentage FROM format1 WHERE levelid = ?;").all(req.query.levelid);
+  const deaths = db.prepare(
+    "SELECT x,y,percentage FROM format1 WHERE levelid = ? UNION\
+    SELECT x,y,percentage FROM format2 WHERE levelid = ?;"
+  ).all(req.query.levelid, req.query.levelid);
   res.json(deaths.map(d => ([d.x, d.y, d.percentage])));
 });
 
@@ -91,9 +104,10 @@ app.all("/submit", expr.text({
   } catch {
     return res.status(400).send("Wrongly formatted JSON");
   }
+  let format;
   try {
-    let format = req.body.format
-    if (!format) return res.status(400).send("Format not supplied");
+    format = req.body.format;
+    if (typeof format != "number") return res.status(400).send("Format not supplied");
     if (!req.body.levelid) return res.status(400).send("levelid is not supplied");
     if (!req.body.userident) {
       if (!req.body.playername || !req.body.userid)
@@ -102,38 +116,57 @@ app.all("/submit", expr.text({
     }
     if (typeof req.body.x != "number" || typeof req.body.y != "number") return res.sendStatus(400);
     if (typeof req.body.percentage != "number") return res.sendStatus(400);
-    if (!req.body.coins) {
-      req.body.coins =
-        Number(!!req.body.coin1) |
-        Number(!!req.body.coin2) << 1 |
-        Number(!!req.body.coin3) << 2;
+
+    if (format >= 2) {
+      if (!req.body.coins) {
+        req.body.coins =
+          Number(!!req.body.coin1) |
+          Number(!!req.body.coin2) << 1 |
+          Number(!!req.body.coin3) << 2;
+      }
+      if (!req.body.itemdata) req.body.itemdata = 0;
     }
-    if (!req.body.itemdata) req.body.itemdata = 0;
+
   } catch {
     return res.status(400).send("Unexpected error when parsing request");
   }
 
   try {
-    db.prepare("INSERT INTO format1 (userident, levelid, x, y, percentage, coins, itemdata) VALUES (?, ?, ?, ?, ?, ?, ?)").run(
-      req.body.userident,
-      req.body.levelid,
-      req.body.x,
-      req.body.y,
-      req.body.percentage,
-      req.body.coins,
-      req.body.itemdata
-    );
+    switch (format) {
+      case 1:
+        db.prepare("INSERT INTO format1 (userident, levelid, x, y, percentage) VALUES (?, ?, ?, ?, ?)").run(
+          req.body.userident,
+          req.body.levelid,
+          req.body.x,
+          req.body.y,
+          req.body.percentage,
+        );
+        break;
+      case 2:
+        db.prepare("INSERT INTO format2 (userident, levelid, x, y, percentage) VALUES (?, ?, ?, ?, ?)").run(
+          req.body.userident,
+          req.body.levelid,
+          req.body.x,
+          req.body.y,
+          req.body.percentage,
+          req.body.coins,
+          req.body.itemdata,
+        );
+        break;
+    }
     res.sendStatus(204);
   } catch {
     return res.status(500).send("Error writing to the database. May be due to wrongly formatted input. Try again.");
   }
-})
+});
 
 app.get("/", (req, res) => {
   if (fs.statSync(GUIDE_FILENAME).mtime > guideLastRead) renderGuide();
   res.send(guideHtml);
 });
 
-app.use(expr.static("front"));
+app.all("*", (req, res) => {
+  res.redirect("/");
+});
 
 app.listen(PORT, () => { console.log("Listening on :" + PORT) });

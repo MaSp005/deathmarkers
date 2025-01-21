@@ -30,11 +30,15 @@ The database contains one table per format version, in order to store the corres
 | practice | BOOLEAN | DEFAULT 0 | If the death was done in practice. |
 | x | FLOAT(10,2) | NOT NULL | The x-position of the player at the time of death. |
 | y | FLOAT(10,2) | NOT NULL | The y-position of the player at the time of death. |
-| percentage | SMALLINT | UNSIGNED NOT NULL | For normal levels, the percentage of the player 0-100.<br>For platformer levels, the time of death in seconds.
-<!--
+| percentage | SMALLINT | UNSIGNED NOT NULL | For normal levels, the percentage of the player 0-100, and 101 for a level finish.<br>For platformer levels, the time of death in seconds.
+
+## Table `format2`
+
+| Column Name | Data Type | Constraints | Description |
+|-|-|-|-|
+| ... | ... | ... | Identical to `format1`, with the addition of: |
 | coins | TINYINT | DEFAULT 0 | Bitfield:<br>`1 << 0` = 1st coin,<br>`1 << 1` = 2nd coin,<br>`1 << 2` = 3rd coin. |
 | itemdata | DOUBLE | DEFAULT 0 | The value of item 0 at the time of death. Can be used by level creators to encode specific information about the player. |
--->
 
 When a player finishes the level, an entry with `percentage = 100` is added. Although this is not a death in the sense of the word, it serves an analytical purpose for detecting if a given player (based on `userident`) has ended up beating the level, as well as discovering potential unintended secret ways.
 

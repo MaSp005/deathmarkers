@@ -1,4 +1,3 @@
-// Include utility headers
 #include <Geode/Geode.hpp>
 #include <Geode/utils/web.hpp>
 #include <Geode/loader/Event.hpp>
@@ -8,18 +7,18 @@
 #include <geode/Utils.hpp>
 
 // TODO: Parse result from list
-// TODO: 100% -> 99%
-// TODO: send completion "death"
 // TODO: "always-show" setting
 
 using namespace geode::prelude;
 
 std::string const HTTP_AGENT =
 "Geode-DeathMarkers-" + Mod::get()->getVersion().toVString(true);
+auto const FORMAT_VERSION = 1;
+
+// If you fork this mod and change the code, you should change this to the localhost
 //std::string const API_BASE = "https://deathmarkers.masp005.dev/";
 std::string const API_BASE = "http://localhost:8048/";
 auto const HTTP_TIMEOUT = std::chrono::seconds(15);
-auto const FORMAT_VERSION = 1;
 
 // CLASSES
 
@@ -59,7 +58,7 @@ public:
 	CCNode* createNode(bool isCurrent, bool preAnim) const {
 		auto sprite = CCSprite::create("death-marker.png"_spr);
 		std::string const id = "marker"_spr;
-		float markerScale = Mod::get()->getSettingValue<double>("marker-scale");
+		float markerScale = Mod::get()->getSettingValue<float>("marker-scale");
 		if (isCurrent) {
 			sprite->setScale(markerScale * 1.5);
 			sprite->setZOrder(2 << 29);
@@ -190,7 +189,7 @@ static bool shouldDraw() {
 	auto drawInPractice = mod->getSettingValue<bool>("draw-in-practice");
 	if (isPractice && !drawInPractice) return false;
 
-	auto scale = mod->getSettingValue<double>("marker-scale");
+	float scale = mod->getSettingValue<float>("marker-scale");
 	if (scale != 0) return true;
 
 	int histHeight = mod->getSettingValue<int>("prog-bar-hist-height");
@@ -211,7 +210,7 @@ static void analyseDeaths(DeathsAnalyser* analyser) {
 
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/GJGameLevel.hpp>
-class $modify(DeathMarkersPlayLayer, PlayLayer) {
+class $modify(DMPlayLayer, PlayLayer) {
 
 	struct Fields {
 		EventListener<web::WebTask> m_listener;
@@ -325,7 +324,10 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 	void levelComplete() {
 
 		PlayLayer::levelComplete();
-		log::info("LEVEL COMPLETE TRIGGERED");
+		if (playingLevel.platformer) return;
+
+		auto deathLoc = DeathLocationOut(this->getPosition(), 101);
+		submitDeath(deathLoc);
 
 	}
 
@@ -391,57 +393,10 @@ class $modify(DeathMarkersPlayLayer, PlayLayer) {
 
 	}
 
-};
-
-#include <Geode/modify/PlayerObject.hpp>
-class $modify(DMPlayerObject, PlayerObject) {
-
-	struct Fields {
-		EventListener<web::WebTask> m_listener;
-	};
-
-	static void onModify(auto & self) {
-
-		// Hook before QOLMod (-6969) hook that completely overrides playerDestroyed
-		if (!self.setHookPriority("PlayerObject::playerDestroyed", -6970)) {
-			log::error("Failed to set hook priority of PlayerObject::playerDestroyed to -6970 (somehow)");
-		}
-
-	}
-
-	void playerDestroyed(bool secondPlr) {
-
-		// Forward to original, we dont want noclip in here
-		PlayerObject::playerDestroyed(secondPlr);
-		if (secondPlr) return;
-
-		auto playLayer = static_cast<DeathMarkersPlayLayer*>(GameManager::get()->getPlayLayer());
-		if (!playLayer) return;
-
-		auto deathLoc = DeathLocationOut(this->getPosition(), playLayer->getCurrentPercentInt());
-		// deathLoc.coin1 = ...; // This stuff is complicated... prolly gonna pr Weebifying/coins-in-pause-menu-geode to make it api public and depend on it here or sm
-		// deathLoc.coin2 = ...;
-		// deathLoc.coin3 = ...;
-		// deathLoc.itemdata = ...; // where the hell are the counters
-
-		if (shouldSubmit()) submitDeath(deathLoc);
-
-		// Render Death Markers
-		if (shouldDraw()) {
-			playLayer->renderDeaths();
-			playLayer->m_fields->m_dmNode->addChild(deathLoc.toMin().createAnimatedNode(true, 0));
-		}
-
-		// Add own death to current level's list
-		// after rendering because the current death's CCNode already exists
-		playLayer->m_fields->m_deaths.push_back(deathLoc.toMin());
-
-	}
-
 	void submitDeath(DeathLocationOut const& deathLoc) {
 
 		auto mod = Mod::get();
-		auto playLayer = static_cast<DeathMarkersPlayLayer*>(GameManager::get()->getPlayLayer());
+		auto playLayer = static_cast<DMPlayLayer*>(GameManager::get()->getPlayLayer());
 
 		m_fields->m_listener.bind([mod](web::WebTask::Event* e) {
 			auto res = e->getValue();
@@ -486,5 +441,49 @@ class $modify(DMPlayerObject, PlayerObject) {
 
 };
 
-// PauseLayer -> left-button-menu
-// PlayLayer -> progress-bar
+#include <Geode/modify/PlayerObject.hpp>
+class $modify(DMPlayerObject, PlayerObject) {
+
+	static void onModify(auto & self) {
+
+		// Hook before QOLMod (-6969) hook that completely overrides playerDestroyed
+		if (!self.setHookPriority("PlayerObject::playerDestroyed", -6970)) {
+			log::error("Failed to set hook priority of PlayerObject::playerDestroyed to -6970 (somehow)");
+		}
+
+	}
+
+	void playerDestroyed(bool secondPlr) {
+
+		// Forward to original, we dont want noclip in here
+		PlayerObject::playerDestroyed(secondPlr);
+		if (secondPlr) return;
+
+		auto playLayer = static_cast<DMPlayLayer*>(GameManager::get()->getPlayLayer());
+		if (!playLayer) return;
+
+		// Populate percentage as current time or progress percentage
+		int percent = playingLevel.platformer ?
+			static_cast<int>(playLayer->m_attemptTime) :
+			playLayer->getCurrentPercentInt();
+		auto deathLoc = DeathLocationOut(this->getPosition(), percent);
+		// deathLoc.coin1 = ...; // This stuff is complicated... prolly gonna pr Weebifying/coins-in-pause-menu-geode to make it api public and depend on it here or sm
+		// deathLoc.coin2 = ...;
+		// deathLoc.coin3 = ...;
+		// deathLoc.itemdata = ...; // where the hell are the counters
+
+		if (shouldSubmit()) playLayer->submitDeath(deathLoc);
+
+		// Render Death Markers
+		if (shouldDraw()) {
+			playLayer->renderDeaths();
+			playLayer->m_fields->m_dmNode->addChild(deathLoc.toMin().createAnimatedNode(true, 0));
+		}
+
+		// Add own death to current level's list
+		// after rendering because the current death's CCNode already exists
+		playLayer->m_fields->m_deaths.push_back(deathLoc.toMin());
+
+	}
+
+};
