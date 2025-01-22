@@ -100,11 +100,11 @@ Parameter(s):
 - `levelid` (string): The ID of the level requested.
 - Optional: `levelversion` (int): Filters to only the specified version if provided.
 
-Delivers: `[{"userident":string, "levelversion":int, "practice":bool, "x":float, "y":float, "percentage":int, "coins":int, "itemdata": double}, {...}]`
+Delivers: `[{"userident":string, "levelversion":int, "practice":bool, "x":float, "y":float, "percentage":int}, {...}]`
 See [§ Table DEATHS](#table-format1) for information on each property.
 
 Example: `https://deathmarkers.masp005.dev/analysis?levelid=10565740`
-⇒ `[{"userident":"89a7s2...", "levelversion":2, "practice":true, "x":52.12, "y":9241.23, "percentage":12, "coins":0, "itemdata": 0},...]`
+⇒ `[{"userident":"89a7s2...", "levelversion":2, "practice":true, "x":52.12, "y":9241.23, "percentage":12},...]`
 
 This endpoint is intended for level creators to analyze the deaths in their level to improve the gameplay. It is not restricted to the actual level creator to allow anyone to learn from others' levels
 

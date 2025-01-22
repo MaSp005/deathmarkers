@@ -83,7 +83,8 @@ app.get("/list", (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
 
-  let query = req.query.platformer == "true" ?
+  let isPlatformer = req.query.platformer == "true";
+  let query = isPlatformer ?
     `SELECT x,y FROM format1 WHERE levelid = ? UNION
     SELECT x,y FROM format2 WHERE levelid = ?;` :
     `SELECT x,y,percentage FROM format1 WHERE levelid = ? AND percentage < 101 UNION
@@ -92,7 +93,7 @@ app.get("/list", (req, res) => {
   const deaths = db.prepare(query)
     .all(req.query.levelid, req.query.levelid);
 
-  res.json(deaths.map(d => ([d.x, d.y, d.percentage])));
+  res.json(deaths.map(d => (isPlatformer ? [d.x, d.y] : [d.x, d.y, d.percentage])));
 });
 
 app.get("/analysis", (req, res) => {

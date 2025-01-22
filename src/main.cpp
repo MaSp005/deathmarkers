@@ -16,7 +16,7 @@ using namespace geode::prelude;
 static bool shouldSubmit(struct playingLevel level, struct playerData player) {
 	// Ignore Testmode and local Levels
 	if (level.testmode) return false;
-	if (level.levelid == 0) return false;
+	if (level.levelId == 0) return false;
 
 	if (player.userid == 0) return false;
 
@@ -32,7 +32,7 @@ static bool shouldDraw(struct playingLevel level) {
 	auto mod = Mod::get();
 
 	if (!playLayer) return false;
-	if (level.levelid == 0) return false; // Don't draw on local levels
+	if (level.levelId == 0) return false; // Don't draw on local levels
 
 	bool isPractice = level.practice || level.testmode;
 	auto drawInPractice = mod->getSettingValue<bool>("draw-in-practice");
@@ -79,7 +79,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		auto mod = Mod::get();
 
 		// save level data
-		this->m_fields->m_levelProps.levelid = level->m_levelID;
+		this->m_fields->m_levelProps.levelId = level->m_levelID;
 		this->m_fields->m_levelProps.levelversion = level->m_levelVersion;
 		this->m_fields->m_levelProps.platformer = level->isPlatformer();
 		this->m_fields->m_levelProps.practice = this->m_isPracticeMode;
@@ -98,37 +98,9 @@ class $modify(DMPlayLayer, PlayLayer) {
 				if (!res->ok())
 					log::error("Listing Deaths failed: {}", res->string().unwrapOr("Body could not be read."));
 				else {
-					log::info("Received something: {}",
-						res->string().unwrapOr("Body could not be read."));
+					log::info("Received death list.");
 
-					auto const body = res->json();
-					if (body.isErr())
-						return log::error("Error reading list response: Body could not be read.");
-
-					auto const okObj = body.ok();
-					matjson::Value const parsed = okObj.value();
-					if (!parsed.isArray())
-						return log::error("Unexpected Non-Array response listing deaths: {}", parsed.dump(matjson::NO_INDENTATION));
-
-					auto const& list = parsed.asArray().unwrap(); // [[#,#,#],[#,#,#],...]
-					for (int i = 0; i < list.size(); i++) {
-						auto const& item = list.at(i);
-						if (!item.isArray())
-							return log::error("Unexpected Non-Array item listing deaths: {}", item.dump(matjson::NO_INDENTATION));
-
-						auto const& coords = item.asArray().unwrap(); // [#,#,#]
-						if (coords.size() != 3)
-							return log::error("Unexpected Non-3-Tuple item listing deaths: {}, size {}", item.dump(matjson::NO_INDENTATION), coords.size());
-
-						auto const& x = coords.at(0);
-						auto const& y = coords.at(1);
-						auto const& percentage = coords.at(2);
-						if (!x.isNumber() || !y.isNumber() || !percentage.isNumber())
-							return log::error("Unexpected Non-Number coordinate listing deaths: {}", item.dump(matjson::NO_INDENTATION));
-
-						auto deathLoc = DeathLocationMin(x.asDouble().unwrap(), y.asDouble().unwrap(), percentage.asInt().unwrap());
-						this->m_fields->m_deaths.push_back(deathLoc);
-					}
+					parseDeathList(res, &this->m_fields->m_deaths);
 				}
 			}
 			else if (e->isCancelled()) {
@@ -140,10 +112,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 		std::string const url = API_BASE + "list";
 		web::WebRequest req = web::WebRequest();
 
-		req.param("levelid", (this->m_fields->m_levelProps.levelid));
+		req.param("levelid", (this->m_fields->m_levelProps.levelId));
+		req.param("platformer", this->m_fields->m_levelProps.platformer);
 		req.userAgent(HTTP_AGENT);
 		req.timeout(HTTP_TIMEOUT);
-		req.param("platformer", this->m_fields->m_levelProps.platformer);
 
 		this->m_fields->m_listener.setFilter(req.get(url));
 

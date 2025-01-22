@@ -1,5 +1,6 @@
 #pragma once
 #include <Geode/Geode.hpp>
+#include <Geode/utils/web.hpp>
 
 using namespace geode::prelude;
 
@@ -14,11 +15,11 @@ auto const HTTP_TIMEOUT = std::chrono::seconds(15);
 
 struct playerData {
 	std::string username = "";
-	long int userid = 0;
+	long userid = 0;
 };
 
 struct playingLevel {
-	long int levelid = 0;
+	long levelId = 0;
 	int levelversion = 0;
 	bool practice = false;
 	bool platformer = false;
@@ -46,6 +47,7 @@ public:
 // FYI i too would like to inherit DeathLocationMin here but c++ is messing around with it
 
 // Holds all information about a death location that can be sent to the server
+// Excludes info about the level, as it does not affect the death itself
 class DeathLocationOut {
 public:
 	CCPoint pos;
@@ -63,11 +65,14 @@ public:
 };
 
 // Holds all information about a death location that the server sends for analysis
+// Includes info about the level, because the server sends it for each individual deathh
 class DeathLocation {
 public:
 	std::string userIdent;
 	CCPoint pos;
 	int percentage = 0;
+	int levelVersion = 1;
+	bool practice = false;
 	bool coin1 = false;
 	bool coin2 = false;
 	bool coin3 = false;
@@ -78,3 +83,6 @@ public:
 
 	DeathLocationMin toMin() const;
 };
+
+void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target);
+void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target);

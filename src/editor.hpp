@@ -1,16 +1,5 @@
 #pragma once
+#include <Geode/utils/web.hpp>
+#include <Geode/loader/Event.hpp>
+#include <vector>
 #include "shared.hpp"
-
-class DeathsAnalyser {
-protected:
-	DeathsAnalyser(std::vector<DeathLocation>& deaths) {
-		this->deaths = deaths;
-	}
-
-	std::vector<DeathLocation> deaths;
-
-public:
-	void setDeaths(std::vector<DeathLocation>& deaths) {
-		this->deaths = deaths;
-	}
-};
