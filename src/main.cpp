@@ -198,14 +198,6 @@ static bool shouldDraw() {
 	return true;
 };
 
-// TODO: stuff into EditLayer
-static void analyseDeaths(DeathsAnalyser* analyser) {
-	std::vector<DeathLocation> list;
-	std::string url = API_BASE + "analyse";
-	// GET /analyse
-	// write into *analyser.deaths;
-};
-
 // MODIFY UI
 
 #include <Geode/modify/PlayLayer.hpp>
@@ -250,7 +242,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		this->m_fields->m_deaths.clear();
 
 		// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
-		m_fields->m_listener.bind([mod, this](web::WebTask::Event* const e) {
+		m_fields->m_listener.bind([this](web::WebTask::Event* const e) {
 			auto res = e->getValue();
 			if (res) {
 				if (!res->ok())
@@ -264,7 +256,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 						return log::error("Error reading list response: Body could not be read.");
 
 					auto const okObj = body.ok();
-					matjson::Value parsed = okObj.value();
+					matjson::Value const parsed = okObj.value();
 					if (!parsed.isArray())
 						return log::error("Unexpected Non-Array response listing deaths: {}", parsed.dump(matjson::NO_INDENTATION));
 
@@ -301,6 +293,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		req.param("levelid", (playingLevel.levelid));
 		req.userAgent(HTTP_AGENT);
 		req.timeout(HTTP_TIMEOUT);
+		req.param("platformer", playingLevel.platformer);
 
 		this->m_fields->m_listener.setFilter(req.get(url));
 
@@ -353,6 +346,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		for (auto& deathLoc : this->m_fields->m_deaths) {
 			auto node = deathLoc.createAnimatedNode(false, (static_cast<float>(rand()) / RAND_MAX) * .25f);
 			this->m_fields->m_dmNode->addChild(node);
+			if (deathLoc.percentage >= 0 && deathLoc.percentage <= 100);
 			hist[deathLoc.percentage]++;
 		}
 
@@ -398,7 +392,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		auto mod = Mod::get();
 		auto playLayer = static_cast<DMPlayLayer*>(GameManager::get()->getPlayLayer());
 
-		m_fields->m_listener.bind([mod](web::WebTask::Event* e) {
+		m_fields->m_listener.bind([](web::WebTask::Event* e) {
 			auto res = e->getValue();
 			if (res) {
 				if (!res->ok())

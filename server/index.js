@@ -82,10 +82,16 @@ db.prepare("CREATE TABLE IF NOT EXISTS format2 (\
 app.get("/list", (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
-  const deaths = db.prepare(
-    "SELECT x,y,percentage FROM format1 WHERE levelid = ? UNION\
-    SELECT x,y,percentage FROM format2 WHERE levelid = ?;"
-  ).all(req.query.levelid, req.query.levelid);
+
+  let query = req.query.platformer == "true" ?
+    `SELECT x,y FROM format1 WHERE levelid = ? UNION
+    SELECT x,y FROM format2 WHERE levelid = ?;` :
+    `SELECT x,y,percentage FROM format1 WHERE levelid = ? AND percentage < 101 UNION
+    SELECT x,y,percentage FROM format2 WHERE levelid = ? AND percentage < 101;`;
+
+  const deaths = db.prepare(query)
+    .all(req.query.levelid, req.query.levelid);
+
   res.json(deaths.map(d => ([d.x, d.y, d.percentage])));
 });
 
