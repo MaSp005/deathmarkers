@@ -5,171 +5,20 @@
 #include <string>
 #include <stdio.h>
 #include <geode/Utils.hpp>
+#include "shared.hpp"
 
-// TODO: Parse result from list
 // TODO: "always-show" setting
 
 using namespace geode::prelude;
 
-std::string const HTTP_AGENT =
-"Geode-DeathMarkers-" + Mod::get()->getVersion().toVString(true);
-auto const FORMAT_VERSION = 1;
-
-// If you fork this mod and change the code, you should change this to the localhost
-//std::string const API_BASE = "https://deathmarkers.masp005.dev/";
-std::string const API_BASE = "http://localhost:8048/";
-auto const HTTP_TIMEOUT = std::chrono::seconds(15);
-
-// CLASSES
-
-class DeathLocationMin {
-public:
-	CCPoint pos;
-	int percentage;
-
-	DeathLocationMin(float x, float y, int percentage) {
-		this->pos = CCPoint(x, y);
-		this->percentage = percentage;
-	}
-
-	DeathLocationMin(CCPoint pos, int percentage) {
-		this->pos = CCPoint(pos);
-		this->percentage = percentage;
-	}
-
-	CCNode* createNode(bool isCurrent) const {
-		return this->createNode(isCurrent, false);
-	}
-
-	CCNode* createAnimatedNode(bool isCurrent, double delay) const {
-		auto node = this->createNode(isCurrent, true);
-		node->runAction(CCSequence::createWithTwoActions(
-			CCDelayTime::create(delay),
-			CCSpawn::createWithTwoActions(
-				CCEaseBounceOut::create(
-					CCMoveTo::create(0.25f, this->pos)
-				),
-				CCFadeIn::create(0.25f)
-			)
-		));
-		return node;
-	}
-
-	CCNode* createNode(bool isCurrent, bool preAnim) const {
-		auto sprite = CCSprite::create("death-marker.png"_spr);
-		std::string const id = "marker"_spr;
-		float markerScale = Mod::get()->getSettingValue<float>("marker-scale");
-		if (isCurrent) {
-			sprite->setScale(markerScale * 1.5);
-			sprite->setZOrder(2 << 29);
-		}
-		else {
-			sprite->setScale(markerScale);
-			sprite->setZOrder(2 << 29 - 1);
-		}
-		if (preAnim) {
-			auto point = CCPoint(this->pos.x, this->pos.y + markerScale * 4);
-			sprite->setPosition(point);
-			sprite->setOpacity(0);
-		}
-		else {
-			sprite->setPosition(this->pos);
-		}
-		sprite->setZOrder(2 << 28 - !isCurrent);
-		sprite->setAnchorPoint({ 0.5f, 0.0f });
-		return sprite;
-	}
-};
-
-// FYI i too would like to inherit DeathLocationMin here but c++ is messing around with it
-class DeathLocationOut {
-public:
-	CCPoint pos;
-	int percentage = 0;
-	bool coin1 = false;
-	bool coin2 = false;
-	bool coin3 = false;
-	int itemdata = 0;
-
-	DeathLocationOut(CCPoint pos, int percentage) {
-		this->pos = CCPoint(pos);
-		this->percentage = percentage;
-	}
-
-	DeathLocationMin toMin() const {
-		return DeathLocationMin(this->pos, percentage);
-	}
-
-	void addToJSON(matjson::Value* json) const {
-		json->set("x", matjson::Value(this->pos.x));
-		json->set("y", matjson::Value(this->pos.y));
-		json->set("percentage", matjson::Value(this->percentage));
-		json->set("coins", matjson::Value(this->coin1 | this->coin2 << 1 | this->coin3 << 2));
-		json->set("itemdata", matjson::Value(this->itemdata));
-	}
-};
-
-class DeathLocation {
-public:
-	std::string userIdent;
-	CCPoint pos;
-	int percentage = 0;
-	bool coin1 = false;
-	bool coin2 = false;
-	bool coin3 = false;
-	int itemdata = 0;
-
-	DeathLocation(float x, float y) {
-		this->pos = CCPoint(x, y);
-	}
-
-	DeathLocation(CCPoint pos) {
-		this->pos = CCPoint(pos);
-	}
-
-	DeathLocationMin toMin() const {
-		return DeathLocationMin(this->pos, this->percentage);
-	}
-};
-
-class DeathsAnalyser {
-protected:
-	DeathsAnalyser(std::vector<DeathLocation>& deaths) {
-		this->deaths = deaths;
-	}
-
-	std::vector<DeathLocation> deaths;
-
-public:
-	void setDeaths(std::vector<DeathLocation>& deaths) {
-		this->deaths = deaths;
-	}
-};
-
-// DATA HOLDERS
-
-struct {
-	std::string username = "";
-	long int userid = 0;
-} playerData;
-
-struct {
-	long int levelid = 0;
-	int levelversion = 0;
-	cocos2d::CCCamera* camera = nullptr;
-	bool practice = false;
-	bool platformer = false;
-	bool testmode = false;
-} playingLevel;
-
 // FUNCTIONS
 
-static bool shouldSubmit() {
+static bool shouldSubmit(struct playingLevel level, struct playerData player) {
 	// Ignore Testmode and local Levels
-	if (playingLevel.testmode) return false;
-	if (playingLevel.levelid == 0) return false;
+	if (level.testmode) return false;
+	if (level.levelid == 0) return false;
 
-	if (playerData.userid == 0) return false;
+	if (player.userid == 0) return false;
 
 	// Respect User Setting
 	auto sharingEnabled = Mod::get()->getSettingValue<bool>("share-deaths");
@@ -178,14 +27,14 @@ static bool shouldSubmit() {
 	return true;
 };
 
-static bool shouldDraw() {
+static bool shouldDraw(struct playingLevel level) {
 	auto playLayer = PlayLayer::get();
 	auto mod = Mod::get();
 
 	if (!playLayer) return false;
-	if (playingLevel.levelid == 0) return false; // Don't draw on local levels
+	if (level.levelid == 0) return false; // Don't draw on local levels
 
-	bool isPractice = playingLevel.practice || playingLevel.testmode;
+	bool isPractice = level.practice || level.testmode;
 	auto drawInPractice = mod->getSettingValue<bool>("draw-in-practice");
 	if (isPractice && !drawInPractice) return false;
 
@@ -210,6 +59,8 @@ class $modify(DMPlayLayer, PlayLayer) {
 		CCDrawNode* m_chartNode = nullptr;
 		bool m_chartAttached = false;
 		std::vector<DeathLocationMin> m_deaths;
+		struct playerData m_playerProps;
+		struct playingLevel m_levelProps;
 	};
 
 	bool init(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
@@ -222,21 +73,20 @@ class $modify(DMPlayLayer, PlayLayer) {
 		this->m_objectLayer->addChild(this->m_fields->m_dmNode);
 
 		// refetch on level start in case it changed
-		playerData.userid = GameManager::get()->m_playerUserID.value();
-		playerData.username = GameManager::get()->m_playerName;
+		this->m_fields->m_playerProps.userid = GameManager::get()->m_playerUserID.value();
+		this->m_fields->m_playerProps.username = GameManager::get()->m_playerName;
 
 		auto mod = Mod::get();
 
 		// save level data
-		playingLevel.camera = level->getCamera();
-		playingLevel.levelid = level->m_levelID;
-		playingLevel.levelversion = level->m_levelVersion;
-		playingLevel.platformer = level->isPlatformer();
-		playingLevel.practice = this->m_isPracticeMode;
-		playingLevel.testmode = this->m_isTestMode;
+		this->m_fields->m_levelProps.levelid = level->m_levelID;
+		this->m_fields->m_levelProps.levelversion = level->m_levelVersion;
+		this->m_fields->m_levelProps.platformer = level->isPlatformer();
+		this->m_fields->m_levelProps.practice = this->m_isPracticeMode;
+		this->m_fields->m_levelProps.testmode = this->m_isTestMode;
 
 		// Don't even continue to list if we're not going to show them anyway
-		if (!shouldDraw()) return true;
+		if (!shouldDraw(this->m_fields->m_levelProps)) return true;
 
 		log::info("Listing Deaths...");
 		this->m_fields->m_deaths.clear();
@@ -290,10 +140,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 		std::string const url = API_BASE + "list";
 		web::WebRequest req = web::WebRequest();
 
-		req.param("levelid", (playingLevel.levelid));
+		req.param("levelid", (this->m_fields->m_levelProps.levelid));
 		req.userAgent(HTTP_AGENT);
 		req.timeout(HTTP_TIMEOUT);
-		req.param("platformer", playingLevel.platformer);
+		req.param("platformer", this->m_fields->m_levelProps.platformer);
 
 		this->m_fields->m_listener.setFilter(req.get(url));
 
@@ -317,9 +167,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 	void levelComplete() {
 
 		PlayLayer::levelComplete();
-		if (playingLevel.platformer) return;
+		if (this->m_fields->m_levelProps.platformer) return;
 
-		auto deathLoc = DeathLocationOut(this->getPosition(), 101);
+		auto deathLoc = DeathLocationOut(this->getPosition());
+		deathLoc.percentage = 101;
 		submitDeath(deathLoc);
 
 	}
@@ -327,7 +178,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 	void togglePracticeMode(bool toggle) {
 
 		PlayLayer::togglePracticeMode(toggle);
-		playingLevel.practice = toggle;
+		this->m_fields->m_levelProps.practice = toggle;
 
 	}
 
@@ -389,6 +240,8 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	void submitDeath(DeathLocationOut const& deathLoc) {
 
+		if (!shouldSubmit(this->m_fields->m_levelProps, this->m_fields->m_playerProps)) return;
+
 		auto mod = Mod::get();
 		auto playLayer = static_cast<DMPlayLayer*>(GameManager::get()->getPlayLayer());
 
@@ -412,8 +265,8 @@ class $modify(DMPlayLayer, PlayLayer) {
 		myjson.set("levelid", matjson::Value(static_cast<int>(playLayer->m_level->m_levelID)));
 		myjson.set("levelversion", matjson::Value(playLayer->m_level->m_levelVersion));
 		myjson.set("practice", matjson::Value(playLayer->m_isPracticeMode));
-		myjson.set("playername", matjson::Value(playerData.username));
-		myjson.set("userid", matjson::Value(playerData.userid));
+		myjson.set("playername", matjson::Value(this->m_fields->m_playerProps.username));
+		myjson.set("userid", matjson::Value(this->m_fields->m_playerProps.userid));
 		myjson.set("format", matjson::Value(FORMAT_VERSION));
 		deathLoc.addToJSON(&myjson);
 		log::info("JSON body: {}", myjson.dump(matjson::NO_INDENTATION));
@@ -457,19 +310,20 @@ class $modify(DMPlayerObject, PlayerObject) {
 		if (!playLayer) return;
 
 		// Populate percentage as current time or progress percentage
-		int percent = playingLevel.platformer ?
+		int percent = this->m_fields->m_levelProps.platformer ?
 			static_cast<int>(playLayer->m_attemptTime) :
 			playLayer->getCurrentPercentInt();
-		auto deathLoc = DeathLocationOut(this->getPosition(), percent);
+		auto deathLoc = DeathLocationOut(this->getPosition());
+		deathLoc.percentage = percent;
 		// deathLoc.coin1 = ...; // This stuff is complicated... prolly gonna pr Weebifying/coins-in-pause-menu-geode to make it api public and depend on it here or sm
 		// deathLoc.coin2 = ...;
 		// deathLoc.coin3 = ...;
 		// deathLoc.itemdata = ...; // where the hell are the counters
 
-		if (shouldSubmit()) playLayer->submitDeath(deathLoc);
+		playLayer->submitDeath(deathLoc);
 
 		// Render Death Markers
-		if (shouldDraw()) {
+		if (shouldDraw(playLayer->m_fields->m_levelProps)) {
 			playLayer->renderDeaths();
 			playLayer->m_fields->m_dmNode->addChild(deathLoc.toMin().createAnimatedNode(true, 0));
 		}
