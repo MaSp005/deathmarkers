@@ -11,7 +11,9 @@
 	"version": "v0.1.0",
 	"developer": "YourLocalIdiot",
 	"description": "Online death collection for creators and players",
-	"repository": "https://github.com/MaSp005/deathmarkers",
+	"links": {
+		"source": "https://github.com/MaSp005/deathmarkers"
+	},
 	"issues": {
 		"info": "Issues are best reported on <cg>GitHub</c>",
 		"url": "https://github.com/MaSp005/deathmarkers/issues"
@@ -66,17 +68,10 @@
 	},
 	"resources": {
 		"sprites": [
-			"resources/death-marker.png",
-			"resources/marker-button.png"
+			"resources/*"
 		]
 	},
-	"dependencies": [
-		{
-			"id": "geode.node-ids",
-			"version": ">=1.13.0",
-			"importance": "required"
-		}
-	],
+	"dependencies": [],
 	"tags": [
 		"online",
 		"utility",

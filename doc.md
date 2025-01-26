@@ -26,8 +26,8 @@ The database contains one table per format version, in order to store the corres
 |-|-|-|-|
 | userident | CHAR(40) | NOT NULL | A unique identification of player & level. See [§ userident](#userident) |
 | levelid | INT | UNSIGNED NOT NULL | The id of the level.
-| levelversion | TINYINT | UNSIGNED DEFAULT 0 | Version number of the level. |
-| practice | BOOLEAN | DEFAULT 0 | If the death was done in practice. |
+| levelversion | TINYINT | UNSIGNED DEFAULT 1 | Version number of the level. |
+| practice | TINYINT | DEFAULT 0 | If the death was done in practice. |
 | x | FLOAT(10,2) | NOT NULL | The x-position of the player at the time of death. |
 | y | FLOAT(10,2) | NOT NULL | The y-position of the player at the time of death. |
 | percentage | SMALLINT | UNSIGNED NOT NULL | For normal levels, the percentage of the player 0-100, and 101 for a level finish.<br>For platformer levels, the time of death in seconds.

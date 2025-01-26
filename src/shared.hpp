@@ -73,10 +73,12 @@ public:
 	int percentage = 0;
 	int levelVersion = 1;
 	bool practice = false;
+	/*
 	bool coin1 = false;
 	bool coin2 = false;
 	bool coin3 = false;
 	int itemdata = 0;
+	*/
 
 	DeathLocation(float x, float y);
 	DeathLocation(CCPoint pos);

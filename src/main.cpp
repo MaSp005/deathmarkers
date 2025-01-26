@@ -161,16 +161,21 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	}
 
-	void renderDeaths() {
+	void renderDeaths(DeathLocationMin* newDeath) {
 
 		int histHeight = Mod::get()->getSettingValue<int>("prog-bar-hist-height");
 		int hist[101] = { 0 };
 
+		if (newDeath) {
+			this->m_fields->m_dmNode->addChild(newDeath->createAnimatedNode(true, 0));
+			hist[newDeath->percentage]++;
+		}
+
 		for (auto& deathLoc : this->m_fields->m_deaths) {
 			auto node = deathLoc.createAnimatedNode(false, (static_cast<float>(rand()) / RAND_MAX) * .25f);
 			this->m_fields->m_dmNode->addChild(node);
-			if (deathLoc.percentage >= 0 && deathLoc.percentage <= 100);
-			hist[deathLoc.percentage]++;
+			if (deathLoc.percentage >= 0 && deathLoc.percentage < 101)
+				hist[deathLoc.percentage]++;
 		}
 
 		// Only Draw Histogram if requested
@@ -282,7 +287,7 @@ class $modify(DMPlayerObject, PlayerObject) {
 		if (!playLayer) return;
 
 		// Populate percentage as current time or progress percentage
-		int percent = this->m_fields->m_levelProps.platformer ?
+		int percent = playLayer->m_fields->m_levelProps.platformer ?
 			static_cast<int>(playLayer->m_attemptTime) :
 			playLayer->getCurrentPercentInt();
 		auto deathLoc = DeathLocationOut(this->getPosition());
@@ -296,8 +301,8 @@ class $modify(DMPlayerObject, PlayerObject) {
 
 		// Render Death Markers
 		if (shouldDraw(playLayer->m_fields->m_levelProps)) {
-			playLayer->renderDeaths();
-			playLayer->m_fields->m_dmNode->addChild(deathLoc.toMin().createAnimatedNode(true, 0));
+			auto minDeathLoc = deathLoc.toMin();
+			playLayer->renderDeaths(&minDeathLoc);
 		}
 
 		// Add own death to current level's list

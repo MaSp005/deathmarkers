@@ -64,6 +64,8 @@ function createUserIdent(userid, username, levelid) {
 db.prepare("CREATE TABLE IF NOT EXISTS format1 (\
   userident CHAR(40) NOT NULL,\
   levelid INT UNSIGNED NOT NULL,\
+  levelversion TINYINT UNSIGNED DEFAULT 0,\
+  practice TINYINT DEFAULT 0,\
   x DOUBLE NOT NULL,\
   y DOUBLE NOT NULL,\
   percentage SMALLINT UNSIGNED NOT NULL\
@@ -72,6 +74,8 @@ db.prepare("CREATE TABLE IF NOT EXISTS format1 (\
 db.prepare("CREATE TABLE IF NOT EXISTS format2 (\
   userident CHAR(40) NOT NULL,\
   levelid INT UNSIGNED NOT NULL,\
+  levelversion TINYINT UNSIGNED DEFAULT 0,\
+  practice TINYINT DEFAULT 0,\
   x DOUBLE NOT NULL,\
   y DOUBLE NOT NULL,\
   percentage SMALLINT UNSIGNED NOT NULL,\
@@ -85,10 +89,10 @@ app.get("/list", (req, res) => {
 
   let isPlatformer = req.query.platformer == "true";
   let query = isPlatformer ?
-    `SELECT x,y FROM format1 WHERE levelid = ? UNION
-    SELECT x,y FROM format2 WHERE levelid = ?;` :
-    `SELECT x,y,percentage FROM format1 WHERE levelid = ? AND percentage < 101 UNION
-    SELECT x,y,percentage FROM format2 WHERE levelid = ? AND percentage < 101;`;
+    `SELECT x,y FROM format1 WHERE levelid == ? UNION
+    SELECT x,y FROM format2 WHERE levelid == ?;` :
+    `SELECT x,y,percentage FROM format1 WHERE levelid == ? AND percentage < 101 UNION
+    SELECT x,y,percentage FROM format2 WHERE levelid == ? AND percentage < 101;`;
 
   const deaths = db.prepare(query)
     .all(req.query.levelid, req.query.levelid);
@@ -99,7 +103,10 @@ app.get("/list", (req, res) => {
 app.get("/analysis", (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
-  const deaths = db.prepare("SELECT userident,x,y,percentage,coins,itemdata FROM format1 WHERE levelid = ?;").all(req.query.levelid);
+  let levelId = parseInt(req.query.levelid);
+  console.log("hi: ", levelId);
+  const deaths = db.prepare("SELECT userident,levelversion,practice,x,y,percentage FROM format1 WHERE levelid = ?;").all(levelId);
+  console.log(deaths);
   res.json(deaths);
 });
 
@@ -116,6 +123,8 @@ app.all("/submit", expr.text({
     format = req.body.format;
     if (typeof format != "number") return res.status(400).send("Format not supplied");
     if (!req.body.levelid) return res.status(400).send("levelid is not supplied");
+    if (!req.body.levelversion) req.body.levelversion = 1;
+    req.body.practice = !!req.body.practice;
     if (!req.body.userident) {
       if (!req.body.playername || !req.body.userid)
         return res.status(400).send("Neither userident nor playername and userid were supplied");
@@ -134,25 +143,30 @@ app.all("/submit", expr.text({
       if (!req.body.itemdata) req.body.itemdata = 0;
     }
 
-  } catch {
+  } catch (e) {
+    console.warn(e);
     return res.status(400).send("Unexpected error when parsing request");
   }
 
   try {
     switch (format) {
       case 1:
-        db.prepare("INSERT INTO format1 (userident, levelid, x, y, percentage) VALUES (?, ?, ?, ?, ?)").run(
+        db.prepare("INSERT INTO format1 (userident, levelid, levelversion, practice, x, y, percentage) VALUES (?, ?, ?, ?, ?, ?, ?)").run(
           req.body.userident,
           req.body.levelid,
+          req.body.levelversion,
+          req.body.practice * 1,
           req.body.x,
           req.body.y,
           req.body.percentage,
         );
         break;
       case 2:
-        db.prepare("INSERT INTO format2 (userident, levelid, x, y, percentage) VALUES (?, ?, ?, ?, ?)").run(
+        db.prepare("INSERT INTO format2 (userident, levelid, levelversion, practice, x, y, percentage) VALUES (?, ?, ?, ?, ?, ?, ?)").run(
           req.body.userident,
           req.body.levelid,
+          req.body.levelversion,
+          req.body.practice * 1,
           req.body.x,
           req.body.y,
           req.body.percentage,
@@ -162,7 +176,8 @@ app.all("/submit", expr.text({
         break;
     }
     res.sendStatus(204);
-  } catch {
+  } catch (e) {
+    console.warn(e);
     return res.status(500).send("Error writing to the database. May be due to wrongly formatted input. Try again.");
   }
 });
