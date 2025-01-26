@@ -206,9 +206,9 @@ class $modify(DMPlayLayer, PlayLayer) {
 		for (int i = 0; i <= 100; i++) {
 			if (hist[i] == 0) continue;
 
-			float distrib = static_cast<float>(hist[i]) / maximum;
-			auto rect = CCRect(width * i, 0, width, -(distrib * histHeight));
-			auto color = _ccColor4F(distrib, 1 - distrib, 0, 1);
+			float distr = static_cast<float>(hist[i]) / maximum;
+			auto rect = CCRect(width * i, 0, width, -(distr * histHeight));
+			auto color = _ccColor4F(distr, 1 - distr, 0, 1);
 
 			this->m_fields->m_chartNode->drawRect(rect, color, 0.0f, color);
 		}

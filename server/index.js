@@ -104,9 +104,7 @@ app.get("/analysis", (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
   let levelId = parseInt(req.query.levelid);
-  console.log("hi: ", levelId);
   const deaths = db.prepare("SELECT userident,levelversion,practice,x,y,percentage FROM format1 WHERE levelid = ?;").all(levelId);
-  console.log(deaths);
   res.json(deaths);
 });
 

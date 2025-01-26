@@ -10,6 +10,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		std::vector<DeathLocation> m_deaths;
 		bool m_enabled = false;
 		bool m_loaded = false;
+		bool m_showedGuide = false;
 		CCMenuItemSprite* m_button = nullptr;
 	};
 
@@ -51,13 +52,6 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 					log::info("Received death list.");
 
 					parseDeathList(res, &this->m_fields->m_deaths);
-
-					FLAlertLayer::create(
-						"DeathMarkers",
-						std::to_string(this->m_fields->m_deaths.size()) + " deaths were found.",
-						"OK"
-					)->show();
-
 					analyzeData();
 					startUI();
 				}
@@ -89,8 +83,6 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 	void toggleDeathMarkers() {
 
-		this->m_fields->m_button->setEnabled(true);
-
 		if (!this->m_fields->m_enabled) {
 			this->m_fields->m_enabled = true;
 			this->m_fields->m_button->selected();
@@ -114,6 +106,19 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 	void startUI() {
 
+		if (!this->m_fields->m_showedGuide) {
+
+			geode::createQuickPopup(
+				"DeathMarkers",
+				std::to_string(this->m_fields->m_deaths.size()) + " deaths were found.",
+				"Continue", "Open Guide",
+				[](auto, bool open) {
+					if (!open) return;
+					web::openLinkInBrowser(API_BASE);
+				}
+			);
+		}
+
 		this->m_fields->m_dmNode = CCNode::create();
 		this->m_fields->m_dmNode->setID("markers"_spr);
 		this->m_fields->m_dmNode->setZOrder(2 << 28); // everyone using 99999 smh
@@ -121,8 +126,17 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 		for (auto& deathLoc : this->m_fields->m_deaths) {
 			auto node = deathLoc.toMin().createNode(false);
+			node->setZOrder(1);
 			this->m_fields->m_dmNode->addChild(node);
 		}
+
+		auto winSize = CCDirector::sharedDirector()->getWinSize();
+		auto darkNode = CCNodeRGBA::create();
+		darkNode->setContentSize(winSize);
+		darkNode->setColor(ccColor3B(0, 0, 0));
+		darkNode->setOpacity(128);
+		darkNode->setZOrder(0);
+		this->m_fields->m_dmNode->addChild(darkNode);
 
 	}
 
@@ -138,15 +152,13 @@ class $modify(DMEditorPauseLayer, EditorPauseLayer) {
 		auto editor = static_cast<DMEditorLayer*>(this->m_editorLayer);
 
 		auto btn = CCMenuItemExt::createSprite(
-			CCSprite::create("marker-button-off.png"_spr),
-			CCSprite::create("marker-button-on.png"_spr),
 			CCSprite::create("marker-button-deact.png"_spr),
+			CCSprite::create("marker-button-on.png"_spr),
 			[editor](auto el) {
 				editor->toggleDeathMarkers();
 			}
 		);
 		btn->setID("load-button"_spr);
-		btn->setEnabled(false);
 		this->getChildByID("guidelines-menu")->addChild(btn);
 
 		editor->m_fields->m_button = btn;

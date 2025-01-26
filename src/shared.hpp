@@ -52,10 +52,12 @@ class DeathLocationOut {
 public:
 	CCPoint pos;
 	int percentage = 0;
+	/*
 	bool coin1 = false;
 	bool coin2 = false;
 	bool coin3 = false;
 	int itemdata = 0;
+	*/
 
 	DeathLocationOut(CCPoint pos);
 
