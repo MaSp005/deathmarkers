@@ -48,28 +48,23 @@ The `userident` is used to group together deaths from an individual player playi
 
 > Since the level id is known for a specific userident, it is possible to brute-force to figure out the username that was encoded. If we add another parameter to the identification, said parameter can in turn be brute-forced if the player name is known (e.g. from tracking down a specific death entry of a streamer), so we cannot use sensitive data for it. Instead, we'll add the *User ID* of the player. Although this means it can still be brute-forced, it is infinitely more tedious than trying every possible string of letters for the account name, as the Username and ID have to match up and be queried from the GD Servers to create a valid `userident`.
 
-In total, the three identification components are: **Account Name**, **Level ID**, **User ID**.
+In total, the three identification components are: **Account Name**, **Level ID**, **User ID**, which are arranged as `[account name]_[user id]_[level id]`.
 
-The arrangement of the three depends on the numerical value of the **User ID modulo 6**.
-
-Acc-ID mod 6 | Arrangement
--|-
-0 | `[account name]_[level id]_[user id]`
-1 | `[account name]_[user id]_[level id]`
-2 | `[user id]_[level id]_[account name]`
-3 | `[user id]_[account name]_[level id]`
-4 | `[level id]_[user id]_[account name]`
-5 | `[level id]_[account name]_[user id]`
+Since the `userident` is stored with each death and could easily be computed to figure out a specific player's deaths (though not the other way), upon sending the deaths for analysis (when the `userident`s would be exposed), they are **hashed again**, this time with a random **salt** generated per analysis. As a result, the userident stays consistent at grouping together a single player's death, but nobody can identify a specific player's death.
 
 ### Example
 
 - Player: **RobTop** (User-ID **16**)
 - Level: Bloodbath, ID **10565740**
 
-`16 % 6 = 4`
-⇒ `[level id]_[user id]_[account name]`
-⇒ `10565740_16_RobTop`
-⇒ `4d5e0d019855e24a4c66a68cbce4e3453db8bc6d`
+`[account name]_[user id]_[level id]`
+⇒ `RobTop_16_10565740`
+⇒ `cba4a35e4ee458178b18d4c8ebb836a518b4df4b` <- This is the way it is stored in the database
+
+**Upon analysis:**
+Select salt: e.g. `ZqQhF28asA` <- Different every time you request a level analysis
+⇒ `cba4a35e4ee458178b18d4c8ebb836a518b4df4b_ZqQhF28asA`
+⇒ `aed5ab073efad9fe738eacb2bebeb174b2ceae6b` <- This is what is sent from /analysis
 
 ### But what about people playing without an account?
 

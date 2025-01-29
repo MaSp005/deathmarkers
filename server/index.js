@@ -2,14 +2,9 @@ const DATABASE_FILENAME = "deaths.db";
 const PORT = 8048;
 // TODO: Differentiate Formats
 
-const ARRANGEMENTS = [
-  `A_L_I`,
-  `A_I_L`,
-  `I_L_A`,
-  `I_A_L`,
-  `L_I_A`,
-  `L_A_I`
-];
+const alphabet = "ABCDEFGHIJOKLMNOPQRSTUVWXYZabcdefghijoklmnopqrstuvwxyz0123456789";
+const random = l => new Array(l).fill(0).map(_ => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+
 const GUIDE_FILENAME = "./guide.md";
 
 const db = require("better-sqlite3")(DATABASE_FILENAME);
@@ -55,16 +50,14 @@ function renderGuide() {
 }
 
 function createUserIdent(userid, username, levelid) {
-  let source = ARRANGEMENTS[userid % ARRANGEMENTS.length];
-
-  source = source.replace("L", levelid)
-    .replace("I", userid)
-    .replace("A", username);
+  let source = `${username}_${userid}_${levelid}`;
 
   return crypto.createHash("sha1").update(source).digest("hex");
 }
 
-db.prepare("CREATE TABLE IF NOT EXISTS format1 (\
+try {
+  // Table for Format 1
+  db.prepare("CREATE TABLE IF NOT EXISTS format1 (\
   userident CHAR(40) NOT NULL,\
   levelid INT UNSIGNED NOT NULL,\
   levelversion TINYINT UNSIGNED DEFAULT 0,\
@@ -72,9 +65,10 @@ db.prepare("CREATE TABLE IF NOT EXISTS format1 (\
   x DOUBLE NOT NULL,\
   y DOUBLE NOT NULL,\
   percentage SMALLINT UNSIGNED NOT NULL\
-  )").run();
+  );").run();
 
-db.prepare("CREATE TABLE IF NOT EXISTS format2 (\
+  // Table for Format 2
+  db.prepare("CREATE TABLE IF NOT EXISTS format2 (\
   userident CHAR(40) NOT NULL,\
   levelid INT UNSIGNED NOT NULL,\
   levelversion TINYINT UNSIGNED DEFAULT 0,\
@@ -84,11 +78,25 @@ db.prepare("CREATE TABLE IF NOT EXISTS format2 (\
   percentage SMALLINT UNSIGNED NOT NULL,\
   coins TINYINT DEFAULT 0,\
   itemdata DOUBLE DEFAULT 0\
-  )").run();
+  );").run();
+
+  // Indexes for both tables
+  db.prepare("CREATE INDEX IF NOT EXISTS format1index ON format1 (\
+  levelid\
+  );").run();
+  db.prepare("CREATE INDEX IF NOT EXISTS format2index ON format2 (\
+  levelid\
+  );").run();
+} catch (e) {
+  console.error("Error preparing database:");
+  console.error(e);
+  process.exit(1);
+}
 
 app.get("/list", (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
+  let levelId = parseInt(req.query.levelid);
 
   let isPlatformer = req.query.platformer == "true";
   let query = isPlatformer ?
@@ -97,8 +105,8 @@ app.get("/list", (req, res) => {
     `SELECT x,y,percentage FROM format1 WHERE levelid == ? AND percentage < 101 UNION
     SELECT x,y,percentage FROM format2 WHERE levelid == ? AND percentage < 101;`;
 
-  const deaths = db.prepare(query)
-    .all(req.query.levelid, req.query.levelid);
+  let deaths = db.prepare(query)
+    .all(levelId, levelId);
 
   res.json(deaths.map(d => (isPlatformer ? [d.x, d.y] : [d.x, d.y, d.percentage])));
 });
@@ -107,7 +115,12 @@ app.get("/analysis", (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
   let levelId = parseInt(req.query.levelid);
-  const deaths = db.prepare("SELECT userident,levelversion,practice,x,y,percentage FROM format1 WHERE levelid = ?;").all(levelId);
+
+  let deaths = db.prepare("SELECT userident,levelversion,practice,x,y,percentage FROM format1 WHERE levelid = ?;").all(levelId);
+
+  let salt = "_" + random(10);
+  deaths.forEach(d => d.userident = crypto.createHash("sha1").update(d.userident + salt).digest("hex"));
+
   res.json(deaths);
 });
 
@@ -152,28 +165,30 @@ app.all("/submit", expr.text({
   try {
     switch (format) {
       case 1:
-        db.prepare("INSERT INTO format1 (userident, levelid, levelversion, practice, x, y, percentage) VALUES (?, ?, ?, ?, ?, ?, ?)").run(
-          req.body.userident,
-          req.body.levelid,
-          req.body.levelversion,
-          req.body.practice * 1,
-          req.body.x,
-          req.body.y,
-          req.body.percentage,
-        );
+        db.prepare("INSERT INTO format1 (userident, levelid, levelversion, practice, x, y, percentage) VALUES (?, ?, ?, ?, ?, ?, ?)")
+          .run(
+            req.body.userident,
+            req.body.levelid,
+            req.body.levelversion,
+            req.body.practice * 1,
+            req.body.x,
+            req.body.y,
+            req.body.percentage,
+          );
         break;
       case 2:
-        db.prepare("INSERT INTO format2 (userident, levelid, levelversion, practice, x, y, percentage) VALUES (?, ?, ?, ?, ?, ?, ?)").run(
-          req.body.userident,
-          req.body.levelid,
-          req.body.levelversion,
-          req.body.practice * 1,
-          req.body.x,
-          req.body.y,
-          req.body.percentage,
-          req.body.coins,
-          req.body.itemdata,
-        );
+        db.prepare("INSERT INTO format2 (userident, levelid, levelversion, practice, x, y, percentage) VALUES (?, ?, ?, ?, ?, ?, ?)")
+          .run(
+            req.body.userident,
+            req.body.levelid,
+            req.body.levelversion,
+            req.body.practice * 1,
+            req.body.x,
+            req.body.y,
+            req.body.percentage,
+            req.body.coins,
+            req.body.itemdata,
+          );
         break;
     }
     res.sendStatus(204);
