@@ -12,6 +12,7 @@ const expr = require("express");
 const app = expr();
 const crypto = require("crypto");
 const fs = require("fs");
+const csv = require("csv");
 const md = require("markdown-it")({ html: true, breaks: true })
   .use(require('markdown-it-named-headings'));
 
@@ -98,6 +99,9 @@ app.get("/list", (req, res) => {
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
   let levelId = parseInt(req.query.levelid);
 
+  let accept = req.query.response || "json";
+  if (accept != "json" && accept != "csv") return res.sendStatus(400);
+
   let isPlatformer = req.query.platformer == "true";
   let query = isPlatformer ?
     `SELECT x,y FROM format1 WHERE levelid == ? UNION
@@ -108,7 +112,9 @@ app.get("/list", (req, res) => {
   let deaths = db.prepare(query)
     .all(levelId, levelId);
 
-  res.json(deaths.map(d => (isPlatformer ? [d.x, d.y] : [d.x, d.y, d.percentage])));
+  // LEGACY: Serve only CSV to minimize traffic
+  if (accept == "json") res.json(deaths.map(d => (isPlatformer ? [d.x, d.y] : [d.x, d.y, d.percentage])));
+  else csv.stringify(deaths, { header: true }).pipe(res);
 });
 
 app.get("/analysis", (req, res) => {
@@ -116,12 +122,17 @@ app.get("/analysis", (req, res) => {
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
   let levelId = parseInt(req.query.levelid);
 
+  let accept = req.query.response || "json";
+  if (accept != "json" && accept != "csv") return res.sendStatus(400);
+
   let deaths = db.prepare("SELECT userident,levelversion,practice,x,y,percentage FROM format1 WHERE levelid = ?;").all(levelId);
 
   let salt = "_" + random(10);
   deaths.forEach(d => d.userident = crypto.createHash("sha1").update(d.userident + salt).digest("hex"));
 
-  res.json(deaths);
+  // LEGACY: Serve only CSV to minimize traffic
+  if (accept == "json") res.json(deaths);
+  else csv.stringify(deaths, { header: true }).pipe(res);
 });
 
 app.all("/submit", expr.text({

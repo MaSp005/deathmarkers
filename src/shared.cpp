@@ -94,6 +94,7 @@ DeathLocationMin DeathLocation::toMin() const {
 }
 
 
+// LEGACY: Read from CSV instead (fuck)
 void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target) {
 
 	auto const body = res->json();
@@ -134,6 +135,7 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 
 }
 
+// LEGACY: Read from CSV instead (fuck)
 void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target) {
 
 	auto const body = res->json();
