@@ -90,11 +90,15 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 			if (!this->m_fields->m_loaded) fetch();
 			else startUI();
-		} else {
+		}
+		else {
 			this->m_fields->m_enabled = false;
 			this->m_fields->m_button->unselected();
 
 			this->m_fields->m_dmNode->removeAllChildrenWithCleanup(true);
+			this->m_fields->m_dmNode->removeFromParent();
+
+			this->unschedule(schedule_selector(DMEditorLayer::myUpdate));
 
 		}
 
@@ -118,27 +122,53 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 					web::openLinkInBrowser(API_BASE);
 				}
 			);
+			this->m_fields->m_showedGuide = true;
+
 		}
 
 		this->m_fields->m_dmNode = CCNode::create();
 		this->m_fields->m_dmNode->setID("markers"_spr);
 		this->m_fields->m_dmNode->setZOrder(2 << 28); // everyone using 99999 smh
-		this->m_objectLayer->addChild(this->m_fields->m_dmNode);
 
-		for (auto& deathLoc : this->m_fields->m_deaths) {
+		// TODO: Display stacked deaths, multiple in close proximity
+		for (int i = 0; i < this->m_fields->m_deaths.size(); i++) {
+			auto& deathLoc = this->m_fields->m_deaths.at(i);
 			auto node = deathLoc.toMin().createNode(false);
 			node->setZOrder(1);
 			this->m_fields->m_dmNode->addChild(node);
 		}
 
+		// TODO: Fix darkener node
+		/*
 		auto winSize = CCDirector::sharedDirector()->getWinSize();
 		auto darkNode = CCNodeRGBA::create();
+		darkNode->setID("darkener"_spr);
 		darkNode->setContentSize(winSize);
 		darkNode->setColor(ccColor3B(0, 0, 0));
 		darkNode->setOpacity(128);
 		darkNode->setZOrder(0);
-		this->m_fields->m_dmNode->addChild(darkNode);
+		darkNode->setPosition(CCPoint(0, 0));
+		darkNode->setAnchorPoint(CCPoint(0, 0));
+		this->m_editorUI->addChild(darkNode);
+		*/
 
+		this->m_editorUI->addChild(this->m_fields->m_dmNode);
+		this->schedule(schedule_selector(DMEditorLayer::myUpdate), 0);
+
+	}
+
+	void myUpdate(float) {
+		this->m_fields->m_dmNode->setPosition(this->m_objectLayer->getPosition());
+		this->m_fields->m_dmNode->setScale(this->m_objectLayer->getScale());
+
+		// Counters UI zoom, keeps markers at constant size relative to screen
+		float inverseScale = Mod::get()->getSettingValue<float>("marker-scale") / this->m_objectLayer->getScale();
+
+		CCArray* children = this->m_fields->m_dmNode->getChildren();
+		for (int i = 0; i < this->m_fields->m_dmNode->getChildrenCount(); i++) {
+			auto child = static_cast<CCNode*>(children->objectAtIndex(i));
+			child->setScale(inverseScale);
+		}
 	}
 
 };
@@ -152,17 +182,19 @@ class $modify(DMEditorPauseLayer, EditorPauseLayer) {
 
 		auto editor = static_cast<DMEditorLayer*>(this->m_editorLayer);
 
-		auto btn = CCMenuItemExt::createSprite(
-			CCSprite::create("marker-button-deact.png"_spr),
-			CCSprite::create("marker-button-on.png"_spr),
-			[editor](auto el) {
-				editor->toggleDeathMarkers();
-			}
-		);
-		btn->setID("load-button"_spr);
-		this->getChildByID("guidelines-menu")->addChild(btn);
+		if (!editor->m_fields->m_button) {
+			auto btn = CCMenuItemExt::createSprite(
+				CCSprite::create("marker-button-deact.png"_spr),
+				CCSprite::create("marker-button-on.png"_spr),
+				[editor](auto el) {
+					editor->toggleDeathMarkers();
+				}
+			);
+			btn->setID("load-button"_spr);
 
-		editor->m_fields->m_button = btn;
+			editor->m_fields->m_button = btn;
+		}
+		this->getChildByID("guidelines-menu")->addChild(editor->m_fields->m_button);
 
 		return true;
 

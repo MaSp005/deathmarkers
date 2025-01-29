@@ -1,23 +1,23 @@
 # DeathMarkers
-This is where she makes a mod.
 
-<img src="logo.png" width="150" alt="the mod's logo" />
+**Online death collection**, not only for fun Mario Maker-style Death Markers, but also for in-depth analysis of gameplay.
 
-*Update logo.png to change your mod's icon (please)*
+## Installation
 
-## Getting started
-We recommend heading over to [the getting started section on our docs](https://docs.geode-sdk.org/getting-started/) for useful info on what to do next.
+DeathMarkers is installed through [Geode](https://geode-sdk.org/), the mod can be found in its in-game mod browser or on the [Mod Index](https://geode-sdk.org/mods/)
 
-## Build instructions
-For more info, see [our docs](https://docs.geode-sdk.org/getting-started/create-mod#build)
-```sh
-# Assuming you have the Geode CLI set up already
-geode build
-```
+## Features
 
-# Resources
-* [Geode SDK Documentation](https://docs.geode-sdk.org/)
-* [Geode SDK Source Code](https://github.com/geode-sdk/geode/)
-* [Geode CLI](https://github.com/geode-sdk/cli)
-* [Bindings](https://github.com/geode-sdk/bindings/)
-* [Dev Tools](https://github.com/geode-sdk/DevTools)
+- Show **other players' deaths** when you die
+- **Analyze** player deaths in your levels
+- Help creators **improve** their levels
+
+**Planned Features:**
+- Built-in analysis **helper tools**
+- (minimal) Player path tracing
+
+## User identification
+
+The mod makes use of your *username and user ID* to create an identifier for you. **This identifier can not be traced back to you**; it is unique to you for the purpose of grouping together attempts (/deaths) that were from the same player. Your identifier is *different* for every level you play, so your deaths **cannot be grouped together across levels**, your account cannot be traced back from a given death, and your specific deaths cannot be determined by anybody.
+
+Extensive documentation of the algorithm can be found in [doc.md](./blob/main/doc.md).
