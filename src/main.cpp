@@ -114,6 +114,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 		req.param("levelid", (this->m_fields->m_levelProps.levelId));
 		req.param("platformer", this->m_fields->m_levelProps.platformer);
+		req.param("response", "csv");
 		req.userAgent(HTTP_AGENT);
 		req.timeout(HTTP_TIMEOUT);
 

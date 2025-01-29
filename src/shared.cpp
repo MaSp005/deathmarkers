@@ -94,40 +94,56 @@ DeathLocationMin DeathLocation::toMin() const {
 }
 
 
-// LEGACY: Read from CSV instead (fuck)
 void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target) {
 
-	auto const body = res->json();
+	auto const body = res->string();
+
 	if (body.isErr())
 		return log::error("Error reading list response: Body could not be read.");
 
-	auto const okObj = body.ok();
-	matjson::Value const parsed = okObj.value();
-	if (!parsed.isArray())
-		return log::error("Unexpected Non-Array response listing deaths: {}", parsed.dump(matjson::NO_INDENTATION));
+	gd::string okObj = body.ok().value();
+	auto lines = split(&okObj, '\n');
+	auto header = split(&lines.at(0), ',');
+	lines.erase(lines.begin());
 
-	auto const& list = parsed.asArray().unwrap(); // [[#,#,#],[#,#,#],...]
-	for (int i = 0; i < list.size(); i++) {
-		auto const& item = list.at(i);
-		if (!item.isArray())
-			return log::error("Unexpected Non-Array item listing deaths: {}", item.dump(matjson::NO_INDENTATION));
+	for (int i = 0; i < lines.size(); i++) {
+		auto const& line = lines.at(i);
+		if (line.size() == 0) continue;
+		auto coords = split(&line, ',');
+		log::info("{}: {}", i, line);
 
-		auto const& coords = item.asArray().unwrap(); // [#,#,#]
-		if (coords.size() < 2 || coords.size() > 3)
-			return log::error("Unexpected Non-2-or-3-Tuple listing deaths: {}, size {}", item.dump(matjson::NO_INDENTATION), coords.size());
-		
-		auto const& x = coords.at(0);
-		auto const& y = coords.at(1);
-		if (!x.isNumber() || !y.isNumber())
-			return log::error("Unexpected Non-Number coordinate listing deaths: {}", item.dump(matjson::NO_INDENTATION));
-		
-		auto deathLoc = DeathLocationMin(x.asDouble().unwrap(), y.asDouble().unwrap());
+		if (coords.size() < 2 || coords.size() > 3) {
+			log::warn("Unexpected Non-2-or-3-Tuple listing deaths: {}, size {}", line, coords.size());
+			continue;
+		}
+
+		float x;
+		float y;
+		try {
+			auto const& xStr = coords.at(find<gd::string>(header, "x"));
+			auto const& yStr = coords.at(find<gd::string>(header, "y"));
+					x = std::stof(xStr);
+			y = std::stof(yStr);
+		}
+		catch (std::invalid_argument) {
+			log::warn("Unexpected Non-Number coordinate listing deaths: {}", line);
+			continue;
+		}
+
+		auto deathLoc = DeathLocationMin(x, y);
 
 		if (coords.size() == 3) {
-			auto const& percentage = coords.at(2);
-			if (!percentage.isNumber())
-				return log::error("Unexpected Non-Number percentage listing deaths: {}", item.dump(matjson::NO_INDENTATION));
-			deathLoc.percentage = percentage.asInt().unwrap();
+
+			int percent;
+			try {
+				auto const& percentStr = coords.at(find<gd::string>(header, "percent"));
+				percent = std::stoi(percentStr);
+			}
+			catch (std::invalid_argument) {
+				log::warn("Unexpected Non-Number coordinate listing deaths: {}", line);
+				continue;
+			}
+			deathLoc.percentage = percent;
 		}
 
 		target->push_back(deathLoc);
@@ -188,5 +204,30 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target) {
 
 		target->push_back(deathLoc);
 	}
+
+}
+
+std::vector<gd::string> split(const gd::string* string, const char at) {
+	auto result = std::vector<gd::string>();
+	int currentStart = 0;
+
+	while (true) {
+		int nextSplit = string->find(at, currentStart);
+		if (nextSplit == std::string::npos) {
+			result.push_back(string->substr(currentStart));
+			return result;
+		}
+		result.push_back(string->substr(currentStart, nextSplit - currentStart));
+		currentStart = nextSplit + 1;
+	}
+}
+
+template <class T>
+int find(std::vector<T> list, T element) {
+
+	for (int i = 0; i < list.size(); i++) {
+		if (list.at(i) == element) return i;
+	}
+	return -1;
 
 }
