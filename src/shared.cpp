@@ -110,7 +110,6 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 		auto const& line = lines.at(i);
 		if (line.size() == 0) continue;
 		auto coords = split(&line, ',');
-		log::info("{}: {}", i, line);
 
 		if (coords.size() < 2 || coords.size() > 3) {
 			log::warn("Unexpected Non-2-or-3-Tuple listing deaths: {}, size {}", line, coords.size());
@@ -122,11 +121,15 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 		try {
 			auto const& xStr = coords.at(find<gd::string>(header, "x"));
 			auto const& yStr = coords.at(find<gd::string>(header, "y"));
-					x = std::stof(xStr);
+			x = std::stof(xStr);
 			y = std::stof(yStr);
 		}
 		catch (std::invalid_argument) {
 			log::warn("Unexpected Non-Number coordinate listing deaths: {}", line);
+			continue;
+		}
+		catch (std::out_of_range) {
+			log::warn("Property not featured: {} - {}", header, line);
 			continue;
 		}
 
@@ -143,6 +146,10 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 				log::warn("Unexpected Non-Number coordinate listing deaths: {}", line);
 				continue;
 			}
+			catch (std::out_of_range) {
+				log::warn("Property not featured: {} - {}", header, line);
+				continue;
+			}
 			deathLoc.percentage = percent;
 		}
 
@@ -154,53 +161,55 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 // LEGACY: Read from CSV instead (fuck)
 void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target) {
 
-	auto const body = res->json();
+	auto const body = res->string();
+
 	if (body.isErr())
 		return log::error("Error reading list response: Body could not be read.");
 
-	auto const okObj = body.ok();
-	matjson::Value const parsed = okObj.value();
-	if (!parsed.isArray())
-		return log::error("Unexpected Non-Array response listing deaths: {}", parsed.dump(matjson::NO_INDENTATION));
+	gd::string okObj = body.ok().value();
+	auto lines = split(&okObj, '\n');
+	auto header = split(&lines.at(0), ',');
+	lines.erase(lines.begin());
 
-	auto const& list = parsed.asArray().unwrap(); // [{...},{...},...]
-	for (int i = 0; i < list.size(); i++) {
-		auto const& item = list.at(i);
-		if (!item.isObject()) {
-			log::error("Unexpected Non-Object item listing deaths: {}", item.dump(matjson::NO_INDENTATION));
+	for (int i = 0; i < lines.size(); i++) {
+		auto const& line = lines.at(i);
+		if (line.size() == 0) continue;
+		auto coords = split(&line, ',');
+
+		gd::string userident;
+		int levelVersion;
+		bool practice;
+		int percent;
+		float x;
+		float y;
+		try {
+			auto const& userident = coords.at(find<gd::string>(header, "userident"));
+			auto const& versionStr = coords.at(find<gd::string>(header, "levelversion"));
+			auto const& practiceStr = coords.at(find<gd::string>(header, "practice"));
+			auto const& xStr = coords.at(find<gd::string>(header, "x"));
+			auto const& yStr = coords.at(find<gd::string>(header, "y"));
+			auto const& percentStr = coords.at(find<gd::string>(header, "percentage"));
+
+			levelVersion = std::stoi(versionStr);
+			practice = (practiceStr == "1");
+			x = std::stof(xStr);
+			y = std::stof(yStr);
+			percent = std::stoi(percentStr);
+		}
+		catch (std::invalid_argument) {
+			log::warn("Unexpected Non-Number coordinate listing deaths: {}", line);
+			continue;
+		}
+		catch (std::out_of_range) {
+			log::warn("Property not featured: {} - {}", header, line);
 			continue;
 		}
 
-		auto const& useridentProp = item.get("userident");
-		auto const& versionProp = item.get("levelversion");
-		auto const& practiceProp = item.get("percentage");
-		auto const& xProp = item.get("x");
-		auto const& yProp = item.get("y");
-		auto const& percentageProp = item.get("percentage");
-		if (useridentProp.isErr() || versionProp.isErr() || practiceProp.isErr() ||
-			xProp.isErr() || yProp.isErr() || percentageProp.isErr()) {
-			log::error("Nonextistant property listing deaths: {}", item.dump(matjson::NO_INDENTATION));
-			continue;
-		}
-
-
-		auto const& userident = useridentProp.unwrap();
-		auto const& version = versionProp.unwrap();
-		auto const& practice = practiceProp.unwrap();
-		auto const& x = xProp.unwrap();
-		auto const& y = yProp.unwrap();
-		auto const& percentage = percentageProp.unwrap();
-		if (!userident.isString() || !version.isNumber() || !practice.isNumber() ||
-			!x.isNumber() || !y.isNumber() || !percentage.isNumber()) {
-			log::error("Incorrect property type listing deaths: {}", item.dump(matjson::NO_INDENTATION));
-			continue;
-		}
-
-		auto deathLoc = DeathLocation(x.asDouble().unwrap(), y.asDouble().unwrap());
-		deathLoc.userIdent = userident.asString().unwrap();
-		deathLoc.levelVersion = version.asInt().unwrap();
-		deathLoc.practice = practice.asInt().unwrap() == 1;
-		deathLoc.percentage = percentage.asInt().unwrap();
+		auto deathLoc = DeathLocation(x, y);
+		deathLoc.userIdent = userident;
+		deathLoc.levelVersion = levelVersion;
+		deathLoc.practice = practice;
+		deathLoc.percentage = percent;
 
 		target->push_back(deathLoc);
 	}

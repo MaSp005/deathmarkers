@@ -28,8 +28,8 @@ for (i = 0; i < DUMMY_COUNT; i++) {
       LEVELID,
       Math.floor(Math.random() * 5),
       (Math.random() > .5) * 1,
-      Math.floor(Math.random() * 30_000),
-      Math.floor(Math.random() * 5_000),
+      Math.random() * 30_000,
+      Math.random() * 5_000,
       Math.floor(Math.random() * 102),
     );
   process.stdout.clearLine();

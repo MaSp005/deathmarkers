@@ -99,8 +99,8 @@ class $modify(DMPlayLayer, PlayLayer) {
 					log::error("Listing Deaths failed: {}", res->string().unwrapOr("Body could not be read."));
 				else {
 					log::info("Received death list.");
-
 					parseDeathList(res, &this->m_fields->m_deaths);
+					log::info("Finished parsing.");
 				}
 			}
 			else if (e->isCancelled()) {
