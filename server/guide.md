@@ -47,7 +47,7 @@ A **new best** is a death in which the player reached their new highest progress
 
 A **setback** is a death in which the player dies significantly earlier than their current best. Setbacks can be split into two groups: **new setbacks** are the first time that a player has died at that location, but they have previously beat it the first time they encountered it. **Old setbacks** are players dying to a location which was a new best (or new setback) previously, despite having passed it before.
 
-**Sightreading** is the practice of entirely (and confidently) predicting the upcoming gameplay by sight (or rhythmic anticipation) alone. Blind button spamming with no understanding of the gameplay is not sightreading. **Blind Jumps** are required inputs that are not reasonably able to be sightread, e.g. a jump instantly after landing a long fall.
+**Sightreading** is the practice of entirely (and confidently) predicting the upcoming gameplay by sight (or rhythmic anticipation) alone. Blind button spamming with no understanding of the gameplay is not sightreading. **Blind Jumps** are required inputs that are not reasonably able to be sightread, e.g. a jump instantly after landing a long fall or a transition that does not give enough time to examine the gameplay coming up.
 
 **Anticipated jumps** are a combination of inputs in which the first input can be hit at any timing with no direct consequences, and will still allow the second input to happen, but limit the timing window to one where death is guaranteed. These combinations can be of any length, where a slightly missed timing on the first input guarantees death at least by the last input.
 

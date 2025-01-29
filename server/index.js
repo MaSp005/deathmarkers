@@ -29,10 +29,12 @@ renderGuide();
 function renderGuide() {
   console.log("Rerendering guide...");
   let markdown = fs.readFileSync(GUIDE_FILENAME, "utf8");
+  markdown = markdown.replace(/<!--.*?-->\n?/gs, ""); // Remove comments
   let chapters = markdown.split("\n")
     .filter(x => x.startsWith("##"))
-    .map(x => x.slice(2).trimEnd().replace(" ", ""))
+    .map(x => x.slice(2).trimEnd().replace(" ", "")); // Identify headings
 
+  // Index Chapters by heading depth and render nested <ol>s
   let levels = [0];
   let last = 0;
   chapters = chapters.map((x, i) => {
@@ -45,9 +47,10 @@ function renderGuide() {
     return `${"\t".repeat(c)}${++levels[c]}. [${x}](#${x.toLowerCase().replaceAll(" ", "-")})`
   });
   markdown = markdown.replace("<?>TOC", chapters.join("\n"));
-  guideHtml = md.render(markdown)
-  guideHtml = guideHtml.replace(/src=".*?front\//g, "src=\"");
-  guideHtml = guideHtml.replace(/<!--.*?-->/g, "");
+
+  guideHtml = md.render(markdown);
+  guideHtml = guideHtml.replace(/src=".*?front\//g, "src=\""); // markdown preview requires directory, running server hosts files on root
+  guideHtml = guideHtml.replace(/>\s+</g, "><"); // Replace newlines and whitespace between HTML tags
   guideLastRead = fs.statSync(GUIDE_FILENAME).mtime;
 }
 
