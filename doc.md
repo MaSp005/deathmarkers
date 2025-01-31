@@ -42,6 +42,13 @@ The database contains one table per format version, in order to store the corres
 
 When a player finishes the level, an entry with `percentage = 100` is added. Although this is not a death in the sense of the word, it serves an analytical purpose for detecting if a given player (based on `userident`) has ended up beating the level, as well as discovering potential unintended secret ways.
 
+## Indexes
+
+To speed up queries for specific levels, the database also employs an index for every table:
+
+`CREATE INDEX IF NOT EXISTS format1index ON format1 (levelid);`
+`CREATE INDEX IF NOT EXISTS format1index ON format2 (levelid);`
+
 ## `userident`
 
 The `userident` is used to group together deaths from an individual player playing a specific level. This is anonymized in order to make grouping across levels difficult.
@@ -59,59 +66,61 @@ Since the `userident` is stored with each death and could easily be computed to 
 
 `[account name]_[user id]_[level id]`
 ⇒ `RobTop_16_10565740`
-⇒ `cba4a35e4ee458178b18d4c8ebb836a518b4df4b` <- This is the way it is stored in the database
+⇒ `cba4a35e4ee458178b18d4c8ebb836a518b4df4b` ← This is the way it is stored in the database
 
 **Upon analysis:**
-Select salt: e.g. `ZqQhF28asA` <- Different every time you request a level analysis
+Select salt: e.g. `ZqQhF28asA` <- Different every time a level analysis is requested
 ⇒ `cba4a35e4ee458178b18d4c8ebb836a518b4df4b_ZqQhF28asA`
-⇒ `aed5ab073efad9fe738eacb2bebeb174b2ceae6b` <- This is what is sent from /analysis
+⇒ `aed5ab073efad9fe738eacb2bebeb174b2ceae6b` ← This is what is sent from /analysis
 
 ### But what about people playing without an account?
 
 Not getting in the database. That's it. The mod won't even try to submit anything if it knows that there is no account.
 
-## API
+# API
 
 **Base URL**: `https://deathmarkers.masp005.dev/`
 
 Every request and response body is in the format **JSON** (MIME-Type `application/json`).
 
-### GET `/list`
+## GET `/list`
 
 Parameter(s):
 - `levelid`: The ID of the level requested.
-- Optional: `levelversion` (int): Filters to only the specified version if provided.
+- `platformer` (boolean): If `false`, ignores entries with percentage > 100. See [§ Table DEATHS](#table-format1).
+- Optional: `response`: `json` or `csv`, responds using specified data format, `csv` by default (`json` is legacy behaviour)
 
-Delivers: `[[float, float, int], [...], ...]` (Groups of [x, y, %])
-
-Example: `https://deathmarkers.masp005.dev/list?levelid=10565740`
-⇒ `[[52.12, 9241.23, 4], ...]`
+Delivers (`text/csv`):
+> `x,y,percentage`
+> `float,float,int`
+> `...`
 
 This endpoint is intended for a regular playthrough to display Mario Maker-style death pins and a bar graph on the percentage.
 
-### GET `/analysis`
+## GET `/analysis`
 
 Parameter(s):
 - `levelid` (string): The ID of the level requested.
-- Optional: `levelversion` (int): Filters to only the specified version if provided.
+- Optional: `response`: `json` or `csv`, responds using specified data format, `csv` by default (`json` is legacy behaviour)
 
-Delivers: `[{"userident":string, "levelversion":int, "practice":bool, "x":float, "y":float, "percentage":int}, {...}]`
+Delivers (`text/csv`):
+> `userident,levelversion,practice,x,y,percentage`
+> `string,int,0 or 1,float,float,int`
+> `...`
+
 See [§ Table DEATHS](#table-format1) for information on each property.
 
-Example: `https://deathmarkers.masp005.dev/analysis?levelid=10565740`
-⇒ `[{"userident":"89a7s2...", "levelversion":2, "practice":true, "x":52.12, "y":9241.23, "percentage":12},...]`
+This endpoint is intended for level creators to analyze the deaths in their level to improve the gameplay. It is not restricted to the actual level creator to allow anyone to learn from others' levels.
 
-This endpoint is intended for level creators to analyze the deaths in their level to improve the gameplay. It is not restricted to the actual level creator to allow anyone to learn from others' levels
+## POST `/submit`
 
-### POST `/submit`
+This parameter in particular is not meant for public access. It should only be used by the mod and is only documented for contributors.
 
-> This parameter in particular is not meant for public access. It should only be used by the mod and is only documented for contributors.
-
-Body Data:
+Body Data (`application/json`):
 - `format`: (int): Format Version Number, for the following always 1.
 - `levelid` (string): The ID of the level requested.
-- Optional: `levelversion` (int): Version number of the level. Assumed to be 0 if omitted.
-- Optional: `practice` (bool): Whether you were in practice. Assumed to be false if omitted.
+- Optional: `levelversion` (int): Version number of the level. 0 by default.
+- Optional: `practice` (bool): Whether the death occurred in practice mode. `false` by default.
 - One of:
   1. `userident` (string): See [§ userident](#userident)
   2. - `playername` (string): Player Name
