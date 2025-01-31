@@ -105,12 +105,8 @@ try {
   );").run();
 
   // Indexes for both tables
-  db.prepare("CREATE INDEX IF NOT EXISTS format1index ON format1 (\
-  levelid\
-  );").run();
-  db.prepare("CREATE INDEX IF NOT EXISTS format2index ON format2 (\
-  levelid\
-  );").run();
+  db.prepare("CREATE INDEX IF NOT EXISTS format1index ON format1 (levelid);").run();
+  db.prepare("CREATE INDEX IF NOT EXISTS format2index ON format2 (levelid);").run();
 } catch (e) {
   console.error("Error preparing database:");
   console.error(e);
@@ -187,13 +183,17 @@ app.all("/submit", expr.text({
   try {
     format = req.body.format;
     if (typeof format != "number") return res.status(400).send("Format not supplied");
-    if (!req.body.levelid) return res.status(400).send("levelid is not supplied");
-    if (!req.body.levelversion) req.body.levelversion = 1;
-    req.body.practice = !!req.body.practice;
-    if (!req.body.userident) {
+    if (typeof req.body.levelid != "number")
+      return res.status(400).send("levelid was not supplied or not numerical");
+    if (typeof req.body.levelversion != "number") req.body.levelversion = 0;
+    req.body.practice = (!!req.body.practice) * 1;
+    if (typeof req.body.userident != "string") {
       if (!req.body.playername || !req.body.userid)
         return res.status(400).send("Neither userident nor playername and userid were supplied");
       req.body.userident = createUserIdent(req.body.userid, req.body.playername, req.body.levelid);
+    } else {
+      if (!/^[0-9a-f]{40}$/i.test(req.body.userident))
+        return res.status(400).send("userident has incorrect length or illegal characters (should be 40 hex characters)");
     }
     if (typeof req.body.x != "number" || typeof req.body.y != "number") return res.sendStatus(400);
     if (typeof req.body.percentage != "number") return res.sendStatus(400);
@@ -218,30 +218,14 @@ app.all("/submit", expr.text({
   try {
     switch (format) {
       case 1:
-        db.prepare("INSERT INTO format1 (userident, levelid, levelversion, practice, x, y, percentage) VALUES (?, ?, ?, ?, ?, ?, ?)")
-          .run(
-            req.body.userident,
-            req.body.levelid,
-            req.body.levelversion,
-            req.body.practice * 1,
-            req.body.x,
-            req.body.y,
-            req.body.percentage,
-          );
+        db.prepare("INSERT INTO format1 (userident, levelid, levelversion, practice, x, y, percentage)\
+          VALUES (@userident, @levelid, @levelversion, @practice, @x, @y, @percentage)")
+          .run(req.body);
         break;
       case 2:
-        db.prepare("INSERT INTO format2 (userident, levelid, levelversion, practice, x, y, percentage) VALUES (?, ?, ?, ?, ?, ?, ?)")
-          .run(
-            req.body.userident,
-            req.body.levelid,
-            req.body.levelversion,
-            req.body.practice * 1,
-            req.body.x,
-            req.body.y,
-            req.body.percentage,
-            req.body.coins,
-            req.body.itemdata,
-          );
+        db.prepare("INSERT INTO format2 (userident, levelid, levelversion, practice, x, y, percentage, coins, itemdata)\
+          VALUES (@userident, @levelid, @levelversion, @practice, @x, @y, @percentage, @coins, @itemdata)")
+          .run(req.body);
         break;
     }
     res.sendStatus(204);
