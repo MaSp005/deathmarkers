@@ -1,11 +1,32 @@
-const DATABASE_FILENAME = "deaths.db";
+if (process.argv.includes("--help") || process.argv.includes("-h")) {
+  console.log(`
+  -b      Benchmark select features in action
+  -i [fn] Database Filename
+    `);
+  process.exit(0);
+}
+
+const DATABASE_FILENAME = process.argv.includes("-i") ?
+  process.argv[process.argv.indexOf("-c") + 1] : "deaths.db";
 const PORT = 8048;
-// TODO: Differentiate Formats
 
 const alphabet = "ABCDEFGHIJOKLMNOPQRSTUVWXYZabcdefghijoklmnopqrstuvwxyz0123456789";
 const random = l => new Array(l).fill(0).map(_ => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
 
 const GUIDE_FILENAME = "./guide.md";
+
+const benchmark = (() => {
+  if (!process.argv.includes("-b")) return () => { };
+  console.log("\u001b[1;31mBenchmarking mode activated. Do not use in production.\u001b[0m");
+  let active = "";
+  return name => {
+    if (active) {
+      console.timeEnd(active);
+      active = "";
+    }
+    else console.time(active = (name || "default"));
+  }
+})();
 
 const db = require("better-sqlite3")(DATABASE_FILENAME);
 const expr = require("express");
@@ -24,6 +45,7 @@ renderGuide();
 
 function renderGuide() {
   console.log("Rerendering guide...");
+  benchmark("guideRender");
   let markdown = fs.readFileSync(GUIDE_FILENAME, "utf8");
   markdown = markdown.replace(/<!--.*?-->\n?/gs, ""); // Remove comments
   let chapters = markdown.split("\n")
@@ -48,6 +70,7 @@ function renderGuide() {
   guideHtml = guideHtml.replace(/src=".*?front\//g, "src=\""); // markdown preview requires directory, running server hosts files on root
   guideHtml = guideHtml.replace(/>\s+</g, "><"); // Replace newlines and whitespace between HTML tags
   guideLastRead = fs.statSync(GUIDE_FILENAME).mtime;
+  benchmark();
 }
 
 function createUserIdent(userid, username, levelid) {
@@ -99,22 +122,29 @@ app.get("/list", (req, res) => {
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
   let levelId = parseInt(req.query.levelid);
 
-  let accept = req.query.response || "json";
+  let accept = req.query.response || "csv";
   if (accept != "json" && accept != "csv") return res.sendStatus(400);
 
   let isPlatformer = req.query.platformer == "true";
   let query = isPlatformer ?
     `SELECT x,y FROM format1 WHERE levelid == ? UNION
-    SELECT x,y FROM format2 WHERE levelid == ?;` :
+  SELECT x,y FROM format2 WHERE levelid == ?;` :
     `SELECT x,y,percentage FROM format1 WHERE levelid == ? AND percentage < 101 UNION
-    SELECT x,y,percentage FROM format2 WHERE levelid == ? AND percentage < 101;`;
+  SELECT x,y,percentage FROM format2 WHERE levelid == ? AND percentage < 101;`;
 
+  benchmark("query");
   let deaths = db.prepare(query)
     .all(levelId, levelId);
+  benchmark();
 
   // LEGACY: Serve only CSV to minimize traffic
   if (accept == "json") res.json(deaths.map(d => (isPlatformer ? [d.x, d.y] : [d.x, d.y, d.percentage])));
-  else csv.stringify(deaths, { header: true }).pipe(res);
+  else {
+    res.contentType("text/csv");
+    benchmark("serve");
+    csv.stringify(deaths, { header: true }).pipe(res);
+    benchmark();
+  }
 });
 
 app.get("/analysis", (req, res) => {
@@ -122,22 +152,32 @@ app.get("/analysis", (req, res) => {
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
   let levelId = parseInt(req.query.levelid);
 
-  let accept = req.query.response || "json";
+  let accept = req.query.response || "csv";
   if (accept != "json" && accept != "csv") return res.sendStatus(400);
 
+  benchmark("query");
   let deaths = db.prepare("SELECT userident,levelversion,practice,x,y,percentage FROM format1 WHERE levelid = ?;").all(levelId);
+  benchmark();
 
+  benchmark("salt" + deaths.length);
   let salt = "_" + random(10);
   deaths.forEach(d => d.userident = crypto.createHash("sha1").update(d.userident + salt).digest("hex"));
+  benchmark();
 
   // LEGACY: Serve only CSV to minimize traffic
   if (accept == "json") res.json(deaths);
-  else csv.stringify(deaths, { header: true }).pipe(res);
+  else {
+    res.contentType("text/csv");
+    benchmark("serve");
+    csv.stringify(deaths, { header: true }).pipe(res);
+    benchmark();
+  }
 });
 
 app.all("/submit", expr.text({
   type: "*/*"
 }), (req, res) => {
+  benchmark("parseSubmission");
   try {
     req.body = JSON.parse(req.body.toString());
   } catch {
@@ -172,7 +212,9 @@ app.all("/submit", expr.text({
     console.warn(e);
     return res.status(400).send("Unexpected error when parsing request");
   }
+  benchmark();
 
+  benchmark("insert");
   try {
     switch (format) {
       case 1:
@@ -207,6 +249,7 @@ app.all("/submit", expr.text({
     console.warn(e);
     return res.status(500).send("Error writing to the database. May be due to wrongly formatted input. Try again.");
   }
+  benchmark();
 });
 
 app.get("/", (req, res) => {
