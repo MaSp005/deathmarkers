@@ -48,7 +48,7 @@ CCNode* DeathLocationMin::createNode(bool isCurrent, bool preAnim) const {
 	}
 	else {
 		sprite->setScale(markerScale);
-		sprite->setZOrder(2 << 29 - 1);
+		sprite->setZOrder((2 << 29) - 1);
 	}
 	if (preAnim) {
 		auto point = CCPoint(this->pos.x, this->pos.y + markerScale * 4);
@@ -58,7 +58,7 @@ CCNode* DeathLocationMin::createNode(bool isCurrent, bool preAnim) const {
 	else {
 		sprite->setPosition(this->pos);
 	}
-	sprite->setZOrder(2 << 28 - !isCurrent);
+	sprite->setZOrder((2 << 28) - !isCurrent);
 	sprite->setAnchorPoint({ 0.5f, 0.0f });
 	return sprite;
 }

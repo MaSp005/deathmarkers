@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 #include <stdio.h>
-#include <geode/Utils.hpp>
 #include "shared.hpp"
 
 // TODO: "always-show" setting
@@ -209,7 +208,11 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 			float distr = static_cast<float>(hist[i]) / maximum;
 			auto rect = CCRect(width * i, 0, width, -(distr * histHeight));
-			auto color = _ccColor4F(distr, 1 - distr, 0, 1);
+			_ccColor4F color{};
+			color.r = distr;
+			color.g = 1 - distr;
+			color.b = 0;
+			color.a = 1;
 
 			this->m_fields->m_chartNode->drawRect(rect, color, 0.0f, color);
 		}
