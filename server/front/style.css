@@ -5,7 +5,7 @@
 
 body {
   background-color: #1c1722;
-  background-image: linear-gradient(to bottom right, #1f1b27, #2d1f35);
+  background-image: linear-gradient(to bottom right, #241a40, #281649);
   min-height: 100vh;
   margin: 0;
   font-family: 'Red Hat Display', 'Helvetica Neue', Helvetica, 'Segoe UI', Arial, sans-serif;
@@ -57,12 +57,28 @@ strong {
   color: #ccd3d6;
 }
 
+h1 {
+  text-decoration: none;
+}
+
+h1 img {
+  height: auto;
+}
+
+@media screen and (min-width: 560px) {
+  h1 img {
+    height: 3em;
+    position: absolute;
+    translate: -60% -40%;
+  }
+}
+
 h1 a {
   text-decoration: none;
 }
 
 img {
-  height: 6lh;
+  max-height: 6lh;
   max-width: 100%;
   width: auto;
   float: right;

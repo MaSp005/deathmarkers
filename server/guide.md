@@ -17,7 +17,7 @@
 </head><body>
 <main>
 
-# Creator's Guide <span style="font-size:50%">to [DeathMarkers](https://github.com/MaSp005/deathmarkers)</span>
+# Creator's Guide <span style="font-size:50%">to [DeathMarkers](https://github.com/MaSp005/deathmarkers)</span><img src="/banner.png">
 <!-- TODO: Header image (also in about.md and README prob) -->
 <!-- TODO: favicon.ico -->
 <!-- TODO: link to github/geode in heading -->
