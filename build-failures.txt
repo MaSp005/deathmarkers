@@ -1,0 +1,37 @@
+macOS
+
+Undefined symbols for architecture arm64:
+  "cocos2d::CCDrawNode::drawRect(cocos2d::CCRect const&, cocos2d::_ccColor4F const&, float, cocos2d::_ccColor4F const&)", referenced from:
+      geode::modifier::AsStaticFunction_playerDestroyed<DMPlayerObject, void (DMPlayerObject::*)(bool)>::Impl<void (DMPlayerObject::*)(bool)>::function(DMPlayerObject*, bool) in 
+  "cocos2d::CCMenuItemSprite::create(cocos2d::CCNode*, cocos2d::CCNode*, cocos2d::CCNode*)", referenced from:
+      geode::modifier::AsStaticFunction_init<DMEditorPauseLayer, bool (DMEditorPauseLayer::*)(LevelEditorLayer*)>::Impl<bool (DMEditorPauseLayer::*)(LevelEditorLayer*)>::function(DMEditorPauseLayer*, LevelEditorLayer*) in 
+ld: symbol(s) not found for architecture arm64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+
+Android32
+ 
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:224:27: error: no member named 'find' in 'gd::string'
+  224 |                 int nextSplit = string->find(at, currentStart);
+      |                                 ~~~~~~  ^
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:226:29: error: no member named 'substr' in 'gd::string'
+  226 |                         result.push_back(string->substr(currentStart));
+      |                                          ~~~~~~  ^
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:229:28: error: no member named 'substr' in 'gd::string'
+  229 |                 result.push_back(string->substr(currentStart, nextSplit - currentStart));
+      |                                  ~~~~~~  ^
+
+/home/runner/work/deathmarkers/deathmarkers/src/main.cpp:175:81: warning: implicit conversion from 'int' to 'float'changes value from 2147483647 to 2147483648 [-Wimplicit-const-int-float-conversion]
+  175 |                         auto node = deathLoc.createAnimatedNode(false, (static_cast<float>(rand()) / RAND_MAX) * .25f);
+      |                                                                                                    ~ ^~~~~~~~
+
+Android64
+
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:224:27: error: no member named 'find' in 'gd::string'
+  224 |                 int nextSplit = string->find(at, currentStart);
+      |                                 ~~~~~~  ^
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:226:29: error: no member named 'substr' in 'gd::string'
+  226 |                         result.push_back(string->substr(currentStart));
+      |                                          ~~~~~~  ^
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:229:28: error: no member named 'substr' in 'gd::string'
+  229 |                 result.push_back(string->substr(currentStart, nextSplit - currentStart));
+      |                                  ~~~~~~  ^

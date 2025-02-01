@@ -125,11 +125,11 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 			y = std::stof(yStr);
 		}
 		catch (std::invalid_argument) {
-			log::warn("Unexpected Non-Number coordinate listing deaths: {}", line);
+			log::warn("Unexpected Non-Number coordinate listing deaths: {}", coords);
 			continue;
 		}
 		catch (std::out_of_range) {
-			log::warn("Property not featured: {} - {}", header, line);
+			log::warn("x/y Property not featured: {} - {}", header, coords);
 			continue;
 		}
 
@@ -139,15 +139,15 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 
 			int percent;
 			try {
-				auto const& percentStr = coords.at(find<gd::string>(header, "percent"));
+				auto const& percentStr = coords.at(find<gd::string>(header, "percentage"));
 				percent = std::stoi(percentStr);
 			}
 			catch (std::invalid_argument) {
-				log::warn("Unexpected Non-Number coordinate listing deaths: {}", line);
+				log::warn("Unexpected Non-Number coordinate listing deaths: {}", coords);
 				continue;
 			}
 			catch (std::out_of_range) {
-				log::warn("Property not featured: {} - {}", header, line);
+				log::warn("% Property not featured: {} - {}", header, coords);
 				continue;
 			}
 			deathLoc.percentage = percent;
@@ -158,7 +158,6 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 
 }
 
-// LEGACY: Read from CSV instead (fuck)
 void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target) {
 
 	auto const body = res->string();
@@ -221,9 +220,9 @@ std::vector<gd::string> split(const gd::string* string, const char at) {
 	int currentStart = 0;
 
 	while (true) {
-		int nextSplit = string->find(at, currentStart);
+		int nextSplit = string->find_first_of(at, currentStart);
 		if (nextSplit == std::string::npos) {
-			result.push_back(string->substr(currentStart));
+			result.push_back(string->substr(currentStart, string->size() - currentStart));
 			return result;
 		}
 		result.push_back(string->substr(currentStart, nextSplit - currentStart));

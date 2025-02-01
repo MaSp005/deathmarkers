@@ -6,8 +6,6 @@
 #include <stdio.h>
 #include "shared.hpp"
 
-// TODO: "always-show" setting
-
 using namespace geode::prelude;
 
 // FUNCTIONS
@@ -91,27 +89,34 @@ class $modify(DMPlayLayer, PlayLayer) {
 		this->m_fields->m_deaths.clear();
 
 		// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
-		m_fields->m_listener.bind([this](web::WebTask::Event* const e) {
-			auto res = e->getValue();
-			if (res) {
-				if (!res->ok())
-					log::error("Listing Deaths failed: {}", res->string().unwrapOr("Body could not be read."));
-				else {
-					log::info("Received death list.");
-					parseDeathList(res, &this->m_fields->m_deaths);
-					log::info("Finished parsing.");
+		m_fields->m_listener.bind(
+			[this](web::WebTask::Event* const e) {
+				auto res = e->getValue();
+				if (res) {
+					if (!res->ok())
+						log::error("Listing Deaths failed: {}", res->string().unwrapOr("Body could not be read."));
+					else {
+						log::info("Received death list.");
+						parseDeathList(res, &this->m_fields->m_deaths);
+						log::info("Finished parsing.");
+
+						if (Mod::get()->getSettingValue<bool>("always-show")) {
+							log::info("Always show enabled, rendering...");
+							renderDeaths(nullptr);
+						}
+					}
 				}
+				else if (e->isCancelled()) {
+					log::error("Death Listing Request was cancelled.");
+				};
 			}
-			else if (e->isCancelled()) {
-				log::error("Death Listing Request was cancelled.");
-			};
-			});
+		);
 
 		// Build the HTTP Request
 		std::string const url = API_BASE + "list";
 		web::WebRequest req = web::WebRequest();
 
-		req.param("levelid", (this->m_fields->m_levelProps.levelId));
+		req.param("levelid", this->m_fields->m_levelProps.levelId);
 		req.param("platformer", this->m_fields->m_levelProps.platformer);
 		req.param("response", "csv");
 		req.userAgent(HTTP_AGENT);
@@ -126,6 +131,8 @@ class $modify(DMPlayLayer, PlayLayer) {
 	void resetLevel() {
 
 		PlayLayer::resetLevel();
+
+		if (Mod::get()->getSettingValue<bool>("always-show")) return;
 
 		m_fields->m_dmNode->removeAllChildrenWithCleanup(true);
 		m_fields->m_dmNode->cleanup();
@@ -161,7 +168,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	}
 
-	void renderDeaths(DeathLocationMin* newDeath) {
+	void renderDeaths(DeathLocationMin * newDeath) {
 
 		int histHeight = Mod::get()->getSettingValue<int>("prog-bar-hist-height");
 		int hist[101] = { 0 };
@@ -172,14 +179,14 @@ class $modify(DMPlayLayer, PlayLayer) {
 		}
 
 		for (auto& deathLoc : this->m_fields->m_deaths) {
-			auto node = deathLoc.createAnimatedNode(false, (static_cast<float>(rand()) / RAND_MAX) * .25f);
+			auto node = deathLoc.createAnimatedNode(false, (static_cast<double>(rand()) / RAND_MAX) * .25f);
 			this->m_fields->m_dmNode->addChild(node);
 			if (deathLoc.percentage >= 0 && deathLoc.percentage < 101)
 				hist[deathLoc.percentage]++;
 		}
 
-		// Only Draw Histogram if requested
-		if (histHeight == 0) return;
+		// Only Draw Histogram if requested and applicable
+		if (histHeight == 0 || this->m_fields->m_levelProps.platformer) return;
 
 		if (!this->m_fields->m_chartAttached) {
 			auto progBarNode = this->getChildByID("progress-bar");
@@ -305,12 +312,17 @@ class $modify(DMPlayerObject, PlayerObject) {
 
 		// Render Death Markers
 		if (shouldDraw(playLayer->m_fields->m_levelProps)) {
-			auto minDeathLoc = deathLoc.toMin();
-			playLayer->renderDeaths(&minDeathLoc);
+			if (Mod::get()->getSettingValue<bool>("always-show")) {
+				playLayer->m_fields->m_dmNode->addChild(deathLoc.toMin().createAnimatedNode(false, 0));
+			}
+			else {
+				auto minDeathLoc = deathLoc.toMin();
+				playLayer->renderDeaths(&minDeathLoc);
+			}
 		}
 
 		// Add own death to current level's list
-		// after rendering because the current death's CCNode already exists
+		// after rendering because the current death's CCNode is being rendered separately
 		playLayer->m_fields->m_deaths.push_back(deathLoc.toMin());
 
 	}

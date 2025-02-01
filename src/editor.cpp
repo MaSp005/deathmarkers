@@ -33,11 +33,31 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		}
 
 		// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
-		m_fields->m_listener.bind([this](web::WebTask::Event* const e) {
-			auto res = e->getValue();
-			if (res) {
-				if (!res->ok()) {
-					log::error("Listing Deaths failed: {}", res->string().unwrapOr("Body could not be read."));
+		m_fields->m_listener.bind(
+			[this](web::WebTask::Event* const e) {
+				auto res = e->getValue();
+				if (res) {
+					if (!res->ok()) {
+						log::error("Listing Deaths failed: {}", res->string().unwrapOr("Body could not be read."));
+
+						FLAlertLayer::create(
+							"DeathMarkers",
+							"Deaths could not be fetched. Please try again later.",
+							"OK"
+						)->show();
+						this->m_fields->m_enabled = false;
+						this->m_fields->m_loaded = false;
+					}
+					else {
+						log::info("Received death list.");
+						parseDeathList(res, &this->m_fields->m_deaths);
+						log::info("Finished parsing.");
+						analyzeData();
+						startUI();
+					}
+				}
+				else if (e->isCancelled()) {
+					log::error("Death Listing Request was cancelled.");
 
 					FLAlertLayer::create(
 						"DeathMarkers",
@@ -46,27 +66,9 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 					)->show();
 					this->m_fields->m_enabled = false;
 					this->m_fields->m_loaded = false;
-				}
-				else {
-					log::info("Received death list.");
-					parseDeathList(res, &this->m_fields->m_deaths);
-					log::info("Finished parsing.");
-					analyzeData();
-					startUI();
-				}
+				};
 			}
-			else if (e->isCancelled()) {
-				log::error("Death Listing Request was cancelled.");
-
-				FLAlertLayer::create(
-					"DeathMarkers",
-					"Deaths could not be fetched. Please try again later.",
-					"OK"
-				)->show();
-				this->m_fields->m_enabled = false;
-				this->m_fields->m_loaded = false;
-			};
-			});
+		);
 
 		// Build the HTTP Request
 		std::string const url = API_BASE + "analysis";
