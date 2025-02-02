@@ -52,10 +52,13 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	struct Fields {
 		EventListener<web::WebTask> m_listener;
+
 		CCNode* m_dmNode = CCNode::create();
 		CCDrawNode* m_chartNode = nullptr;
-		bool m_chartAttached = false;
+
 		std::vector<DeathLocationMin> m_deaths;
+
+		bool m_chartAttached = false;
 		struct playerData m_playerProps;
 		struct playingLevel m_levelProps;
 	};
@@ -102,7 +105,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 						if (Mod::get()->getSettingValue<bool>("always-show")) {
 							log::info("Always show enabled, rendering...");
-							renderDeaths(nullptr);
+							renderMarkers();
 						}
 					}
 				}
@@ -168,25 +171,28 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	}
 
-	void renderDeaths(DeathLocationMin * newDeath) {
-
-		int histHeight = Mod::get()->getSettingValue<int>("prog-bar-hist-height");
-		int hist[101] = { 0 };
-
-		if (newDeath) {
-			this->m_fields->m_dmNode->addChild(newDeath->createAnimatedNode(true, 0));
-			hist[newDeath->percentage]++;
-		}
+	void renderMarkers() {
 
 		for (auto& deathLoc : this->m_fields->m_deaths) {
 			auto node = deathLoc.createAnimatedNode(false, (static_cast<double>(rand()) / RAND_MAX) * .25f);
 			this->m_fields->m_dmNode->addChild(node);
-			if (deathLoc.percentage >= 0 && deathLoc.percentage < 101)
-				hist[deathLoc.percentage]++;
 		}
+
+	}
+
+	void renderHistogram() {
+
+		int histHeight = Mod::get()->getSettingValue<int>("prog-bar-hist-height");
 
 		// Only Draw Histogram if requested and applicable
 		if (histHeight == 0 || this->m_fields->m_levelProps.platformer) return;
+
+		int hist[101] = { 0 };
+
+		for (auto& deathLoc : this->m_fields->m_deaths) {
+			if (deathLoc.percentage >= 0 && deathLoc.percentage < 101)
+				hist[deathLoc.percentage]++;
+		}
 
 		if (!this->m_fields->m_chartAttached) {
 			auto progBarNode = this->getChildByID("progress-bar");
@@ -310,20 +316,24 @@ class $modify(DMPlayerObject, PlayerObject) {
 
 		playLayer->submitDeath(deathLoc);
 
+		auto render = shouldDraw(playLayer->m_fields->m_levelProps);
+
 		// Render Death Markers
-		if (shouldDraw(playLayer->m_fields->m_levelProps)) {
+		if (render) {
 			if (Mod::get()->getSettingValue<bool>("always-show")) {
 				playLayer->m_fields->m_dmNode->addChild(deathLoc.toMin().createAnimatedNode(false, 0));
 			}
 			else {
-				auto minDeathLoc = deathLoc.toMin();
-				playLayer->renderDeaths(&minDeathLoc);
+				playLayer->renderMarkers();
+				playLayer->m_fields->m_dmNode->addChild(deathLoc.toMin().createAnimatedNode(true, 0));
 			}
 		}
 
 		// Add own death to current level's list
 		// after rendering because the current death's CCNode is being rendered separately
 		playLayer->m_fields->m_deaths.push_back(deathLoc.toMin());
+
+		if (render) playLayer->renderHistogram();
 
 	}
 

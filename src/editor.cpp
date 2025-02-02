@@ -5,12 +5,17 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 	struct Fields {
 		EventListener<web::WebTask> m_listener;
+
+		CCNode* m_stackNode = nullptr;
 		CCNode* m_dmNode = nullptr;
+		CCMenuItemSprite* m_button = nullptr;
+
 		std::vector<DeathLocation> m_deaths;
+
 		bool m_enabled = false;
 		bool m_loaded = false;
 		bool m_showedGuide = false;
-		CCMenuItemSprite* m_button = nullptr;
+		float m_lastZoom = 0;
 	};
 
 	void fetch() {
@@ -87,9 +92,11 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 		if (!this->m_fields->m_enabled) {
 			this->m_fields->m_enabled = true;
-			this->m_fields->m_button->selected();
 
-			if (!this->m_fields->m_loaded) fetch();
+			if (!this->m_fields->m_loaded) {
+				// TODO: Swap button sprite to loading spinner
+				fetch();
+			}
 			else startUI();
 		}
 		else {
@@ -99,18 +106,60 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 			this->m_fields->m_dmNode->removeAllChildrenWithCleanup(true);
 			this->m_fields->m_dmNode->removeFromParent();
 
-			this->unschedule(schedule_selector(DMEditorLayer::myUpdate));
+			this->m_fields->m_stackNode->removeAllChildrenWithCleanup(true);
+			this->m_fields->m_stackNode->removeFromParent();
 
+			this->unschedule(schedule_selector(DMEditorLayer::updateMarkers));
 		}
 
 	}
 
+	void updateStacks(float maxDistance) {
+		std::vector<struct deathLocationStack> deathStacks;
+
+		// TODO: identify stacks (uhhh)
+
+		this->m_fields->m_stackNode->removeAllChildrenWithCleanup(true);
+		for (auto& stack : deathStacks) {
+			auto sprite = CCSprite::create("marker-group.png"_spr);
+			std::string const id = "marker"_spr;
+			float markerScale = Mod::get()->getSettingValue<float>("marker-scale");
+			sprite->setScale(stack.diameter);
+			sprite->setZOrder(1);
+			sprite->setPosition(stack.center);
+			sprite->setAnchorPoint({ 0.5f, 0.5f });
+			this->m_fields->m_stackNode->addChild(sprite);
+		}
+	}
+
 	void analyzeData() {
-		// TODO: Parse and analyze data
+
+		if (false) {
+			std::stable_sort(
+				this->m_fields->m_deaths.begin(),
+				this->m_fields->m_deaths.end(),
+				[](DeathLocation a, DeathLocation b) {
+					return a.userIdent.compare(b.userIdent) < 0;
+				}
+			);
+
+			// TODO: analyze data
+		}
+
+		// Sort Deaths list along x-axis for better positional searching performance
+		std::sort(
+			this->m_fields->m_deaths.begin(),
+			this->m_fields->m_deaths.end(),
+			[](DeathLocation a, DeathLocation b) {
+				return (a.pos.x < b.pos.x);
+			}
+		);
 
 	}
 
 	void startUI() {
+
+		this->m_fields->m_button->selected();
 
 		if (!this->m_fields->m_showedGuide) {
 
@@ -129,13 +178,15 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 		this->m_fields->m_dmNode = CCNode::create();
 		this->m_fields->m_dmNode->setID("markers"_spr);
-		this->m_fields->m_dmNode->setZOrder(2 << 28); // everyone using 99999 smh
+		this->m_fields->m_dmNode->setZOrder(-2);
 
-		// TODO: Display stacked deaths, multiple in close proximity
-		for (int i = 0; i < this->m_fields->m_deaths.size(); i++) {
-			auto& deathLoc = this->m_fields->m_deaths.at(i);
+		this->m_fields->m_stackNode = CCNode::create();
+		this->m_fields->m_stackNode->setID("stacks"_spr);
+		this->m_fields->m_stackNode->setZOrder(-1);
+
+		for (auto& deathLoc : this->m_fields->m_deaths) {
 			auto node = deathLoc.toMin().createNode(false);
-			node->setZOrder(1);
+			node->setZOrder(0);
 			this->m_fields->m_dmNode->addChild(node);
 		}
 
@@ -154,16 +205,22 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		*/
 
 		this->m_editorUI->addChild(this->m_fields->m_dmNode);
-		this->schedule(schedule_selector(DMEditorLayer::myUpdate), 0);
+		this->m_editorUI->addChild(this->m_fields->m_stackNode);
+		this->schedule(schedule_selector(DMEditorLayer::updateMarkers), 0);
 
 	}
 
-	void myUpdate(float) {
+	void updateMarkers(float) {
 		this->m_fields->m_dmNode->setPosition(this->m_objectLayer->getPosition());
 		this->m_fields->m_dmNode->setScale(this->m_objectLayer->getScale());
 
 		// Counters UI zoom, keeps markers at constant size relative to screen
 		float inverseScale = Mod::get()->getSettingValue<float>("marker-scale") / this->m_objectLayer->getScale();
+
+		if (this->m_fields->m_lastZoom != this->m_objectLayer->getScale()) {
+			updateStacks(inverseScale * 2);
+			this->m_fields->m_lastZoom = this->m_objectLayer->getScale();
+		}
 
 		CCArray* children = this->m_fields->m_dmNode->getChildren();
 		for (int i = 0; i < this->m_fields->m_dmNode->getChildrenCount(); i++) {
@@ -184,16 +241,14 @@ class $modify(DMEditorPauseLayer, EditorPauseLayer) {
 		auto editor = static_cast<DMEditorLayer*>(this->m_editorLayer);
 
 		if (!editor->m_fields->m_button) {
-			auto btn = CCMenuItemExt::createSprite(
+			editor->m_fields->m_button = CCMenuItemExt::createSprite(
 				CCSprite::create("marker-button-deact.png"_spr),
 				CCSprite::create("marker-button-on.png"_spr),
 				[editor](auto el) {
 					editor->toggleDeathMarkers();
 				}
 			);
-			btn->setID("load-button"_spr);
-
-			editor->m_fields->m_button = btn;
+			editor->m_fields->m_button->setID("load-button"_spr);
 		}
 		this->getChildByID("guidelines-menu")->addChild(editor->m_fields->m_button);
 
