@@ -85,7 +85,7 @@ try {
   userident CHAR(40) NOT NULL,\
   levelid INT UNSIGNED NOT NULL,\
   levelversion TINYINT UNSIGNED DEFAULT 0,\
-  practice TINYINT DEFAULT 0,\
+  practice BIT DEFAULT 0,\
   x DOUBLE NOT NULL,\
   y DOUBLE NOT NULL,\
   percentage SMALLINT UNSIGNED NOT NULL\
@@ -96,7 +96,7 @@ try {
   userident CHAR(40) NOT NULL,\
   levelid INT UNSIGNED NOT NULL,\
   levelversion TINYINT UNSIGNED DEFAULT 0,\
-  practice TINYINT DEFAULT 0,\
+  practice BIT DEFAULT 0,\
   x DOUBLE NOT NULL,\
   y DOUBLE NOT NULL,\
   percentage SMALLINT UNSIGNED NOT NULL,\

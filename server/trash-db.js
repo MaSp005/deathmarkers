@@ -2,9 +2,9 @@ if (process.argv.includes("--help") || process.argv.includes("-h")) {
   console.log(`
   -a           Appends to the existing deaths.db instead of replacing all records
   -B           Does not back up the database before writing (recommended with -a)
-  -c [count]   Determined count of dummy deaths to add
-  -l [levelid] Changes levelid on every added record
-  -i [fn]      Database Filename
+  -c [count]   Determined count of dummy deaths to add (2000 by default)
+  -l [levelid] Changes levelid on every added record (otherwise random per entry)
+  -i [fn]      Database Filename (deaths.db by default)
   WARNING: Does not support abbreviated Flags (like -aB) im too lazy to implement them
     `);
   process.exit(0);

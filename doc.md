@@ -27,7 +27,7 @@ The database contains one table per format version, in order to store the corres
 | userident | CHAR(40) | NOT NULL | A unique identification of player & level. See [§ userident](#userident) |
 | levelid | INT | UNSIGNED NOT NULL | The id of the level.
 | levelversion | TINYINT | UNSIGNED DEFAULT 1 | Version number of the level. |
-| practice | TINYINT | DEFAULT 0 | If the death was done in practice. |
+| practice | BIT | DEFAULT 0 | If the death was done in practice. |
 | x | FLOAT(10,2) | NOT NULL | The x-position of the player at the time of death. |
 | y | FLOAT(10,2) | NOT NULL | The y-position of the player at the time of death. |
 | percentage | SMALLINT | UNSIGNED NOT NULL | For normal levels, the percentage of the player 0-100, and 101 for a level finish.<br>For platformer levels, the time of death in seconds.
@@ -51,11 +51,9 @@ To speed up queries for specific levels, the database also employs an index for 
 
 ## `userident`
 
-The `userident` is used to group together deaths from an individual player playing a specific level. This is anonymized in order to make grouping across levels difficult.
+The `userident` is used to group together deaths from an individual player playing a specific level. This is anonymized in order to make grouping across levels difficult. The three identification components are: **Account Name**, **Level ID**, **User ID**, which are arranged as `[account name]_[user id]_[level id]` and then hashed using the SHA-1 algorithm.
 
-> Since the level id is known for a specific userident, it is possible to brute-force to figure out the username that was encoded. If we add another parameter to the identification, said parameter can in turn be brute-forced if the player name is known (e.g. from tracking down a specific death entry of a streamer), so we cannot use sensitive data for it. Instead, we'll add the *User ID* of the player. Although this means it can still be brute-forced, it is infinitely more tedious than trying every possible string of letters for the account name, as the Username and ID have to match up and be queried from the GD Servers to create a valid `userident`.
-
-In total, the three identification components are: **Account Name**, **Level ID**, **User ID**, which are arranged as `[account name]_[user id]_[level id]`.
+> Yes SHA-1 has been [cryptographically broken](https://blog.mozilla.org/security/2017/02/23/the-end-of-sha-1-on-the-public-web/) and is vulnerable to certain attacks, but come on, this is a fucking death collection mod. Who cares. It also has the smallest output size and storage space is limited. Unless this proves to become an actual danger, it stays.
 
 Since the `userident` is stored with each death and could easily be computed to figure out a specific player's deaths (though not the other way), upon sending the deaths for analysis (when the `userident`s would be exposed), they are **hashed again**, this time with a random **salt** generated per analysis. As a result, the userident stays consistent at grouping together a single player's death, but nobody can identify a specific player's death.
 
