@@ -57,6 +57,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		CCDrawNode* m_chartNode = nullptr;
 
 		std::vector<DeathLocationMin> m_deaths;
+		std::deque<DeathLocationOut> m_queuedSubmissions;
 
 		bool m_chartAttached = false;
 		struct playerData m_playerProps;
@@ -107,6 +108,8 @@ class $modify(DMPlayLayer, PlayLayer) {
 							log::info("Always show enabled, rendering...");
 							renderMarkers();
 						}
+
+						this->checkQueue();
 					}
 				}
 				else if (e->isCancelled()) {
@@ -239,19 +242,28 @@ class $modify(DMPlayLayer, PlayLayer) {
 		auto mod = Mod::get();
 		auto playLayer = static_cast<DMPlayLayer*>(GameManager::get()->getPlayLayer());
 
-		m_fields->m_listener.bind([](web::WebTask::Event* e) {
-			auto res = e->getValue();
-			if (res) {
-				if (!res->ok())
-					log::error(
-						"Posting Death failed: {}",
-						res->string().unwrapOr("Body could not be read.")
-					);
-				else log::info("Posted Death.");
+		m_fields->m_listener.bind(
+			[this, deathLoc](web::WebTask::Event* e) {
+				auto res = e->getValue();
+				if (res) {
+					if (!res->ok()) {
+						log::error(
+							"Posting Death failed: {}",
+							res->string().unwrapOr("Body could not be read.")
+						);
+						this->m_fields->m_queuedSubmissions.push_back(deathLoc);
+					}
+					else {
+						log::info("Posted Death.");
+						this->checkQueue();
+					}
+				}
+				else if (e->isCancelled()) {
+					log::error("Posting Death was cancelled");
+					this->m_fields->m_queuedSubmissions.push_back(deathLoc);
+				}
 			}
-			else if (e->isCancelled())
-				log::error("Posting Death was cancelled");
-			});
+		);
 
 		// Build the HTTP Request
 		std::string const url = API_BASE + "submit";
@@ -263,7 +275,6 @@ class $modify(DMPlayLayer, PlayLayer) {
 		myjson.set("userid", matjson::Value(this->m_fields->m_playerProps.userid));
 		myjson.set("format", matjson::Value(FORMAT_VERSION));
 		deathLoc.addToJSON(&myjson);
-		log::info("JSON body: {}", myjson.dump(matjson::NO_INDENTATION));
 
 		web::WebRequest req = web::WebRequest();
 		req.bodyJSON(myjson);
@@ -278,6 +289,15 @@ class $modify(DMPlayLayer, PlayLayer) {
 		auto task = req.get(url);
 		m_fields->m_listener.setFilter(task);
 
+	}
+
+	void checkQueue() {
+		if (this->m_fields->m_queuedSubmissions.empty()) return;
+		log::info("Clearing Queue. {} deaths pending.", this->m_fields->m_queuedSubmissions.size());
+
+		DeathLocationOut next = this->m_fields->m_queuedSubmissions.front();
+		this->m_fields->m_queuedSubmissions.pop_front();
+		this->submitDeath(next);
 	}
 
 };

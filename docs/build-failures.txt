@@ -35,3 +35,14 @@ Android64
 /home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:229:28: error: no member named 'substr' in 'gd::string'
   229 |                 result.push_back(string->substr(currentStart, nextSplit - currentStart));
       |                                  ~~~~~~  ^
+
+> geode project check
+| Info | Fetching dependency from index
+| Info | Dependency found: geode.node-ids, version 1.19.0
+| Info | Downloading dependency
+| Info | Success
+| Info | Writing dependency to temp file
+| Info | Dependency 'geode.node-ids' found
+thread 'main' panicked at src/project.rs:489:64:
+called `Result::unwrap()` on an `Err` value: Os { code: 5, kind: PermissionDenied, message: "Zugriff verweigert" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
