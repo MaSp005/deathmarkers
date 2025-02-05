@@ -88,7 +88,7 @@ Every request and response body is in the format **JSON** (MIME-Type `applicatio
 Parameter(s):
 - `levelid`: The ID of the level requested.
 - `platformer` (boolean): If `false`, ignores entries with percentage > 100. See [§ Table DEATHS](#table-format1).
-- Optional: `response`: `json` or `csv`, responds using specified data format, `csv` by default (`json` is legacy behaviour)
+- Optional: `response`: responds using specified data format, `csv` is the default and only allowed value
 
 Delivers (`text/csv`):
 > `x,y,percentage`
@@ -101,7 +101,7 @@ This endpoint is intended for a regular playthrough to display Mario Maker-style
 
 Parameter(s):
 - `levelid` (string): The ID of the level requested.
-- Optional: `response`: `json` or `csv`, responds using specified data format, `csv` by default (`json` is legacy behaviour)
+- Optional: `response`: responds using specified data format, `csv` is the default and only allowed value
 
 Delivers (`text/csv`):
 > `userident,levelversion,practice,x,y,percentage`

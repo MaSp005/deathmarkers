@@ -123,7 +123,7 @@ app.get("/list", (req, res) => {
   let levelId = parseInt(req.query.levelid);
 
   let accept = req.query.response || "csv";
-  if (accept != "json" && accept != "csv") return res.sendStatus(400);
+  if (accept != "csv") return res.sendStatus(400);
 
   let isPlatformer = req.query.platformer == "true";
   let query = isPlatformer ?
@@ -137,15 +137,10 @@ app.get("/list", (req, res) => {
     .all(levelId, levelId);
   benchmark();
 
-  // LEGACY: Serve only CSV to minimize traffic
-  if (accept == "json") res.json(deaths
-    .map(d => (isPlatformer ? [d.x, d.y] : [d.x, d.y, d.percentage])));
-  else {
-    res.contentType("text/csv");
-    benchmark("serve");
-    csv.stringify(deaths, { header: true }).pipe(res);
-    benchmark();
-  }
+  res.contentType("text/csv");
+  benchmark("serve");
+  csv.stringify(deaths, { header: true }).pipe(res);
+  benchmark();
 });
 
 app.get("/analysis", (req, res) => {
@@ -154,7 +149,7 @@ app.get("/analysis", (req, res) => {
   let levelId = parseInt(req.query.levelid);
 
   let accept = req.query.response || "csv";
-  if (accept != "json" && accept != "csv") return res.sendStatus(400);
+  if (accept != "csv") return res.sendStatus(400);
 
   benchmark("query");
   let deaths = db.prepare("SELECT userident,levelversion,practice,x,y,percentage FROM format1 WHERE levelid = ?;").all(levelId);
@@ -166,14 +161,10 @@ app.get("/analysis", (req, res) => {
     .update(d.userident + salt).digest("hex"));
   benchmark();
 
-  // LEGACY: Serve only CSV to minimize traffic
-  if (accept == "json") res.json(deaths);
-  else {
-    res.contentType("text/csv");
-    benchmark("serve");
-    csv.stringify(deaths, { header: true }).pipe(res);
-    benchmark();
-  }
+  res.contentType("text/csv");
+  benchmark("serve");
+  csv.stringify(deaths, { header: true }).pipe(res);
+  benchmark();
 });
 
 app.all("/submit", expr.text({
