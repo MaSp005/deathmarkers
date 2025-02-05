@@ -101,53 +101,56 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 	if (body.isErr())
 		return log::error("Error reading list response: Body could not be read.");
 
+	// Read and split up body
 	gd::string okObj = body.ok().value();
+	if (okObj.empty()) return log::info("Responded with zero deaths.");
+
 	auto lines = split(&okObj, '\n');
 	auto header = split(&lines.at(0), ',');
 	lines.erase(lines.begin());
 
+	// Identify columns
+	int xIdx = find<gd::string>(header, "x");
+	int yIdx = find<gd::string>(header, "y");
+	int percentIdx = find<gd::string>(header, "percentage");
+	if (xIdx == -1 || yIdx == -1) return log::warn("Property not featured in header: {}", header);
+
+	// Iterate lines
 	for (int i = 0; i < lines.size(); i++) {
 		auto const& line = lines.at(i);
-		if (line.size() == 0) continue;
-		auto coords = split(&line, ',');
+		if (line.empty()) return;
 
-		if (coords.size() < 2 || coords.size() > 3) {
-			log::warn("Unexpected Non-2-or-3-Tuple listing deaths: {}, size {}", line, coords.size());
+		auto coords = split(&line, ',');
+		if (coords.size() != header.size()) {
+			log::warn("Error listing deaths: Inequal number of elements: {} | {}", header, coords);
 			continue;
 		}
 
+		// Reserve variables, extract strings
 		float x;
 		float y;
+		auto const& xStr = coords.at(xIdx);
+		auto const& yStr = coords.at(yIdx);
+
+		// Interpret Strings into Numbers
 		try {
-			auto const& xStr = coords.at(find<gd::string>(header, "x"));
-			auto const& yStr = coords.at(find<gd::string>(header, "y"));
 			x = std::stof(xStr);
 			y = std::stof(yStr);
-		}
-		catch (std::invalid_argument) {
+		} catch (std::invalid_argument) {
 			log::warn("Unexpected Non-Number coordinate listing deaths: {}", coords);
-			continue;
-		}
-		catch (std::out_of_range) {
-			log::warn("x/y Property not featured: {} - {}", header, coords);
 			continue;
 		}
 
 		auto deathLoc = DeathLocationMin(x, y);
 
-		if (coords.size() == 3) {
-
+		// If applicable, extract and interpret percentage
+		if (percentIdx != -1) {
 			int percent;
+			auto const& percentStr = coords.at(percentIdx);
 			try {
-				auto const& percentStr = coords.at(find<gd::string>(header, "percentage"));
 				percent = std::stoi(percentStr);
-			}
-			catch (std::invalid_argument) {
+			} catch (std::invalid_argument) {
 				log::warn("Unexpected Non-Number coordinate listing deaths: {}", coords);
-				continue;
-			}
-			catch (std::out_of_range) {
-				log::warn("% Property not featured: {} - {}", header, coords);
 				continue;
 			}
 			deathLoc.percentage = percent;
@@ -165,32 +168,49 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target) {
 	if (body.isErr())
 		return log::error("Error reading list response: Body could not be read.");
 
+	// Read and split up body
 	gd::string okObj = body.ok().value();
 	auto lines = split(&okObj, '\n');
 	auto header = split(&lines.at(0), ',');
 	lines.erase(lines.begin());
 
+	// Identify columns
+	int useridentIdx = find<gd::string>(header, "userident");
+	int versionIdx = find<gd::string>(header, "levelversion");
+	int practiceIdx = find<gd::string>(header, "practice");
+	int xIdx = find<gd::string>(header, "x");
+	int yIdx = find<gd::string>(header, "y");
+	int percentageIdx = find<gd::string>(header, "percentage");
+	if (useridentIdx == -1 || versionIdx == -1 || practiceIdx == -1 || xIdx == -1 || yIdx == -1 || percentageIdx == -1)
+		return log::warn("Property not featured in header: {}", header);
+
+	// Iterate lines
 	for (int i = 0; i < lines.size(); i++) {
 		auto const& line = lines.at(i);
-		if (line.size() == 0) continue;
-		auto coords = split(&line, ',');
+		if (line.empty()) return;
 
-		gd::string userident;
+		auto coords = split(&line, ',');
+		if (coords.size() != header.size()) {
+			log::warn("Error analyzing deaths: Inequal number of elements: {} | {}", header, coords);
+			continue;
+		}
+
+		// Reserve variables, extract strings
+		gd::string userident = coords.at(useridentIdx);
 		int levelVersion;
-		bool practice;
+		bool practice = coords.at(practiceIdx) == "1";
 		int percent;
 		float x;
 		float y;
-		try {
-			auto const& userident = coords.at(find<gd::string>(header, "userident"));
-			auto const& versionStr = coords.at(find<gd::string>(header, "levelversion"));
-			auto const& practiceStr = coords.at(find<gd::string>(header, "practice"));
-			auto const& xStr = coords.at(find<gd::string>(header, "x"));
-			auto const& yStr = coords.at(find<gd::string>(header, "y"));
-			auto const& percentStr = coords.at(find<gd::string>(header, "percentage"));
+		auto const& versionStr = coords.at(versionIdx);
+		auto const& practiceStr = coords.at(practiceIdx);
+		auto const& xStr = coords.at(xIdx);
+		auto const& yStr = coords.at(yIdx);
+		auto const& percentStr = coords.at(percentageIdx);
 
+		// Interpret Strings into Numbers
+		try {
 			levelVersion = std::stoi(versionStr);
-			practice = (practiceStr == "1");
 			x = std::stof(xStr);
 			y = std::stof(yStr);
 			percent = std::stoi(percentStr);
@@ -199,11 +219,8 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target) {
 			log::warn("Unexpected Non-Number coordinate listing deaths: {}", line);
 			continue;
 		}
-		catch (std::out_of_range) {
-			log::warn("Property not featured: {} - {}", header, line);
-			continue;
-		}
 
+		// Populate DeathLocation Object
 		auto deathLoc = DeathLocation(x, y);
 		deathLoc.userIdent = userident;
 		deathLoc.levelVersion = levelVersion;
@@ -225,7 +242,8 @@ std::vector<gd::string> split(const gd::string* string, const char at) {
 			result.push_back(string->substr(currentStart, string->size() - currentStart));
 			return result;
 		}
-		result.push_back(string->substr(currentStart, nextSplit - currentStart));
+		int nextLength = nextSplit - currentStart;
+		result.push_back(string->substr(currentStart, nextLength));
 		currentStart = nextSplit + 1;
 	}
 }
