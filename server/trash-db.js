@@ -18,10 +18,13 @@ const DUMMY_COUNT =
     2000;
 const LEVELID =
   process.argv.includes("-l") ?
-    parseInt(process.argv[process.argv.indexOf("-l") + 1]) : 0;
+    parseInt(process.argv[process.argv.indexOf("-l") + 1]) :
+    0;
 
 const alphabet = "0123456789abcdef";
-const random = l => new Array(l).fill(0).map(_ => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+const random = l => new Array(l).fill(0)
+  .map(_ => alphabet[Math.floor(Math.random() * alphabet.length)])
+  .join("");
 
 const fs = require("fs");
 if (!fs.existsSync(DATABASE_FILENAME)) process.exit(1);

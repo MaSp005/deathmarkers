@@ -62,13 +62,17 @@ function renderGuide() {
     if (c < last) levels.splice(c + 1, Infinity);
     if (!levels[c]) levels[c] = 0;
     last = c;
-    return `${"\t".repeat(c)}${++levels[c]}. [${x}](#${x.toLowerCase().replaceAll(" ", "-")})`
+    return `${"\t".repeat(c)}${++levels[c]}. [${x}]` +
+      `(#${x.toLowerCase().replaceAll(" ", "-")})`;
   });
-  markdown = markdown.replace("<?>TOC", chapters.join("\n"));
+  markdown = markdown.replace("<?>TOC",
+    chapters.join("\n"));
 
   guideHtml = md.render(markdown);
-  guideHtml = guideHtml.replace(/src=".*?front\//g, "src=\""); // markdown preview requires directory, running server hosts files on root
-  guideHtml = guideHtml.replace(/>\s+</g, "><"); // Replace newlines and whitespace between HTML tags
+  // markdown preview requires directory, running server hosts files on root
+  guideHtml = guideHtml.replace(/src=".*?front\//g, "src=\"");
+  // Replace newlines and whitespace between HTML tags
+  guideHtml = guideHtml.replace(/>\s+</g, "><");
   guideLastRead = fs.statSync(GUIDE_FILENAME).mtime;
   benchmark();
 }
@@ -134,7 +138,8 @@ app.get("/list", (req, res) => {
   benchmark();
 
   // LEGACY: Serve only CSV to minimize traffic
-  if (accept == "json") res.json(deaths.map(d => (isPlatformer ? [d.x, d.y] : [d.x, d.y, d.percentage])));
+  if (accept == "json") res.json(deaths
+    .map(d => (isPlatformer ? [d.x, d.y] : [d.x, d.y, d.percentage])));
   else {
     res.contentType("text/csv");
     benchmark("serve");
@@ -157,7 +162,8 @@ app.get("/analysis", (req, res) => {
 
   benchmark("salt" + deaths.length);
   let salt = "_" + random(10);
-  deaths.forEach(d => d.userident = crypto.createHash("sha1").update(d.userident + salt).digest("hex"));
+  deaths.forEach(d => d.userident = crypto.createHash("sha1")
+    .update(d.userident + salt).digest("hex"));
   benchmark();
 
   // LEGACY: Serve only CSV to minimize traffic
@@ -182,20 +188,30 @@ app.all("/submit", expr.text({
   let format;
   try {
     format = req.body.format;
+
     if (typeof format != "number") return res.status(400).send("Format not supplied");
+
     if (typeof req.body.levelid != "number")
       return res.status(400).send("levelid was not supplied or not numerical");
+
     if (typeof req.body.levelversion != "number") req.body.levelversion = 0;
+
     req.body.practice = (!!req.body.practice) * 1;
+
     if (typeof req.body.userident != "string") {
       if (!req.body.playername || !req.body.userid)
-        return res.status(400).send("Neither userident nor playername and userid were supplied");
-      req.body.userident = createUserIdent(req.body.userid, req.body.playername, req.body.levelid);
+        return res.status(400)
+          .send("Neither userident nor playername and userid were supplied");
+
+      req.body.userident = createUserIdent(req.body.userid,
+        req.body.playername, req.body.levelid);
     } else {
       if (!/^[0-9a-f]{40}$/i.test(req.body.userident))
         return res.status(400).send("userident has incorrect length or illegal characters (should be 40 hex characters)");
     }
+
     if (typeof req.body.x != "number" || typeof req.body.y != "number") return res.sendStatus(400);
+
     if (typeof req.body.percentage != "number") return res.sendStatus(400);
 
     if (format >= 2) {

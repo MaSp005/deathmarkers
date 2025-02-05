@@ -64,7 +64,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		struct playingLevel m_levelProps;
 	};
 
-	bool init(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
+	bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
 
 		if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
 
@@ -74,8 +74,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 		this->m_objectLayer->addChild(this->m_fields->m_dmNode);
 
 		// refetch on level start in case it changed
-		this->m_fields->m_playerProps.userid = GameManager::get()->m_playerUserID.value();
-		this->m_fields->m_playerProps.username = GameManager::get()->m_playerName;
+		this->m_fields->m_playerProps.userid =
+			GameManager::get()->m_playerUserID.value();
+		this->m_fields->m_playerProps.username =
+			GameManager::get()->m_playerName;
 
 		auto mod = Mod::get();
 
@@ -97,9 +99,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 			[this](web::WebTask::Event* const e) {
 				auto res = e->getValue();
 				if (res) {
-					if (!res->ok())
-						log::error("Listing Deaths failed: {}", res->string().unwrapOr("Body could not be read."));
-					else {
+					if (!res->ok()) {
+						log::error("Listing Deaths failed: {}",
+								   res->string().unwrapOr("Body could not be read."));
+					} else {
 						log::info("Received death list.");
 						parseDeathList(res, &this->m_fields->m_deaths);
 						log::info("Finished parsing.");
@@ -132,7 +135,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 		return true;
 
-	};
+	}
 
 	void resetLevel() {
 
@@ -177,7 +180,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 	void renderMarkers() {
 
 		for (auto& deathLoc : this->m_fields->m_deaths) {
-			auto node = deathLoc.createAnimatedNode(false, (static_cast<double>(rand()) / RAND_MAX) * .25f);
+			auto node = deathLoc.createAnimatedNode(
+				false,
+				(static_cast<double>(rand()) / RAND_MAX) * .25f
+			);
 			this->m_fields->m_dmNode->addChild(node);
 		}
 
@@ -205,7 +211,9 @@ class $modify(DMPlayLayer, PlayLayer) {
 			this->m_fields->m_chartNode->setID("chart"_spr);
 			this->m_fields->m_chartNode->setZOrder(-2);
 			this->m_fields->m_chartNode->setPosition(2, 4);
-			this->m_fields->m_chartNode->setContentWidth(progBarNode->getContentWidth() - 4);
+			this->m_fields->m_chartNode->setContentWidth(
+				progBarNode->getContentWidth() - 4
+			);
 			progBarNode->addChild(this->m_fields->m_chartNode);
 			this->m_fields->m_chartAttached = true;
 		}
@@ -224,7 +232,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 			float distr = static_cast<float>(hist[i]) / maximum;
 			auto rect = CCRect(width * i, 0, width, -(distr * histHeight));
-			_ccColor4F color{};
+			ccColor4F color{};
 			color.r = distr;
 			color.g = 1 - distr;
 			color.b = 0;
@@ -341,11 +349,15 @@ class $modify(DMPlayerObject, PlayerObject) {
 		// Render Death Markers
 		if (render) {
 			if (Mod::get()->getSettingValue<bool>("always-show")) {
-				playLayer->m_fields->m_dmNode->addChild(deathLoc.toMin().createAnimatedNode(false, 0));
+				playLayer->m_fields->m_dmNode->addChild(
+					deathLoc.toMin().createAnimatedNode(false, 0)
+				);
 			}
 			else {
 				playLayer->renderMarkers();
-				playLayer->m_fields->m_dmNode->addChild(deathLoc.toMin().createAnimatedNode(true, 0));
+				playLayer->m_fields->m_dmNode->addChild(
+					deathLoc.toMin().createAnimatedNode(true, 0)
+				);
 			}
 		}
 
