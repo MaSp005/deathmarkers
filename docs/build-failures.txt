@@ -20,10 +20,6 @@ Android32
   229 |                 result.push_back(string->substr(currentStart, nextSplit - currentStart));
       |                                  ~~~~~~  ^
 
-/home/runner/work/deathmarkers/deathmarkers/src/main.cpp:175:81: warning: implicit conversion from 'int' to 'float'changes value from 2147483647 to 2147483648 [-Wimplicit-const-int-float-conversion]
-  175 |                         auto node = deathLoc.createAnimatedNode(false, (static_cast<float>(rand()) / RAND_MAX) * .25f);
-      |                                                                                                    ~ ^~~~~~~~
-
 Android64
 
 /home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:224:27: error: no member named 'find' in 'gd::string'

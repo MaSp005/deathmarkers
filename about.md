@@ -12,6 +12,8 @@ but also for <cg>in-depth analysis of gameplay</c>.
 - Built-in analysis <cg>helper tools</c>
 - (minimal) Player path tracing
 
+## Currently only on Windows!
+
 ## Disclaimer
 
 The mod makes use of your *username and user ID* to create an identifier for you. <cg>This identifier **can not be traced back to you**</c>; it is unique to you for the purpose of grouping together attempts (/deaths) that were from the same player. Your identifier is *different* for every level you play, so your deaths *cannot* be grouped together across levels.
