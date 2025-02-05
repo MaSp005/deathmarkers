@@ -18,9 +18,6 @@
 <main>
 
 # Creator's Guide <span style="font-size:50%">to [DeathMarkers](https://github.com/MaSp005/deathmarkers)</span><img src="/banner.png">
-<!-- TODO: Header image (also in about.md and README prob) -->
-<!-- TODO: favicon.ico -->
-<!-- TODO: link to github/geode in heading -->
 You've probably landed here because you are interested in using DeathMarkers to **improve** the gameplay/experience in the levels you create. **Great!** That's exactly what the mod was made to do.
 
 As you (probably) know by now, this mod collects **every player's deaths** with a heck of a lot of information. With these statistics, you can find out more about how players experience your level and iron out any **unintended unfair/blind jumps**.
