@@ -115,19 +115,20 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 	}
 
 	void updateStacks(float maxDistance) {
-		std::vector<struct deathLocationStack> deathStacks;
+		std::vector<DeathLocationStack> deathStacks;
 
-		// TODO: identify stacks (uhhh)
+		identifyClusters(&this->m_fields->m_deaths, maxDistance, &deathStacks);
 
 		this->m_fields->m_stackNode->removeAllChildrenWithCleanup(true);
 		for (auto& stack : deathStacks) {
 			auto sprite = CCSprite::create("marker-group.png"_spr);
 			std::string const id = "marker"_spr;
-			float markerScale = Mod::get()->getSettingValue<float>("marker-scale");
-			sprite->setScale(stack.diameter);
+			float spriteScale = (stack.diameter ? stack.diameter : 30) / sprite->getContentWidth();
+			sprite->setScale(spriteScale);
 			sprite->setZOrder(1);
 			sprite->setPosition(stack.center);
 			sprite->setAnchorPoint({ 0.5f, 0.5f });
+			// TODO: add text with number of deaths in stack
 			this->m_fields->m_stackNode->addChild(sprite);
 		}
 	}
@@ -213,19 +214,21 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 	void updateMarkers(float) {
 		this->m_fields->m_dmNode->setPosition(this->m_objectLayer->getPosition());
 		this->m_fields->m_dmNode->setScale(this->m_objectLayer->getScale());
+		this->m_fields->m_stackNode->setPosition(this->m_objectLayer->getPosition());
+		this->m_fields->m_stackNode->setScale(this->m_objectLayer->getScale());
 
 		// Counters UI zoom, keeps markers at constant size relative to screen
 		float inverseScale = Mod::get()->getSettingValue<float>("marker-scale") / this->m_objectLayer->getScale();
 
 		if (this->m_fields->m_lastZoom != this->m_objectLayer->getScale()) {
-			updateStacks(inverseScale * 2);
+			updateStacks(inverseScale * 180); // max diameter = height of ~3 Markers, 
 			this->m_fields->m_lastZoom = this->m_objectLayer->getScale();
 		}
 
 		CCArray* children = this->m_fields->m_dmNode->getChildren();
 		for (int i = 0; i < this->m_fields->m_dmNode->getChildrenCount(); i++) {
 			auto child = static_cast<CCNode*>(children->objectAtIndex(i));
-			child->setScale(inverseScale);
+			child->setScale(inverseScale / 2);
 		}
 	}
 

@@ -92,13 +92,3 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target);
 
 std::vector<gd::string> split(const gd::string* string, const char at);
-
-// because std::find works with iterators and all that jazz man i just want a fucking index
-template <class T>
-int find(std::vector<T> list, T element);
-
-struct deathLocationStack {
-	std::vector<DeathLocation> deaths;
-	CCPoint center;
-	float diameter;
-};

@@ -110,9 +110,9 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 	lines.erase(lines.begin());
 
 	// Identify columns
-	int xIdx = find<gd::string>(header, "x");
-	int yIdx = find<gd::string>(header, "y");
-	int percentIdx = find<gd::string>(header, "percentage");
+	int xIdx = std::find(header.begin(), header.end(), "x") - header.begin();
+	int yIdx = std::find(header.begin(), header.end(), "y") - header.begin();
+	int percentIdx = std::find(header.begin(), header.end(), "percentage") - header.begin();
 	if (xIdx == -1 || yIdx == -1) return log::warn("Property not featured in header: {}", header);
 
 	// Iterate lines
@@ -175,12 +175,12 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target) {
 	lines.erase(lines.begin());
 
 	// Identify columns
-	int useridentIdx = find<gd::string>(header, "userident");
-	int versionIdx = find<gd::string>(header, "levelversion");
-	int practiceIdx = find<gd::string>(header, "practice");
-	int xIdx = find<gd::string>(header, "x");
-	int yIdx = find<gd::string>(header, "y");
-	int percentageIdx = find<gd::string>(header, "percentage");
+	int useridentIdx = std::find(header.begin(), header.end(), "userident") - header.begin();
+	int versionIdx = std::find(header.begin(), header.end(), "levelversion") - header.begin();
+	int practiceIdx = std::find(header.begin(), header.end(), "practice") - header.begin();
+	int xIdx = std::find(header.begin(), header.end(), "x") - header.begin();
+	int yIdx = std::find(header.begin(), header.end(), "y") - header.begin();
+	int percentageIdx = std::find(header.begin(), header.end(), "percentage") - header.begin();
 	if (useridentIdx == -1 || versionIdx == -1 || practiceIdx == -1 || xIdx == -1 || yIdx == -1 || percentageIdx == -1)
 		return log::warn("Property not featured in header: {}", header);
 
@@ -246,14 +246,4 @@ std::vector<gd::string> split(const gd::string* string, const char at) {
 		result.push_back(string->substr(currentStart, nextLength));
 		currentStart = nextSplit + 1;
 	}
-}
-
-template <class T>
-int find(std::vector<T> list, T element) {
-
-	for (int i = 0; i < list.size(); i++) {
-		if (list.at(i) == element) return i;
-	}
-	return -1;
-
 }
