@@ -64,6 +64,12 @@
 			"name": "Markers in Practice",
 			"description": "Whether to draw death markers in Practice Mode and Testmode.",
 			"default": false
+		},
+		"stacks-in-editor": {
+			"type": "bool",
+			"name": "Marker Stacks in Editor",
+			"description": "Whether to mark groups of death markers in close proximity with a special indicator. Causes lag with large amounts of markers in a level.",
+			"default": true
 		}
 	},
 	"resources": {

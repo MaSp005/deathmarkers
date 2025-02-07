@@ -115,6 +115,9 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 	}
 
 	void updateStacks(float maxDistance) {
+
+		if (!Mod::get()->getSettingValue<bool>("stacks-in-editor")) return;
+
 		std::vector<DeathLocationStack> deathStacks;
 
 		identifyClusters(&this->m_fields->m_deaths, maxDistance, &deathStacks);
@@ -131,6 +134,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 			// TODO: add text with number of deaths in stack
 			this->m_fields->m_stackNode->addChild(sprite);
 		}
+
 	}
 
 	void analyzeData() {
@@ -221,7 +225,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		float inverseScale = Mod::get()->getSettingValue<float>("marker-scale") / this->m_objectLayer->getScale();
 
 		if (this->m_fields->m_lastZoom != this->m_objectLayer->getScale()) {
-			updateStacks(inverseScale * 180); // max diameter = height of ~3 Markers, 
+			updateStacks(150 / this->m_objectLayer->getScale());
 			this->m_fields->m_lastZoom = this->m_objectLayer->getScale();
 		}
 
