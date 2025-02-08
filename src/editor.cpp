@@ -126,18 +126,33 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		for (auto& stack : deathStacks) {
 			auto sprite = CCSprite::create("marker-group.png"_spr);
 			std::string const id = "marker"_spr;
-			float spriteScale = (stack.diameter ? stack.diameter : 30) / sprite->getContentWidth();
+			float spriteScale = 1.1f * (stack.diameter ? stack.diameter : maxDistance / 2) / sprite->getContentWidth();
 			sprite->setScale(spriteScale);
 			sprite->setZOrder(1);
 			sprite->setPosition(stack.center);
 			sprite->setAnchorPoint({ 0.5f, 0.5f });
-			// TODO: add text with number of deaths in stack
+
+			auto countText = CCLabelBMFont::create(numToString(stack.deaths.size(), 0).c_str(), "goldFont.fnt");
+			countText->setAnchorPoint({ 0.5f, 0.5f });
+			countText->setPosition({ sprite->getContentWidth() / 2, sprite->getContentHeight() / 2 });
+			sprite->addChild(countText);
+
 			this->m_fields->m_stackNode->addChild(sprite);
 		}
 
 	}
 
 	void analyzeData() {
+
+		auto completed = std::unordered_map<gd::string,bool>();
+
+		if (!this->m_level->isPlatformer()) {
+			std::erase_if(this->m_fields->m_deaths, [&completed](const DeathLocation& death) {
+				if (death.percentage != 101) return false;
+				completed[death.userIdent] = true;
+				return true;
+			});
+		}
 
 		if (false) {
 			std::stable_sort(
@@ -150,6 +165,8 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 			// TODO: analyze data
 		}
+
+		completed.clear();
 
 		// Sort Deaths list along x-axis for better positional searching performance
 		std::sort(
@@ -183,14 +200,14 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 		this->m_fields->m_dmNode = CCNode::create();
 		this->m_fields->m_dmNode->setID("markers"_spr);
-		this->m_fields->m_dmNode->setZOrder(-2);
+		this->m_fields->m_dmNode->setZOrder(-3);
 
 		this->m_fields->m_stackNode = CCNode::create();
 		this->m_fields->m_stackNode->setID("stacks"_spr);
-		this->m_fields->m_stackNode->setZOrder(-1);
+		this->m_fields->m_stackNode->setZOrder(-2);
 
 		for (auto& deathLoc : this->m_fields->m_deaths) {
-			auto node = deathLoc.toMin().createNode(false);
+			auto node = deathLoc.createNode();
 			node->setZOrder(0);
 			this->m_fields->m_dmNode->addChild(node);
 		}
@@ -203,7 +220,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		darkNode->setContentSize(winSize);
 		darkNode->setColor(ccColor3B(0, 0, 0));
 		darkNode->setOpacity(128);
-		darkNode->setZOrder(0);
+		darkNode->setZOrder(-1);
 		darkNode->setPosition(CCPoint(0, 0));
 		darkNode->setAnchorPoint(CCPoint(0, 0));
 		this->m_editorUI->addChild(darkNode);
@@ -225,7 +242,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		float inverseScale = Mod::get()->getSettingValue<float>("marker-scale") / this->m_objectLayer->getScale();
 
 		if (this->m_fields->m_lastZoom != this->m_objectLayer->getScale()) {
-			updateStacks(150 / this->m_objectLayer->getScale());
+			updateStacks(20 / this->m_objectLayer->getScale());
 			this->m_fields->m_lastZoom = this->m_objectLayer->getScale();
 		}
 

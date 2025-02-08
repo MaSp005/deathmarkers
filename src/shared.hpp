@@ -75,6 +75,7 @@ public:
 	int percentage = 0;
 	int levelVersion = 1;
 	bool practice = false;
+	bool clustered = true;
 	/*
 	bool coin1 = false;
 	bool coin2 = false;
@@ -86,6 +87,7 @@ public:
 	DeathLocation(CCPoint pos);
 
 	DeathLocationMin toMin() const;
+	CCNode* createNode() const;
 };
 
 void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target);

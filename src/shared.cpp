@@ -43,7 +43,7 @@ CCNode* DeathLocationMin::createNode(bool isCurrent, bool preAnim) const {
 	std::string const id = "marker"_spr;
 	float markerScale = Mod::get()->getSettingValue<float>("marker-scale");
 	if (isCurrent) {
-		sprite->setScale(markerScale * 1.5);
+		sprite->setScale(markerScale * 1.5f);
 		sprite->setZOrder(2 << 29);
 	}
 	else {
@@ -58,7 +58,6 @@ CCNode* DeathLocationMin::createNode(bool isCurrent, bool preAnim) const {
 	else {
 		sprite->setPosition(this->pos);
 	}
-	sprite->setZOrder((2 << 28) - !isCurrent);
 	sprite->setAnchorPoint({ 0.5f, 0.0f });
 	return sprite;
 }
@@ -91,6 +90,21 @@ DeathLocation::DeathLocation(CCPoint pos) {
 
 DeathLocationMin DeathLocation::toMin() const {
 	return DeathLocationMin(this->pos, this->percentage);
+}
+
+CCNode* DeathLocation::createNode() const {
+	auto sprite = CCSprite::create("death-marker.png"_spr);
+	std::string const id = "marker"_spr;
+	float markerScale = Mod::get()->getSettingValue<float>("marker-scale");
+	sprite->setScale(markerScale);
+	sprite->setPosition(this->pos);
+	sprite->setAnchorPoint({ 0.5f, 0.0f });
+	// TODO: fix clustered attribute
+	// if (this->clustered) {
+	//     sprite->setOpacity(128);
+	//     sprite->setScale(markerScale / 2);
+	// }
+	return sprite;
 }
 
 

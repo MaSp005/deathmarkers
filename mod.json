@@ -68,7 +68,7 @@
 		"stacks-in-editor": {
 			"type": "bool",
 			"name": "Marker Stacks in Editor",
-			"description": "Whether to mark groups of death markers in close proximity with a special indicator. Causes lag with large amounts of markers in a level.",
+			"description": "Whether to mark groups of death markers in close proximity with a special indicator. Causes lag with large amounts of markers in a level. Disambiguates deaths laying at the exact same coordiantes.",
 			"default": true
 		}
 	},

@@ -6,6 +6,7 @@ public:
 	std::vector<DeathLocation> deaths;
 	CCPoint center;
 	float diameter = 0;
+	float density = 0;
 
 	DeathLocationStack(std::vector<DeathLocation> deaths);
 
