@@ -94,7 +94,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 			this->m_fields->m_enabled = true;
 
 			if (!this->m_fields->m_loaded) {
-				// TODO: Swap button sprite to loading spinner
+				this->m_fields->m_button->setEnabled(false),
 				fetch();
 			}
 			else startUI();
@@ -180,7 +180,8 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 	}
 
 	void startUI() {
-
+		
+		this->m_fields->m_button->setEnabled(true);
 		this->m_fields->m_button->selected();
 
 		if (!this->m_fields->m_showedGuide) {
@@ -264,10 +265,13 @@ class $modify(DMEditorPauseLayer, EditorPauseLayer) {
 
 		auto editor = static_cast<DMEditorLayer*>(this->m_editorLayer);
 
+		auto offSprite = CCSprite::create("marker-button-deact.png"_spr);
+
 		if (!editor->m_fields->m_button) {
 			editor->m_fields->m_button = CCMenuItemExt::createSprite(
-				CCSprite::create("marker-button-deact.png"_spr),
+				offSprite,
 				CCSprite::create("marker-button-on.png"_spr),
+				LoadingSpinner::create(offSprite->getContentWidth()),
 				[editor](auto el) {
 					editor->toggleDeathMarkers();
 				}
