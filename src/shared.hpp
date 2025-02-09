@@ -44,14 +44,10 @@ public:
 	CCNode* createNode(bool isCurrent, bool preAnim) const;
 };
 
-// FYI i too would like to inherit DeathLocationMin here but c++ is messing around with it
-
 // Holds all information about a death location that can be sent to the server
 // Excludes info about the level, as it does not affect the death itself
-class DeathLocationOut {
+class DeathLocationOut : public DeathLocationMin {
 public:
-	CCPoint pos;
-	int percentage = 0;
 	/*
 	bool coin1 = false;
 	bool coin2 = false;
@@ -59,20 +55,14 @@ public:
 	int itemdata = 0;
 	*/
 
-	DeathLocationOut(CCPoint pos);
-
-	DeathLocationMin toMin() const;
-
 	void addToJSON(matjson::Value* json) const;
 };
 
 // Holds all information about a death location that the server sends for analysis
 // Includes info about the level, because the server sends it for each individual deathh
-class DeathLocation {
+class DeathLocation : public DeathLocationMin {
 public:
 	std::string userIdent;
-	CCPoint pos;
-	int percentage = 0;
 	int levelVersion = 1;
 	bool practice = false;
 	bool clustered = true;
@@ -86,7 +76,6 @@ public:
 	DeathLocation(float x, float y);
 	DeathLocation(CCPoint pos);
 
-	DeathLocationMin toMin() const;
 	CCNode* createNode() const;
 };
 

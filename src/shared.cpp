@@ -63,14 +63,6 @@ CCNode* DeathLocationMin::createNode(bool isCurrent, bool preAnim) const {
 }
 
 
-DeathLocationOut::DeathLocationOut(CCPoint pos) {
-	this->pos = CCPoint(pos);
-}
-
-DeathLocationMin DeathLocationOut::toMin() const {
-	return DeathLocationMin(this->pos, percentage);
-}
-
 void DeathLocationOut::addToJSON(matjson::Value* json) const {
 	json->set("x", matjson::Value(this->pos.x));
 	json->set("y", matjson::Value(this->pos.y));
@@ -80,17 +72,9 @@ void DeathLocationOut::addToJSON(matjson::Value* json) const {
 }
 
 
-DeathLocation::DeathLocation(float x, float y) {
-	this->pos = CCPoint(x, y);
-}
+DeathLocation::DeathLocation(float x, float y) : DeathLocationMin::DeathLocationMin(x, y) {}
 
-DeathLocation::DeathLocation(CCPoint pos) {
-	this->pos = CCPoint(pos);
-}
-
-DeathLocationMin DeathLocation::toMin() const {
-	return DeathLocationMin(this->pos, this->percentage);
-}
+DeathLocation::DeathLocation(CCPoint pos) : DeathLocationMin::DeathLocationMin(pos) {}
 
 CCNode* DeathLocation::createNode() const {
 	auto sprite = CCSprite::create("death-marker.png"_spr);

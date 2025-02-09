@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include "shared.hpp"
 
+// TODO: resources as spritesheets
+// TODO: Check for incompatibilities with other mods
+
 using namespace geode::prelude;
 
 // FUNCTIONS
@@ -67,6 +70,8 @@ class $modify(DMPlayLayer, PlayLayer) {
 	bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
 
 		if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
+
+		// TODO: Info-button
 
 		// Prepare UI
 		this->m_fields->m_dmNode->setID("markers"_spr);
@@ -350,20 +355,20 @@ class $modify(DMPlayerObject, PlayerObject) {
 		if (render) {
 			if (Mod::get()->getSettingValue<bool>("always-show")) {
 				playLayer->m_fields->m_dmNode->addChild(
-					deathLoc.toMin().createAnimatedNode(false, 0)
+					deathLoc.createAnimatedNode(false, 0)
 				);
 			}
 			else {
 				playLayer->renderMarkers();
 				playLayer->m_fields->m_dmNode->addChild(
-					deathLoc.toMin().createAnimatedNode(true, 0)
+					deathLoc.createAnimatedNode(true, 0)
 				);
 			}
 		}
 
 		// Add own death to current level's list
 		// after rendering because the current death's CCNode is being rendered separately
-		playLayer->m_fields->m_deaths.push_back(deathLoc.toMin());
+		playLayer->m_fields->m_deaths.push_back(deathLoc);
 
 		if (render) playLayer->renderHistogram();
 

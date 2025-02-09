@@ -1,6 +1,6 @@
 #include "cluster.hpp"
 
-DeathLocationStack::DeathLocationStack(std::vector<DeathLocation> deaths) {
+DeathLocationStack::DeathLocationStack(std::vector<DeathLocation*> deaths) {
 	this->deaths = deaths;
 	this->recalculate();
 }
@@ -11,8 +11,8 @@ void DeathLocationStack::recalculate() {
 	this->diameter = 0;
 	this->center = averagePos(this->deaths.begin(), this->deaths.end());
 
-	for (auto& death : this->deaths) {
-		auto dist = this->center.getDistanceSq(death.pos);
+	for (auto death : this->deaths) {
+		auto dist = this->center.getDistanceSq(death->pos);
 		if (dist > this->diameter)
 			this->diameter = dist;
 	}
@@ -36,13 +36,13 @@ void mergeStacks(std::vector<DeathLocationStack>* stacks, int a, int b) {
 
 // Time complexity O(n)
 // Auxiliary space complexity O(1)
-CCPoint averagePos(std::vector<DeathLocation>::iterator const begin, std::vector<DeathLocation>::iterator const end) {
+CCPoint averagePos(std::vector<DeathLocation*>::iterator const begin, std::vector<DeathLocation*>::iterator const end) {
 	double avgX = 0;
 	double avgY = 0;
 
 	for (auto death = begin; death < end; death++) {
-		avgX += death->pos.x;
-		avgY += death->pos.y;
+		avgX += (*death)->pos.x;
+		avgY += (*death)->pos.y;
 	}
 
 	avgX /= end - begin;
@@ -98,8 +98,8 @@ void identifyClusters(std::vector<DeathLocation>* const deaths, float maxDistanc
 	stacks->reserve(deaths->size());
 
 	for (auto i = deaths->begin(); i < deaths->end(); i++) {
-		std::vector<DeathLocation> vector;
-		vector.push_back(*i);
+		std::vector<DeathLocation*> vector;
+		vector.push_back(&*i);
 		stacks->push_back(DeathLocationStack(vector));
 	}
 	// At this point, death stacks vector is also sorted by x-coordinate
@@ -116,7 +116,7 @@ void identifyClusters(std::vector<DeathLocation>* const deaths, float maxDistanc
 			if (nearest == -1) {
 				if (i->deaths.size() <= 1) {
 					// This can only happen in the first iteration, otherwise it will have been merged and have > 1 elements
-					i->deaths.begin()->clustered = false;
+					(*i->deaths.begin())->clustered = false;
 					stacks->erase(i);
 					continue;
 				}
