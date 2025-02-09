@@ -26,12 +26,23 @@ This stuff is not self-explanatory, though, which is why this document walks you
 
 ## Table of contents
 
-> Last updated: Dec 18, 2024<br>Changes: uh
+> Last updated: Feb 09, 2025<br>Changes: uh
 
 <?>TOC
 
 ## Interface
 
+![Death Marker button in the editor pause menu](front/editor-pause-button.webp)
+
+In the editor's pause menu, you'll find a button on the bottom row with the death marker icon. When hitting it, the mod will load all available deaths from the loaded level. A popup will appear, telling you how many deaths were fetched.
+
+Be wary, it uses the level's saved online ID, so if you copy a copied level, it only takes the **original** level ID and makes the deaths of the actual level you copied inaccessible. In such cases, only the creator of the level can view its deaths. (I can't do anything about this, it's how GD stores level IDs)
+
+![Demonstration of death markers in the editor, with two groups indicating some of them being in close vicinity](front/editor-markers-groups.webp)
+
+Once loaded, you'll see every death rendered in your level, with some group circles highlighting stacks of deaths in close proximity. These groups include more or less deaths when you zoom out or in. They make it easier to see when many deaths lay on the exact same spot, and give you a sense of scale when many deaths occur in a small vicinity.
+
+<!-- TODO: Abandon Vocab section, make entire sections for each topic directly
 ## Vocabulary
 
 For the rest of the guide, we'll need to lay some ground rules about **vocabulary**. How each of these work together will be discussed later. This list is grouped by thematic relevance.
@@ -46,9 +57,11 @@ A **setback** is a death in which the player dies significantly earlier than the
 
 **Sightreading** is the practice of entirely (and confidently) predicting the upcoming gameplay by sight (or rhythmic anticipation) alone. Blind button spamming with no understanding of the gameplay is not sightreading. **Blind Jumps** are required inputs that are not reasonably able to be sightread, e.g. a jump instantly after landing a long fall or a transition that does not give enough time to examine the gameplay coming up.
 
+![Overlay of two paths across a green-orb chain, demonstrating that the timing on the first orb impacts the trajectory and causing a sequence to be impossible](front/anticipated-jumps.webp)
+
 **Anticipated jumps** are a combination of inputs in which the first input can be hit at any timing with no direct consequences, and will still allow the second input to happen, but limit the timing window to one where death is guaranteed. These combinations can be of any length, where a slightly missed timing on the first input guarantees death at least by the last input.
 
-<!-- TODO: Explanatory graphic on Anticipated Jumps (maybe even a gif) -->
+-->
 
 </main>
 
