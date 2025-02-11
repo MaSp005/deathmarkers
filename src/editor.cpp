@@ -278,7 +278,10 @@ class $modify(DMEditorPauseLayer, EditorPauseLayer) {
 			);
 			editor->m_fields->m_button->setID("load-button"_spr);
 		}
-		this->getChildByID("guidelines-menu")->addChild(editor->m_fields->m_button);
+
+		auto menu = this->getChildByID("guidelines-menu");
+		menu->addChild(editor->m_fields->m_button);
+		menu->updateLayout(true);
 
 		return true;
 

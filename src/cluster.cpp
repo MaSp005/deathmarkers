@@ -24,14 +24,14 @@ void DeathLocationStack::recalculate() {
 
 // Time complexity O(n)
 // Auxiliary space complexity O(1)
-void mergeStacks(std::vector<DeathLocationStack>* stacks, int a, int b) {
+void mergeStacks(std::vector<DeathLocationStack>* stacks, std::vector<DeathLocationStack>::iterator a, std::vector<DeathLocationStack>::iterator b) {
 	// Append b's deaths onto a
-	stacks->at(a).deaths.reserve(stacks->at(a).deaths.size() + stacks->at(b).deaths.size());
-	stacks->at(a).deaths.insert(stacks->at(a).deaths.end(), stacks->at(b).deaths.begin(), stacks->at(b).deaths.end());
+	a->deaths.reserve(a->deaths.size() + b->deaths.size());
+	a->deaths.insert(a->deaths.end(), b->deaths.begin(), b->deaths.end());
 	// Recalculate a
-	stacks->at(a).recalculate();
+	a->recalculate();
 	// Remove b from vector
-	stacks->erase(stacks->begin() + b);
+	stacks->erase(b);
 }
 
 // Time complexity O(n)
@@ -53,15 +53,15 @@ CCPoint averagePos(std::vector<DeathLocation*>::iterator const begin, std::vecto
 
 // Time complexity O(n)
 // Auxiliary space complexity O(1)
-int findNearest(std::vector<DeathLocationStack> const* stacks, int sourceIndex, float maxDistance) {
+int findNearest(std::vector<DeathLocationStack> const* stacks, std::vector<DeathLocationStack>::iterator source, float maxDistance) {
 	// Assumes death stacks vector is (roughly) sorted by x-coordinate
 
-	CCPoint srcPoint = stacks->at(sourceIndex).center;
+	CCPoint srcPoint = source->center;
 	float minDistSq = maxDistance * maxDistance;
 	int minimum = -1;
 	
 	// Walk right
-	for (auto i = stacks->begin() + sourceIndex + 1; i < stacks->end(); i++) {
+	for (auto i = source + 1; i < stacks->end(); i++) {
 		// All points from here will be out of range on x alone, skip
 		if (i->center.x > srcPoint.x + maxDistance) break;
 		float dist = i->center.getDistanceSq(srcPoint);
@@ -71,7 +71,7 @@ int findNearest(std::vector<DeathLocationStack> const* stacks, int sourceIndex, 
 		}
 	}
 	// Walk left
-	for (auto i = stacks->begin() + sourceIndex - 1; i >= stacks->begin(); i--) {
+	for (auto i = source - 1; i >= stacks->begin(); i--) {
 		if (i->center.x < srcPoint.x - maxDistance) break;
 		float dist = i->center.getDistanceSq(srcPoint);
 		if (dist < minDistSq) {
@@ -112,7 +112,7 @@ void identifyClusters(std::vector<DeathLocation>* const deaths, float maxDistanc
 
 		for (auto i = stacks->begin(); i < stacks->end();) {
 			deathIdx++;
-			int nearest = findNearest(stacks, i - stacks->begin(), maxDistance);
+			int nearest = findNearest(stacks, i, maxDistance);
 			if (nearest == -1) {
 				if (i->deaths.size() <= 1) {
 					// This can only happen in the first iteration, otherwise it will have been merged and have > 1 elements
@@ -124,7 +124,7 @@ void identifyClusters(std::vector<DeathLocation>* const deaths, float maxDistanc
 				continue;
 			}
 			merged = true;
-			mergeStacks(stacks, i - stacks->begin(), nearest);
+			mergeStacks(stacks, stacks->begin(), stacks->begin() + nearest);
 		}
 
 		if (!merged) break;

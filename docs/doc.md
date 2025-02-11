@@ -14,6 +14,8 @@ The system works with format numbers, starting from 1 as the first version. They
   - Additionally sends for analysis: `coins`, `itemdata`
   - Currently unused by the mod, but available
 
+> Format 2 is accepted for submissions and treated the same as format 1 for listing, but ignored for analysis
+
 # Database
 
 The server works with [`better-sqlite3`](https://www.npmjs.com/package/better-sqlite3) and thus has only one database and no login.
