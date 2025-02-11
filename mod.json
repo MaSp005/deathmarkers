@@ -6,10 +6,10 @@
 		"_mac": "2.2074",
 		"_ios": "2.2074"
 	},
-	"id": "yourlocalidiot.deathmarkers",
+	"id": "freakyrobot.deathmarkers",
 	"name": "DeathMarkers",
 	"version": "v1.0.0",
-	"developer": "YourLocalIdiot",
+	"developer": "FreakyRobot",
 	"description": "Online death collection for creators and players",
 	"links": {
 		"source": "https://github.com/MaSp005/deathmarkers"
