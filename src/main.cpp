@@ -63,6 +63,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		std::deque<DeathLocationOut> m_queuedSubmissions;
 
 		bool m_chartAttached = false;
+		bool m_fetched = false;
 		struct playerData m_playerProps;
 		struct playingLevel m_levelProps;
 	};
@@ -94,34 +95,55 @@ class $modify(DMPlayLayer, PlayLayer) {
 		this->m_fields->m_levelProps.testmode = this->m_isTestMode;
 
 		// Don't even continue to list if we're not going to show them anyway
-		if (!shouldDraw(this->m_fields->m_levelProps)) return true;
+		if (!shouldDraw(this->m_fields->m_levelProps)) {
+			this->m_fields->m_fetched = true;
+			return true;
+		}
 
-		log::info("Listing Deaths...");
 		this->m_fields->m_deaths.clear();
+
+		this->fetch(
+			[this](bool success) {
+				if (Mod::get()->getSettingValue<bool>("always-show")) {
+					log::info("Always show enabled, rendering...");
+					this->renderMarkers();
+				}
+
+				this->checkQueue();
+			}
+		);
+
+		return true;
+
+	}
+
+	void fetch(std::function<void(bool)> cb) {
+
+		if (this->m_fields->m_fetched) return cb(true);
+		
+		log::info("Listing Deaths...");
 
 		// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
 		m_fields->m_listener.bind(
-			[this](web::WebTask::Event* const e) {
+			[this, cb](web::WebTask::Event* const e) {
 				auto res = e->getValue();
 				if (res) {
 					if (!res->ok()) {
 						log::error("Listing Deaths failed: {}",
 								   res->string().unwrapOr("Body could not be read."));
+						cb(false);
 					} else {
 						log::info("Received death list.");
 						parseDeathList(res, &this->m_fields->m_deaths);
 						log::info("Finished parsing.");
+						this->m_fields->m_fetched = true;
 
-						if (Mod::get()->getSettingValue<bool>("always-show")) {
-							log::info("Always show enabled, rendering...");
-							renderMarkers();
-						}
-
-						this->checkQueue();
+						cb(true);
 					}
 				}
 				else if (e->isCancelled()) {
 					log::error("Death Listing Request was cancelled.");
+					cb(false);
 				};
 			}
 		);
@@ -137,8 +159,6 @@ class $modify(DMPlayLayer, PlayLayer) {
 		req.timeout(HTTP_TIMEOUT);
 
 		this->m_fields->m_listener.setFilter(req.get(url));
-
-		return true;
 
 	}
 
@@ -164,7 +184,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 		auto deathLoc = DeathLocationOut(this->getPosition());
 		deathLoc.percentage = 101;
-		submitDeath(deathLoc);
+		trySubmitDeath(deathLoc);
 
 	}
 
@@ -248,15 +268,38 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	}
 
-	void submitDeath(DeathLocationOut const& deathLoc) {
+	void trySubmitDeath(DeathLocationOut const& deathLoc) {
 
-		if (!shouldSubmit(this->m_fields->m_levelProps, this->m_fields->m_playerProps)) return;
+		if (!shouldSubmit(this->m_fields->m_levelProps, this->m_fields->m_playerProps)) {
+			if (!this->m_fields->m_fetched) {
+				this->fetch([](bool _){});
+			}
+			return;
+		}
+
+		if (this->m_fields->m_queuedSubmissions.empty() && this->m_fields->m_fetched) {
+			this->submitDeath(deathLoc,
+				[this, deathLoc](bool success) {
+					if (!success) {
+						this->m_fields->m_queuedSubmissions.push_front(deathLoc);
+					}
+				}
+			);
+		}
+		else {
+			this->m_fields->m_queuedSubmissions.push_back(deathLoc);
+			this->checkQueue();
+		}
+
+	}
+
+	void submitDeath(DeathLocationOut const& deathLoc, std::function<void(bool)> cb) {
 
 		auto mod = Mod::get();
 		auto playLayer = static_cast<DMPlayLayer*>(GameManager::get()->getPlayLayer());
 
 		m_fields->m_listener.bind(
-			[this, deathLoc](web::WebTask::Event* e) {
+			[this, deathLoc, cb](web::WebTask::Event* e) {
 				auto res = e->getValue();
 				if (res) {
 					if (!res->ok()) {
@@ -264,16 +307,16 @@ class $modify(DMPlayLayer, PlayLayer) {
 							"Posting Death failed: {}",
 							res->string().unwrapOr("Body could not be read.")
 						);
-						this->m_fields->m_queuedSubmissions.push_back(deathLoc);
+						cb(false);
 					}
 					else {
 						log::info("Posted Death.");
-						this->checkQueue();
+						cb(true);
 					}
 				}
 				else if (e->isCancelled()) {
 					log::error("Posting Death was cancelled");
-					this->m_fields->m_queuedSubmissions.push_back(deathLoc);
+					cb(false);
 				}
 			}
 		);
@@ -305,12 +348,35 @@ class $modify(DMPlayLayer, PlayLayer) {
 	}
 
 	void checkQueue() {
-		if (this->m_fields->m_queuedSubmissions.empty()) return;
-		log::info("Clearing Queue. {} deaths pending.", this->m_fields->m_queuedSubmissions.size());
 
-		DeathLocationOut next = this->m_fields->m_queuedSubmissions.front();
-		this->m_fields->m_queuedSubmissions.pop_front();
-		this->submitDeath(next);
+		if (this->m_fields->m_queuedSubmissions.empty()) return;
+		
+		if (this->m_fields->m_fetched) {
+			log::info("Clearing Queue. {} deaths pending.", this->m_fields->m_queuedSubmissions.size());
+
+			DeathLocationOut next = this->m_fields->m_queuedSubmissions.front();
+			this->m_fields->m_queuedSubmissions.pop_front();
+
+			this->submitDeath(next,
+				[this, next](bool success) {
+					if (success) {
+						this->checkQueue();
+					} else {
+						this->m_fields->m_queuedSubmissions.push_front(next);
+					}
+				}
+			);
+		} else {
+			log::info("Attempting to fetch...");
+
+			this->fetch(
+				[this](bool success) {
+					if (success) {
+						this->checkQueue();
+					}
+				}
+			);
+		}
 	}
 
 };
@@ -347,7 +413,7 @@ class $modify(DMPlayerObject, PlayerObject) {
 		// deathLoc.coin3 = ...;
 		// deathLoc.itemdata = ...; // where the hell are the counters
 
-		playLayer->submitDeath(deathLoc);
+		playLayer->trySubmitDeath(deathLoc);
 
 		auto render = shouldDraw(playLayer->m_fields->m_levelProps);
 
