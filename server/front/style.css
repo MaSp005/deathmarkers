@@ -59,18 +59,24 @@ strong {
 
 h1 {
   text-decoration: none;
+  margin-top: 1em;
 }
 
 h1 img {
   height: auto;
   pointer-events: none;
+  display: none;
 }
 
 @media screen and (min-width: 560px) {
+  h1 {
+    margin-top: 2em;
+  }
   h1 img {
     height: 3em;
     position: absolute;
     translate: -60% -40%;
+    display: inline-block;
   }
 }
 
@@ -78,12 +84,40 @@ h1 a {
   text-decoration: none;
 }
 
-img {
+p img {
   max-height: 6lh;
   max-width: 100%;
   width: auto;
   float: right;
   margin-left: 1ch;
+  border-radius: 1em;
+  cursor: zoom-in;
+}
+
+dialog {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  animation: fade-out 0.25s ease-out;
+  cursor: zoom-out;
+}
+
+dialog::backdrop {
+  background: #0004;
+  backdrop-filter: blur(5px);
+}
+
+dialog[open] {
+  animation: fade-in 0.25s ease-out;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  gap: .5em;
+}
+
+dialog img {
+  cursor: auto;
 }
 
 cb {
@@ -109,4 +143,20 @@ cr {
 }
 cp {
   color: #ff00ff;
+}
+
+body > blockquote {
+  font-size: small;
+  width: fit-content;
+}
+
+.love {
+  display: inline-block;
+  height: 1em;
+  aspect-ratio: 1;
+  background-image: url(/heart.svg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  vertical-align: middle;
+  margin-left: .2em;
 }

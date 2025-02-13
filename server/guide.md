@@ -26,7 +26,7 @@ This stuff is not self-explanatory, though, which is why this document walks you
 
 ## Table of contents
 
-> Last updated: Feb 09, 2025<br>Changes: uh
+> Last updated: Feb 13, 2025<br>For mod version: v1.0.0
 
 <?>TOC
 
@@ -63,7 +63,14 @@ A **setback** is a death in which the player dies significantly earlier than the
 
 -->
 
+## Upcoming
+
+As of now, the mod only (but eagerly) *tracks* a lot of information about player deaths, but does not yet display it to creators. This is being actively worked on, but I want you to enjoy the benefits of seeing just death locations, as they are right now, first!
+
+If you want to help make this whole dream a bit more of a reality, either by contributing directly or by helping iron out issues, be sure to take a look at the [GitHub repository](https://github.com/MaSp005/deathmarkers) of the project. <span class="love"></span>
+
 </main>
 
-> **LEGAL STUFF**<br>See [my homepage](https://masp005.dev/legal) regarding hosting and contact. This page does not collect any data. As for the mod, see the [GitHub repository](https://github.com/MaSp005/deathmarkers).
+> **LEGAL STUFF**<br>See [my homepage](https://masp005.dev/legal) regarding hosting and contact.<br>This page does not collect any data.<br>As for the mod, see the [GitHub repository](https://github.com/MaSp005/deathmarkers).
+<script src="/zoom.js"></script>
 </body></html>

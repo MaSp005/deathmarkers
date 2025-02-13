@@ -54,8 +54,8 @@ function csvStream(array, columns, map = r => r) {
         buffer.push(map(row).join(","));
 
         if (buffer.length >= BUFFER_SIZE) {
-          this.push(buffer.join("\n") + "\n"); // Push batched rows
-          buffer = []; // Clear buffer
+          this.push(buffer.join("\n") + "\n");
+          buffer = [];
         }
       }
       this.push(null);
