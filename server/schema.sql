@@ -1,0 +1,24 @@
+CREATE TABLE IF NOT EXISTS format1 (
+  userident CHAR(40) NOT NULL,
+  levelid INT UNSIGNED NOT NULL,
+  levelversion TINYINT UNSIGNED DEFAULT 0,
+  practice BIT DEFAULT 0,
+  x DOUBLE NOT NULL,
+  y DOUBLE NOT NULL,
+  percentage SMALLINT UNSIGNED NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS format2 (
+  userident CHAR(40) NOT NULL,
+  levelid INT UNSIGNED NOT NULL,
+  levelversion TINYINT UNSIGNED DEFAULT 0,
+  practice BIT DEFAULT 0,
+  x DOUBLE NOT NULL,
+  y DOUBLE NOT NULL,
+  percentage SMALLINT UNSIGNED NOT NULL,
+  coins TINYINT DEFAULT 0,
+  itemdata DOUBLE DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS format1index ON format1 (levelid);
+CREATE INDEX IF NOT EXISTS format2index ON format2 (levelid);

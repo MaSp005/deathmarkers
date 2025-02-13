@@ -9,6 +9,7 @@ if (process.argv.includes("--help") || process.argv.includes("-h")) {
 const DATABASE_FILENAME = process.argv.includes("-i") ?
   process.argv[process.argv.indexOf("-c") + 1] : "deaths.db";
 const PORT = 8048;
+const BUFFER_SIZE = 500;
 
 const alphabet = "ABCDEFGHIJOKLMNOPQRSTUVWXYZabcdefghijoklmnopqrstuvwxyz0123456789";
 const random = l => new Array(l).fill(0).map(_ => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
@@ -33,15 +34,34 @@ const expr = require("express");
 const app = expr();
 const crypto = require("crypto");
 const fs = require("fs");
-const csv = require("csv");
 const md = require("markdown-it")({ html: true, breaks: true })
   .use(require('markdown-it-named-headings'));
+const { Readable } = require("stream");
 
 app.use(expr.static("front"));
 
 let guideHtml = "";
 let guideLastRead = 0;
 renderGuide();
+
+function csvStream(array, columns, map = r => r) {
+  return new Readable({
+    read() {
+      this.push(columns + "\n");
+
+      let buffer = [];
+      for (const row of array) {
+        buffer.push(map(row).join(","));
+
+        if (buffer.length >= BUFFER_SIZE) {
+          this.push(buffer.join("\n") + "\n"); // Push batched rows
+          buffer = []; // Clear buffer
+        }
+      }
+      this.push(null);
+    }
+  })
+}
 
 function renderGuide() {
   console.log("Rerendering guide...");
@@ -84,34 +104,11 @@ function createUserIdent(userid, username, levelid) {
 }
 
 try {
-  // Table for Format 1
-  db.prepare("CREATE TABLE IF NOT EXISTS format1 (\
-  userident CHAR(40) NOT NULL,\
-  levelid INT UNSIGNED NOT NULL,\
-  levelversion TINYINT UNSIGNED DEFAULT 0,\
-  practice BIT DEFAULT 0,\
-  x DOUBLE NOT NULL,\
-  y DOUBLE NOT NULL,\
-  percentage SMALLINT UNSIGNED NOT NULL\
-  );").run();
-
-  // Table for Format 2
-  db.prepare("CREATE TABLE IF NOT EXISTS format2 (\
-  userident CHAR(40) NOT NULL,\
-  levelid INT UNSIGNED NOT NULL,\
-  levelversion TINYINT UNSIGNED DEFAULT 0,\
-  practice BIT DEFAULT 0,\
-  x DOUBLE NOT NULL,\
-  y DOUBLE NOT NULL,\
-  percentage SMALLINT UNSIGNED NOT NULL,\
-  coins TINYINT DEFAULT 0,\
-  itemdata DOUBLE DEFAULT 0\
-  );").run();
-
-  // Indexes for both tables
-  db.prepare("CREATE INDEX IF NOT EXISTS format1index ON format1 (levelid);").run();
-  db.prepare("CREATE INDEX IF NOT EXISTS format2index ON format2 (levelid);").run();
+  db.exec("BEGIN TRANSACTION;");
+  db.exec(fs.readFileSync('schema.sql', 'utf8'));
+  db.exec("COMMIT;");
 } catch (e) {
+  db.exec("ROLLBACK;");
   console.error("Error preparing database:");
   console.error(e);
   process.exit(1);
@@ -126,20 +123,25 @@ app.get("/list", (req, res) => {
   if (accept != "csv") return res.sendStatus(400);
 
   let isPlatformer = req.query.platformer == "true";
+  let columns = isPlatformer ? "x,y" : "x,y,percentage";
   let query = isPlatformer ?
-    `SELECT x,y FROM format1 WHERE levelid == ? UNION
-  SELECT x,y FROM format2 WHERE levelid == ?;` :
-    `SELECT x,y,percentage FROM format1 WHERE levelid == ? AND percentage < 101 UNION
-  SELECT x,y,percentage FROM format2 WHERE levelid == ? AND percentage < 101;`;
+    `SELECT ${columns} FROM format1 WHERE levelid == @levelId UNION
+  SELECT ${columns} FROM format2 WHERE levelid == @levelId` :
+    `SELECT ${columns} FROM format1 WHERE levelid == @levelId AND percentage < 101 UNION
+  SELECT ${columns} FROM format2 WHERE levelid == @levelId AND percentage < 101;`;
 
   benchmark("query");
   let deaths = db.prepare(query)
-    .all(levelId, levelId);
+    .raw(true)
+    .all({ levelId });
   benchmark();
 
   res.contentType("text/csv");
+
   benchmark("serve");
-  csv.stringify(deaths, { header: true }).pipe(res);
+  csvStream(deaths, columns).pipe(res);
+  // let csv = columns + "\n" + deaths.map(r => r.join(",")).join("\n");
+  // res.send(csv);
   benchmark();
 });
 
@@ -151,19 +153,23 @@ app.get("/analysis", (req, res) => {
   let accept = req.query.response || "csv";
   if (accept != "csv") return res.sendStatus(400);
 
-  benchmark("query");
-  let deaths = db.prepare("SELECT userident,levelversion,practice,x,y,percentage FROM format1 WHERE levelid = ?;").all(levelId);
-  benchmark();
-
-  benchmark("salt" + deaths.length);
+  let columns = "userident,levelversion,practice,x,y,percentage";
   let salt = "_" + random(10);
-  deaths.forEach(d => d.userident = crypto.createHash("sha1")
-    .update(d.userident + salt).digest("hex"));
+
+  benchmark("query");
+  let deaths = db.prepare(`SELECT ${columns} FROM format1 WHERE levelid = ?;`).raw(true).all(levelId);
   benchmark();
 
   res.contentType("text/csv");
+
   benchmark("serve");
-  csv.stringify(deaths, { header: true }).pipe(res);
+  csvStream(deaths, columns,
+    d => ([
+      crypto.createHash("sha1")
+        .update(d[0] + salt).digest("hex"),
+      ...d.slice(1)
+    ])
+  ).pipe(res);
   benchmark();
 });
 
@@ -225,13 +231,11 @@ app.all("/submit", expr.text({
   try {
     switch (format) {
       case 1:
-        db.prepare("INSERT INTO format1 (userident, levelid, levelversion, practice, x, y, percentage)\
-          VALUES (@userident, @levelid, @levelversion, @practice, @x, @y, @percentage)")
+        db.prepare("INSERT INTO format1 VALUES (@userident, @levelid, @levelversion, @practice, @x, @y, @percentage)")
           .run(req.body);
         break;
       case 2:
-        db.prepare("INSERT INTO format2 (userident, levelid, levelversion, practice, x, y, percentage, coins, itemdata)\
-          VALUES (@userident, @levelid, @levelversion, @practice, @x, @y, @percentage, @coins, @itemdata)")
+        db.prepare("INSERT INTO format2 VALUES (@userident, @levelid, @levelversion, @practice, @x, @y, @percentage, @coins, @itemdata)")
           .run(req.body);
         break;
     }
