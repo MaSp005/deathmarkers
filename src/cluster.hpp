@@ -13,6 +13,4 @@ public:
 	void recalculate();
 };
 
-CCPoint averagePos(std::vector<DeathLocation*>::iterator const begin, std::vector<DeathLocation*>::iterator const end);
-
 void identifyClusters(std::vector<DeathLocation>* const deaths, float maxDistance, std::vector<DeathLocationStack>* stacks);
