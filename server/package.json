@@ -4,10 +4,15 @@
   "description": "Server-side of the Geometry Dash Mod Deathmarkers",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node .",
+    "benchmark": "node . -b"
   },
-  "author": "",
-  "license": "UNLICENSED",
+  "author": "masp005",
+  "license": "MIT",
+  "repository": {
+    "url": "git+https://github.com/MaSp005/deathmarkers",
+    "type": "git"
+  },
   "dependencies": {
     "better-sqlite3": "^11.5.0",
     "express": "^4.21.1",

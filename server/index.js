@@ -103,11 +103,10 @@ function createUserIdent(userid, username, levelid) {
 }
 
 try {
-  db.exec("BEGIN TRANSACTION;");
-  db.exec(fs.readFileSync('schema.sql', 'utf8'));
-  db.exec("COMMIT;");
+  db.transaction(() => {
+    db.exec(fs.readFileSync('schema.sql', 'utf8'));
+  })();
 } catch (e) {
-  db.exec("ROLLBACK;");
   console.error("Error preparing database:");
   console.error(e);
   process.exit(1);
