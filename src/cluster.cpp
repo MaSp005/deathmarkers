@@ -19,12 +19,15 @@ void DeathLocationStack::recalculate() {
 
 	this->diameter = sqrt(this->diameter) * 2;
 
-	this->density = static_cast<float>(this->deaths.size()) / (this->diameter ? this->diameter * this->diameter : 1);
+	this->density = static_cast<float>(this->deaths.size()) /
+		(this->diameter ? this->diameter * this->diameter : 1);
 }
 
 // Time complexity O(n)
 // Auxiliary space complexity O(1)
-void mergeStacks(std::vector<DeathLocationStack>* stacks, std::vector<DeathLocationStack>::iterator a, std::vector<DeathLocationStack>::iterator b) {
+void mergeStacks(std::vector<DeathLocationStack>* stacks,
+	std::vector<DeathLocationStack>::iterator a,
+	std::vector<DeathLocationStack>::iterator b) {
 	// Append b's deaths onto a
 	a->deaths.reserve(a->deaths.size() + b->deaths.size());
 	a->deaths.insert(a->deaths.end(), b->deaths.begin(), b->deaths.end());
@@ -36,7 +39,8 @@ void mergeStacks(std::vector<DeathLocationStack>* stacks, std::vector<DeathLocat
 
 // Time complexity O(n)
 // Auxiliary space complexity O(1)
-CCPoint averagePos(std::vector<DeathLocation*>::iterator const begin, std::vector<DeathLocation*>::iterator const end) {
+CCPoint averagePos(std::vector<DeathLocation*>::iterator const begin,
+	std::vector<DeathLocation*>::iterator const end) {
 	double avgX = 0;
 	double avgY = 0;
 
@@ -53,7 +57,8 @@ CCPoint averagePos(std::vector<DeathLocation*>::iterator const begin, std::vecto
 
 // Time complexity O(n)
 // Auxiliary space complexity O(1)
-int findNearest(std::vector<DeathLocationStack> const* stacks, std::vector<DeathLocationStack>::iterator source, float maxDistance) {
+int findNearest(std::vector<DeathLocationStack> const* stacks,
+	std::vector<DeathLocationStack>::iterator source, float maxDistance) {
 	// Assumes death stacks vector is (roughly) sorted by x-coordinate
 
 	CCPoint srcPoint = source->center;
@@ -84,7 +89,8 @@ int findNearest(std::vector<DeathLocationStack> const* stacks, std::vector<Death
 	return minimum;
 }
 
-void identifyClusters(std::vector<DeathLocation>* const deaths, float maxDistance, std::vector<DeathLocationStack>* stacks) {
+void identifyClusters(std::vector<DeathLocation>* const deaths,
+	float maxDistance, std::vector<DeathLocationStack>* stacks) {
 
 	/*
 	*  Hierarchical Clustering
@@ -93,7 +99,8 @@ void identifyClusters(std::vector<DeathLocation>* const deaths, float maxDistanc
 	*  Assumes deaths vector is sorted by x-coordinate
 	*/
 
-	log::info("Clustering {} entries with maximum distance {}", deaths->size(), maxDistance);
+	log::info("Clustering {} entries with maximum distance {}",
+		deaths->size(), maxDistance);
 	stacks->clear();
 	stacks->reserve(deaths->size());
 
@@ -115,7 +122,8 @@ void identifyClusters(std::vector<DeathLocation>* const deaths, float maxDistanc
 			int nearest = findNearest(stacks, i, maxDistance);
 			if (nearest == -1) {
 				if (i->deaths.size() <= 1) {
-					// This can only happen in the first iteration, otherwise it will have been merged and have > 1 elements
+					// This can only happen in the first iteration,
+					// otherwise it will have been merged and have > 1 elements
 					(*i->deaths.begin())->clustered = false;
 					stacks->erase(i);
 					continue;

@@ -270,14 +270,18 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	void trySubmitDeath(DeathLocationOut const& deathLoc) {
 
-		if (!shouldSubmit(this->m_fields->m_levelProps, this->m_fields->m_playerProps)) {
+		if (!shouldSubmit(
+			this->m_fields->m_levelProps,
+			this->m_fields->m_playerProps
+		)) {
 			if (!this->m_fields->m_fetched) {
 				this->fetch([](bool _){});
 			}
 			return;
 		}
 
-		if (this->m_fields->m_queuedSubmissions.empty() && this->m_fields->m_fetched) {
+		if (this->m_fields->m_queuedSubmissions.empty() &&
+			this->m_fields->m_fetched) {
 			this->submitDeath(deathLoc,
 				[this, deathLoc](bool success) {
 					if (!success) {
@@ -293,10 +297,13 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	}
 
-	void submitDeath(DeathLocationOut const& deathLoc, std::function<void(bool)> cb) {
+	void submitDeath(DeathLocationOut const& deathLoc,
+		std::function<void(bool)> cb) {
 
 		auto mod = Mod::get();
-		auto playLayer = static_cast<DMPlayLayer*>(GameManager::get()->getPlayLayer());
+		auto playLayer = static_cast<DMPlayLayer*>(
+			GameManager::get()->getPlayLayer()
+		);
 
 		m_fields->m_listener.bind(
 			[this, deathLoc, cb](web::WebTask::Event* e) {
@@ -324,10 +331,18 @@ class $modify(DMPlayLayer, PlayLayer) {
 		// Build the HTTP Request
 		std::string const url = API_BASE + "submit";
 		auto myjson = matjson::Value();
-		myjson.set("levelid", matjson::Value(static_cast<int>(playLayer->m_level->m_levelID)));
-		myjson.set("levelversion", matjson::Value(playLayer->m_level->m_levelVersion));
-		myjson.set("practice", matjson::Value(playLayer->m_isPracticeMode));
-		myjson.set("playername", matjson::Value(this->m_fields->m_playerProps.username));
+		myjson.set("levelid", matjson::Value(
+			static_cast<int>(playLayer->m_level->m_levelID)
+		));
+		myjson.set("levelversion", matjson::Value(
+			playLayer->m_level->m_levelVersion
+		));
+		myjson.set("practice", matjson::Value(
+			playLayer->m_isPracticeMode
+		));
+		myjson.set("playername", matjson::Value(
+			this->m_fields->m_playerProps.username
+		));
 		myjson.set("userid", matjson::Value(this->m_fields->m_playerProps.userid));
 		myjson.set("format", matjson::Value(FORMAT_VERSION));
 		deathLoc.addToJSON(&myjson);
@@ -352,7 +367,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 		if (this->m_fields->m_queuedSubmissions.empty()) return;
 		
 		if (this->m_fields->m_fetched) {
-			log::info("Clearing Queue. {} deaths pending.", this->m_fields->m_queuedSubmissions.size());
+			log::info(
+				"Clearing Queue. {} deaths pending.",
+				this->m_fields->m_queuedSubmissions.size()
+			);
 
 			DeathLocationOut next = this->m_fields->m_queuedSubmissions.front();
 			this->m_fields->m_queuedSubmissions.pop_front();
@@ -399,7 +417,9 @@ class $modify(DMPlayerObject, PlayerObject) {
 		PlayerObject::playerDestroyed(secondPlr);
 		if (secondPlr) return;
 
-		auto playLayer = static_cast<DMPlayLayer*>(GameManager::get()->getPlayLayer());
+		auto playLayer = static_cast<DMPlayLayer*>(
+			GameManager::get()->getPlayLayer()
+		);
 		if (!playLayer) return;
 
 		// Populate percentage as current time or progress percentage

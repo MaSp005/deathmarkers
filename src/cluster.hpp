@@ -13,4 +13,5 @@ public:
 	void recalculate();
 };
 
-void identifyClusters(std::vector<DeathLocation>* const deaths, float maxDistance, std::vector<DeathLocationStack>* stacks);
+void identifyClusters(std::vector<DeathLocation>* const deaths,
+	float maxDistance, std::vector<DeathLocationStack>* stacks);

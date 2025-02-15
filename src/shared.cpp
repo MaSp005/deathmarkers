@@ -24,7 +24,8 @@ CCNode* DeathLocationMin::createNode(bool isCurrent) const {
 	return this->createNode(isCurrent, false);
 }
 
-CCNode* DeathLocationMin::createAnimatedNode(bool isCurrent, double delay) const {
+CCNode* DeathLocationMin::createAnimatedNode(
+	bool isCurrent, double delay) const {
 	auto node = this->createNode(isCurrent, true);
 	node->runAction(CCSequence::createWithTwoActions(
 		CCDelayTime::create(delay),
@@ -72,9 +73,11 @@ void DeathLocationOut::addToJSON(matjson::Value* json) const {
 }
 
 
-DeathLocation::DeathLocation(float x, float y) : DeathLocationMin::DeathLocationMin(x, y) {}
+DeathLocation::DeathLocation(float x, float y) :
+	DeathLocationMin::DeathLocationMin(x, y) {}
 
-DeathLocation::DeathLocation(CCPoint pos) : DeathLocationMin::DeathLocationMin(pos) {}
+DeathLocation::DeathLocation(CCPoint pos) :
+	DeathLocationMin::DeathLocationMin(pos) {}
 
 CCNode* DeathLocation::createNode() const {
 	auto sprite = CCSprite::create("death-marker.png"_spr);
@@ -92,7 +95,8 @@ CCNode* DeathLocation::createNode() const {
 }
 
 
-void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target) {
+void parseDeathList(web::WebResponse* res,
+	std::vector<DeathLocationMin>* target) {
 
 	auto const body = res->string();
 
@@ -110,8 +114,10 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 	// Identify columns
 	int xIdx = std::find(header.begin(), header.end(), "x") - header.begin();
 	int yIdx = std::find(header.begin(), header.end(), "y") - header.begin();
-	int percentIdx = std::find(header.begin(), header.end(), "percentage") - header.begin();
-	if (xIdx == -1 || yIdx == -1) return log::warn("Property not featured in header: {}", header);
+	int percentIdx = std::find(header.begin(), header.end(), "percentage") -
+		header.begin();
+	if (xIdx == -1 || yIdx == -1) return
+		log::warn("Property not featured in header: {}", header);
 
 	// Iterate lines
 	for (int i = 0; i < lines.size(); i++) {
@@ -120,7 +126,10 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 
 		auto coords = split(&line, ',');
 		if (coords.size() != header.size()) {
-			log::warn("Error listing deaths: Inequal number of elements: {} | {}", header, coords);
+			log::warn(
+				"Error listing deaths: Inequal number of elements: {} | {}",
+				header, coords
+			);
 			continue;
 		}
 
@@ -148,7 +157,10 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 			try {
 				percent = std::stoi(percentStr);
 			} catch (std::invalid_argument) {
-				log::warn("Unexpected Non-Number coordinate listing deaths: {}", coords);
+				log::warn(
+					"Unexpected Non-Number coordinate listing deaths: {}",
+					coords
+				);
 				continue;
 			}
 			deathLoc.percentage = percent;
@@ -159,7 +171,8 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target
 
 }
 
-void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target) {
+void parseDeathList(web::WebResponse* res,
+	std::vector<DeathLocation>* target) {
 
 	auto const body = res->string();
 
@@ -173,14 +186,20 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target) {
 	lines.erase(lines.begin());
 
 	// Identify columns
-	int useridentIdx = std::find(header.begin(), header.end(), "userident") - header.begin();
-	int versionIdx = std::find(header.begin(), header.end(), "levelversion") - header.begin();
-	int practiceIdx = std::find(header.begin(), header.end(), "practice") - header.begin();
+	int useridentIdx = std::find(header.begin(), header.end(), "userident") -
+		header.begin();
+	int versionIdx = std::find(header.begin(), header.end(), "levelversion") -
+		header.begin();
+	int practiceIdx = std::find(header.begin(), header.end(), "practice") -
+		header.begin();
 	int xIdx = std::find(header.begin(), header.end(), "x") - header.begin();
 	int yIdx = std::find(header.begin(), header.end(), "y") - header.begin();
-	int percentageIdx = std::find(header.begin(), header.end(), "percentage") - header.begin();
-	if (useridentIdx == -1 || versionIdx == -1 || practiceIdx == -1 || xIdx == -1 || yIdx == -1 || percentageIdx == -1)
-		return log::warn("Property not featured in header: {}", header);
+	int percentageIdx = std::find(header.begin(), header.end(), "percentage") -
+		header.begin();
+	if (
+		useridentIdx == -1 || versionIdx == -1 || practiceIdx == -1 ||
+		xIdx == -1 || yIdx == -1 || percentageIdx == -1
+	) return log::warn("Property not featured in header: {}", header);
 
 	// Iterate lines
 	for (int i = 0; i < lines.size(); i++) {
@@ -189,7 +208,10 @@ void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target) {
 
 		auto coords = split(&line, ',');
 		if (coords.size() != header.size()) {
-			log::warn("Error analyzing deaths: Inequal number of elements: {} | {}", header, coords);
+			log::warn(
+				"Error analyzing deaths: Inequal number of elements: {} | {}",
+				header, coords
+			);
 			continue;
 		}
 
@@ -237,7 +259,9 @@ std::vector<gd::string> split(const gd::string* string, const char at) {
 	while (true) {
 		int nextSplit = string->find_first_of(at, currentStart);
 		if (nextSplit == std::string::npos) {
-			result.push_back(string->substr(currentStart, string->size() - currentStart));
+			result.push_back(string->substr(
+				currentStart, string->size() - currentStart
+			));
 			return result;
 		}
 		int nextLength = nextSplit - currentStart;

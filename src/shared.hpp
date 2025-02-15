@@ -79,7 +79,9 @@ public:
 	CCNode* createNode() const;
 };
 
-void parseDeathList(web::WebResponse* res, std::vector<DeathLocationMin>* target);
-void parseDeathList(web::WebResponse* res, std::vector<DeathLocation>* target);
+void parseDeathList(web::WebResponse* res,
+	std::vector<DeathLocationMin>* target);
+void parseDeathList(web::WebResponse* res,
+	std::vector<DeathLocation>* target);
 
 std::vector<gd::string> split(const gd::string* string, const char at);

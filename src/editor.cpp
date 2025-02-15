@@ -43,7 +43,8 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 				auto res = e->getValue();
 				if (res) {
 					if (!res->ok()) {
-						log::error("Listing Deaths failed: {}", res->string().unwrapOr("Body could not be read."));
+						log::error("Listing Deaths failed: {}", res->string()
+							.unwrapOr("Body could not be read."));
 
 						FLAlertLayer::create(
 							"DeathMarkers",
@@ -126,15 +127,22 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		for (auto& stack : deathStacks) {
 			auto sprite = CCSprite::create("marker-group.png"_spr);
 			std::string const id = "marker"_spr;
-			float spriteScale = 1.1f * (stack.diameter ? stack.diameter : maxDistance / 2) / sprite->getContentWidth();
+			float spriteScale = 1.1f * (stack.diameter ? stack.diameter : maxDistance / 2) /
+				sprite->getContentWidth();
 			sprite->setScale(spriteScale);
 			sprite->setZOrder(1);
 			sprite->setPosition(stack.center);
 			sprite->setAnchorPoint({ 0.5f, 0.5f });
 
-			auto countText = CCLabelBMFont::create(numToString(stack.deaths.size(), 0).c_str(), "goldFont.fnt");
+			auto countText = CCLabelBMFont::create(
+				numToString(stack.deaths.size(), 0).c_str(),
+				"goldFont.fnt"
+			);
 			countText->setAnchorPoint({ 0.5f, 0.5f });
-			countText->setPosition({ sprite->getContentWidth() / 2, sprite->getContentHeight() / 2 });
+			countText->setPosition({
+				sprite->getContentWidth() / 2,
+				sprite->getContentHeight() / 2
+			});
 			sprite->addChild(countText);
 
 			this->m_fields->m_stackNode->addChild(sprite);
@@ -147,11 +155,13 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		auto completed = std::unordered_map<gd::string,bool>();
 
 		if (!this->m_level->isPlatformer()) {
-			std::erase_if(this->m_fields->m_deaths, [&completed](const DeathLocation& death) {
-				if (death.percentage != 101) return false;
-				completed[death.userIdent] = true;
-				return true;
-			});
+			std::erase_if(this->m_fields->m_deaths,
+				[&completed](const DeathLocation& death) {
+					if (death.percentage != 101) return false;
+					completed[death.userIdent] = true;
+					return true;
+				}
+			);
 		}
 
 		if (false) {
@@ -240,7 +250,8 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		this->m_fields->m_stackNode->setScale(this->m_objectLayer->getScale());
 
 		// Counters UI zoom, keeps markers at constant size relative to screen
-		float inverseScale = Mod::get()->getSettingValue<float>("marker-scale") / this->m_objectLayer->getScale();
+		float inverseScale = Mod::get()->getSettingValue<float>("marker-scale") /
+			this->m_objectLayer->getScale();
 
 		if (this->m_fields->m_lastZoom != this->m_objectLayer->getScale()) {
 			updateStacks(20 / this->m_objectLayer->getScale());
