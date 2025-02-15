@@ -47,9 +47,7 @@ renderGuide();
 function csvStream(array, columns, map = r => r) {
   return new Readable({
     read() {
-      this.push(columns + "\n");
-
-      let buffer = [];
+      let buffer = [columns];
       for (const row of array) {
         buffer.push(map(row).join(","));
 
@@ -58,6 +56,7 @@ function csvStream(array, columns, map = r => r) {
           buffer = [];
         }
       }
+      this.push(buffer.join("\n"));
       this.push(null);
     }
   })
