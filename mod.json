@@ -12,7 +12,9 @@
 	"developer": "FreakyRobot",
 	"description": "Online death collection for creators and players",
 	"links": {
-		"source": "https://github.com/MaSp005/deathmarkers"
+		"source": "https://github.com/MaSp005/deathmarkers",
+		"community": "https://discord.gg/hzDFNaNgCf",
+		"homepage": "https://deathmarkers.masp005.dev"
 	},
 	"issues": {
 		"info": "Issues are best reported on <cg>GitHub</c>",

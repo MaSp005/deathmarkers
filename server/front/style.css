@@ -160,3 +160,16 @@ body > blockquote {
   vertical-align: middle;
   margin-left: .2em;
 }
+
+.links {
+  display: flex;
+  justify-content: center;
+  gap: .5em;
+}
+.links * {
+  height: 5em;
+  aspect-ratio: 1;
+}
+.links + h2 {
+  margin-top: 1em;
+}
