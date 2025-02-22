@@ -7,6 +7,24 @@ DeathLocationStack::DeathLocationStack(std::vector<DeathLocation*> deaths) {
 
 // Time complexity O(n)
 // Auxiliary space complexity O(1)
+CCPoint averagePos(std::vector<DeathLocation*>::iterator const begin,
+	std::vector<DeathLocation*>::iterator const end) {
+	double avgX = 0;
+	double avgY = 0;
+
+	for (auto death = begin; death < end; death++) {
+		avgX += (*death)->pos.x;
+		avgY += (*death)->pos.y;
+	}
+
+	avgX /= end - begin;
+	avgY /= end - begin;
+
+	return CCPoint(avgX, avgY);
+}
+
+// Time complexity O(n)
+// Auxiliary space complexity O(1)
 void DeathLocationStack::recalculate() {
 	this->diameter = 0;
 	this->center = averagePos(this->deaths.begin(), this->deaths.end());
@@ -35,24 +53,6 @@ void mergeStacks(std::vector<DeathLocationStack>* stacks,
 	a->recalculate();
 	// Remove b from vector
 	stacks->erase(b);
-}
-
-// Time complexity O(n)
-// Auxiliary space complexity O(1)
-CCPoint averagePos(std::vector<DeathLocation*>::iterator const begin,
-	std::vector<DeathLocation*>::iterator const end) {
-	double avgX = 0;
-	double avgY = 0;
-
-	for (auto death = begin; death < end; death++) {
-		avgX += (*death)->pos.x;
-		avgY += (*death)->pos.y;
-	}
-
-	avgX /= end - begin;
-	avgY /= end - begin;
-
-	return CCPoint(avgX, avgY);
 }
 
 // Time complexity O(n)

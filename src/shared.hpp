@@ -9,8 +9,8 @@ auto const HTTP_AGENT =
 auto const FORMAT_VERSION = 1;
 
 // If you fork this mod and change the code, you should change this to the localhost
-std::string const API_BASE = "http://localhost:8048/";
-//std::string const API_BASE = "https://deathmarkers.masp005.dev/";
+// std::string const API_BASE = "http://localhost:8048/";
+std::string const API_BASE = "https://deathmarkers.masp005.dev/";
 auto const HTTP_TIMEOUT = std::chrono::seconds(15);
 
 struct playerData {
