@@ -59,8 +59,8 @@ class $modify(DMPlayLayer, PlayLayer) {
 		CCNode* m_dmNode = CCNode::create();
 		CCDrawNode* m_chartNode = nullptr;
 
-		std::vector<DeathLocationMin> m_deaths;
-		std::deque<DeathLocationOut> m_queuedSubmissions;
+		vector<DeathLocationMin> m_deaths;
+		deque<DeathLocationOut> m_queuedSubmissions;
 
 		bool m_chartAttached = false;
 		bool m_fetched = false;

@@ -10,7 +10,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		CCNode* m_dmNode = nullptr;
 		CCMenuItemSprite* m_button = nullptr;
 
-		std::vector<DeathLocation> m_deaths;
+		vector<DeathLocation> m_deaths;
 
 		bool m_enabled = false;
 		bool m_loaded = false;
@@ -119,23 +119,22 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 		if (!Mod::get()->getSettingValue<bool>("stacks-in-editor")) return;
 
-		std::vector<DeathLocationStack> deathStacks;
+		auto deathStacks = new vector<DeathLocationStack>();
 
-		identifyClusters(&this->m_fields->m_deaths, maxDistance, &deathStacks);
+		identifyClusters(&this->m_fields->m_deaths, maxDistance, deathStacks);
 
 		this->m_fields->m_stackNode->removeAllChildrenWithCleanup(true);
-		for (auto& stack : deathStacks) {
+		for (auto stack = deathStacks->begin(); stack < deathStacks->end(); stack++) {
+			// TODO: separate Texture for zero-size stack
 			auto sprite = CCSprite::create("marker-group.png"_spr);
-			std::string const id = "marker"_spr;
-			float spriteScale = 1.1f * (stack.diameter ? stack.diameter : maxDistance / 2) /
-				sprite->getContentWidth();
-			sprite->setScale(spriteScale);
+			sprite->setID("marker-stack"_spr);
+			sprite->setScale(max(stack->circle.r * 2.125f, maxDistance / 2) / sprite->getContentWidth());
 			sprite->setZOrder(1);
-			sprite->setPosition(stack.center);
+			sprite->setPosition(stack->circle.c);
 			sprite->setAnchorPoint({ 0.5f, 0.5f });
 
 			auto countText = CCLabelBMFont::create(
-				numToString(stack.deaths.size(), 0).c_str(),
+				numToString(stack->deaths.size(), 0).c_str(),
 				"goldFont.fnt"
 			);
 			countText->setAnchorPoint({ 0.5f, 0.5f });
@@ -152,10 +151,10 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 	void analyzeData() {
 
-		auto completed = std::unordered_map<gd::string,bool>();
+		auto completed = unordered_map<gd::string,bool>();
 
 		if (!this->m_level->isPlatformer()) {
-			std::erase_if(this->m_fields->m_deaths,
+			erase_if(this->m_fields->m_deaths,
 				[&completed](const DeathLocation& death) {
 					if (death.percentage != 101) return false;
 					completed[death.userIdent] = true;
@@ -165,7 +164,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		}
 
 		if (false) {
-			std::stable_sort(
+			stable_sort(
 				this->m_fields->m_deaths.begin(),
 				this->m_fields->m_deaths.end(),
 				[](DeathLocation a, DeathLocation b) {
@@ -179,7 +178,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		completed.clear();
 
 		// Sort Deaths list along x-axis for better positional searching performance
-		std::sort(
+		sort(
 			this->m_fields->m_deaths.begin(),
 			this->m_fields->m_deaths.end(),
 			[](DeathLocation a, DeathLocation b) {
@@ -198,7 +197,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 			geode::createQuickPopup(
 				"DeathMarkers",
-				std::to_string(this->m_fields->m_deaths.size()) + " deaths were found.",
+				to_string(this->m_fields->m_deaths.size()) + " deaths were found.",
 				"Continue", "Open Guide",
 				[](auto, bool open) {
 					if (!open) return;
@@ -262,6 +261,10 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		for (int i = 0; i < this->m_fields->m_dmNode->getChildrenCount(); i++) {
 			auto child = static_cast<CCNode*>(children->objectAtIndex(i));
 			child->setScale(inverseScale / 2);
+		}
+		
+		for (auto& deathLoc : this->m_fields->m_deaths) {
+			deathLoc.updateNode();
 		}
 	}
 

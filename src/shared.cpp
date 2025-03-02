@@ -79,24 +79,28 @@ DeathLocation::DeathLocation(float x, float y) :
 DeathLocation::DeathLocation(CCPoint pos) :
 	DeathLocationMin::DeathLocationMin(pos) {}
 
-CCNode* DeathLocation::createNode() const {
-	auto sprite = CCSprite::create("death-marker.png"_spr);
+CCSprite* DeathLocation::createNode() {
+	if (this->node) return this->node;
+
+	this->node = CCSprite::create();
+	this->updateNode();
+
 	std::string const id = "marker"_spr;
 	float markerScale = Mod::get()->getSettingValue<float>("marker-scale");
-	sprite->setScale(markerScale);
-	sprite->setPosition(this->pos);
-	sprite->setAnchorPoint({ 0.5f, 0.0f });
-	// TODO: fix clustered attribute
-	// if (this->clustered) {
-	//     sprite->setOpacity(128);
-	//     sprite->setScale(markerScale / 2);
-	// }
-	return sprite;
+	this->node->setScale(markerScale);
+	this->node->setPosition(this->pos);
+	this->node->setAnchorPoint({ 0.5f, 0.0f });
+	return this->node;
+}
+
+void DeathLocation::updateNode() {
+	this->node->initWithFile(this->clustered ? "mini-marker.png"_spr : "death-marker.png"_spr);
+	this->node->setAnchorPoint({ 0.5f, 0.0f });
 }
 
 
 void parseDeathList(web::WebResponse* res,
-	std::vector<DeathLocationMin>* target) {
+	vector<DeathLocationMin>* target) {
 
 	auto const body = res->string();
 
@@ -112,9 +116,9 @@ void parseDeathList(web::WebResponse* res,
 	lines.erase(lines.begin());
 
 	// Identify columns
-	int xIdx = std::find(header.begin(), header.end(), "x") - header.begin();
-	int yIdx = std::find(header.begin(), header.end(), "y") - header.begin();
-	int percentIdx = std::find(header.begin(), header.end(), "percentage") -
+	int xIdx = find(header.begin(), header.end(), "x") - header.begin();
+	int yIdx = find(header.begin(), header.end(), "y") - header.begin();
+	int percentIdx = find(header.begin(), header.end(), "percentage") -
 		header.begin();
 	if (xIdx == -1 || yIdx == -1) return
 		log::warn("Property not featured in header: {}", header);
@@ -141,9 +145,9 @@ void parseDeathList(web::WebResponse* res,
 
 		// Interpret Strings into Numbers
 		try {
-			x = std::stof(xStr);
-			y = std::stof(yStr);
-		} catch (std::invalid_argument) {
+			x = stof(xStr);
+			y = stof(yStr);
+		} catch (invalid_argument) {
 			log::warn("Unexpected Non-Number coordinate listing deaths: {}", coords);
 			continue;
 		}
@@ -155,8 +159,8 @@ void parseDeathList(web::WebResponse* res,
 			int percent;
 			auto const& percentStr = coords.at(percentIdx);
 			try {
-				percent = std::stoi(percentStr);
-			} catch (std::invalid_argument) {
+				percent = stoi(percentStr);
+			} catch (invalid_argument) {
 				log::warn(
 					"Unexpected Non-Number coordinate listing deaths: {}",
 					coords
@@ -172,7 +176,7 @@ void parseDeathList(web::WebResponse* res,
 }
 
 void parseDeathList(web::WebResponse* res,
-	std::vector<DeathLocation>* target) {
+	vector<DeathLocation>* target) {
 
 	auto const body = res->string();
 
@@ -186,15 +190,15 @@ void parseDeathList(web::WebResponse* res,
 	lines.erase(lines.begin());
 
 	// Identify columns
-	int useridentIdx = std::find(header.begin(), header.end(), "userident") -
+	int useridentIdx = find(header.begin(), header.end(), "userident") -
 		header.begin();
-	int versionIdx = std::find(header.begin(), header.end(), "levelversion") -
+	int versionIdx = find(header.begin(), header.end(), "levelversion") -
 		header.begin();
-	int practiceIdx = std::find(header.begin(), header.end(), "practice") -
+	int practiceIdx = find(header.begin(), header.end(), "practice") -
 		header.begin();
-	int xIdx = std::find(header.begin(), header.end(), "x") - header.begin();
-	int yIdx = std::find(header.begin(), header.end(), "y") - header.begin();
-	int percentageIdx = std::find(header.begin(), header.end(), "percentage") -
+	int xIdx = find(header.begin(), header.end(), "x") - header.begin();
+	int yIdx = find(header.begin(), header.end(), "y") - header.begin();
+	int percentageIdx = find(header.begin(), header.end(), "percentage") -
 		header.begin();
 	if (
 		useridentIdx == -1 || versionIdx == -1 || practiceIdx == -1 ||
@@ -230,12 +234,12 @@ void parseDeathList(web::WebResponse* res,
 
 		// Interpret Strings into Numbers
 		try {
-			levelVersion = std::stoi(versionStr);
-			x = std::stof(xStr);
-			y = std::stof(yStr);
-			percent = std::stoi(percentStr);
+			levelVersion = stoi(versionStr);
+			x = stof(xStr);
+			y = stof(yStr);
+			percent = stoi(percentStr);
 		}
-		catch (std::invalid_argument) {
+		catch (invalid_argument) {
 			log::warn("Unexpected Non-Number coordinate listing deaths: {}", line);
 			continue;
 		}
@@ -252,8 +256,8 @@ void parseDeathList(web::WebResponse* res,
 
 }
 
-std::vector<gd::string> split(const gd::string* string, const char at) {
-	auto result = std::vector<gd::string>();
+vector<gd::string> split(const gd::string* string, const char at) {
+	auto result = vector<gd::string>();
 	int currentStart = 0;
 
 	while (true) {

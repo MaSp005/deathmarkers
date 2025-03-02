@@ -31,9 +31,8 @@ struct Circle final {
 	
 	private: static const double MULTIPLICATIVE_EPSILON;
 	
-	
 	public: CCPoint c;   // Center
-	public: double r;  // Radius
+	public: float r = 0;  // Radius
 	
 	
 	public: bool contains(const CCPoint &p) const;

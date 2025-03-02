@@ -3,6 +3,7 @@
 #include <Geode/utils/web.hpp>
 
 using namespace geode::prelude;
+using namespace std;
 
 auto const HTTP_AGENT =
 "Geode-DeathMarkers-" + Mod::get()->getVersion().toVString(true);
@@ -65,23 +66,25 @@ public:
 	std::string userIdent;
 	int levelVersion = 1;
 	bool practice = false;
-	bool clustered = true;
+	bool clustered = false;
 	/*
 	bool coin1 = false;
 	bool coin2 = false;
 	bool coin3 = false;
 	int itemdata = 0;
 	*/
+	CCSprite* node = nullptr;
 
 	DeathLocation(float x, float y);
 	DeathLocation(CCPoint pos);
 
-	CCNode* createNode() const;
+	CCSprite* createNode();
+	void updateNode();
 };
 
 void parseDeathList(web::WebResponse* res,
-	std::vector<DeathLocationMin>* target);
+	vector<DeathLocationMin>* target);
 void parseDeathList(web::WebResponse* res,
-	std::vector<DeathLocation>* target);
+	vector<DeathLocation>* target);
 
-std::vector<gd::string> split(const gd::string* string, const char at);
+vector<gd::string> split(const gd::string* string, const char at);
