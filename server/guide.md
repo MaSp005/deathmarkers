@@ -45,7 +45,7 @@ In the editor's pause menu, you'll find a button on the bottom row with the deat
 
 Be wary, it uses the level's saved online ID, so if you copy a copied level, it only takes the **original** level ID and makes the deaths of the actual level you copied inaccessible. In such cases, only the creator of the level can view its deaths. (I can't do anything about this, it's how GD stores level IDs)
 
-![Demonstration of death markers in the editor, with two groups indicating some of them being in close vicinity](/editor-markers-groups.webp)
+![Demonstration of death markers in the editor of Deadlocked, with several groups indicating some of them being in close vicinity](/editor-markers-groups.webp)
 
 Once loaded, you'll see every death rendered in your level, with some group circles highlighting stacks of deaths in close proximity. These groups include more or less deaths when you zoom out or in. They make it easier to see when many deaths lay on the exact same spot, and give you a sense of scale when many deaths occur in a small vicinity.
 
