@@ -64,6 +64,12 @@ CCNode* DeathLocationMin::createNode(bool isCurrent, bool preAnim) const {
 }
 
 
+DeathLocationOut::DeathLocationOut(float x, float y) :
+	DeathLocationMin::DeathLocationMin(x, y) {}
+
+DeathLocationOut::DeathLocationOut(CCPoint pos) :
+	DeathLocationMin::DeathLocationMin(pos) {}
+
 void DeathLocationOut::addToJSON(matjson::Value* json) const {
 	json->set("x", matjson::Value(this->pos.x));
 	json->set("y", matjson::Value(this->pos.y));
@@ -82,7 +88,7 @@ DeathLocation::DeathLocation(CCPoint pos) :
 CCSprite* DeathLocation::createNode() {
 	if (this->node) return this->node;
 
-	this->node = CCSprite::create();
+	this->node = CCSprite::create(); // Omit texture for caller to apply and change
 	this->updateNode();
 
 	std::string const id = "marker"_spr;

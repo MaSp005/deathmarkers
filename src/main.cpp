@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include "shared.hpp"
 
-// TODO: resources as spritesheets
 // TODO: Check for incompatibilities with other mods
 
 using namespace geode::prelude;

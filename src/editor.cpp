@@ -110,6 +110,9 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 			this->m_fields->m_stackNode->removeAllChildrenWithCleanup(true);
 			this->m_fields->m_stackNode->removeFromParent();
 
+			for (auto& deathLoc : this->m_fields->m_deaths)
+				deathLoc.node = nullptr;
+
 			this->unschedule(schedule_selector(DMEditorLayer::updateMarkers));
 		}
 
@@ -151,13 +154,13 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 	void analyzeData() {
 
-		auto completed = unordered_map<gd::string,bool>();
+		auto completed = set<std::string>();
 
 		if (!this->m_level->isPlatformer()) {
 			erase_if(this->m_fields->m_deaths,
 				[&completed](const DeathLocation& death) {
 					if (death.percentage != 101) return false;
-					completed[death.userIdent] = true;
+					completed.insert(death.userIdent);
 					return true;
 				}
 			);
@@ -239,6 +242,8 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		this->m_editorUI->addChild(this->m_fields->m_dmNode);
 		this->m_editorUI->addChild(this->m_fields->m_stackNode);
 		this->schedule(schedule_selector(DMEditorLayer::updateMarkers), 0);
+		
+		updateStacks(20 / this->m_objectLayer->getScale());
 
 	}
 

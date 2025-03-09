@@ -55,12 +55,14 @@ public:
 	bool coin3 = false;
 	int itemdata = 0;
 	*/
+	DeathLocationOut(float x, float y);
+	DeathLocationOut(CCPoint pos);
 
 	void addToJSON(matjson::Value* json) const;
 };
 
 // Holds all information about a death location that the server sends for analysis
-// Includes info about the level, because the server sends it for each individual deathh
+// Includes info about the level, because the server sends it for each individual death
 class DeathLocation : public DeathLocationMin {
 public:
 	std::string userIdent;
