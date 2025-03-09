@@ -114,11 +114,11 @@ void parseDeathList(web::WebResponse* res,
 		return log::error("Error reading list response: Body could not be read.");
 
 	// Read and split up body
-	gd::string okObj = body.ok().value();
+	auto okObj = body.ok().value();
 	if (okObj.empty()) return log::info("Responded with zero deaths.");
 
-	auto lines = split(&okObj, '\n');
-	auto header = split(&lines.at(0), ',');
+	vector<std::string> lines = split(&okObj, '\n');
+	vector<std::string> header = split(&lines.at(0), ',');
 	lines.erase(lines.begin());
 
 	// Identify columns
@@ -134,7 +134,7 @@ void parseDeathList(web::WebResponse* res,
 		auto const& line = lines.at(i);
 		if (line.empty()) return;
 
-		auto coords = split(&line, ',');
+		vector<std::string> coords = split(&line, ',');
 		if (coords.size() != header.size()) {
 			log::warn(
 				"Error listing deaths: Inequal number of elements: {} | {}",
@@ -191,8 +191,8 @@ void parseDeathList(web::WebResponse* res,
 
 	// Read and split up body
 	gd::string okObj = body.ok().value();
-	auto lines = split(&okObj, '\n');
-	auto header = split(&lines.at(0), ',');
+	vector<std::string> lines = split(&okObj, '\n');
+	vector<std::string> header = split(&lines.at(0), ',');
 	lines.erase(lines.begin());
 
 	// Identify columns
@@ -216,7 +216,7 @@ void parseDeathList(web::WebResponse* res,
 		auto const& line = lines.at(i);
 		if (line.empty()) return;
 
-		auto coords = split(&line, ',');
+		vector<std::string> coords = split(&line, ',');
 		if (coords.size() != header.size()) {
 			log::warn(
 				"Error analyzing deaths: Inequal number of elements: {} | {}",

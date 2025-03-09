@@ -2,43 +2,37 @@ This file is a collection of the failure messages from the latest GitHub Actions
 
 
 
-macOS: https://github.com/MaSp005/deathmarkers/actions/runs/13751846937/job/38453770066#step:3:677
+macOS: https://github.com/MaSp005/deathmarkers/actions/runs/13753377869/job/38457161489#step:3:681
 
 Undefined symbols for architecture arm64:
-  "cocos2d::CCDrawNode::drawRect(cocos2d::CCRect const&, cocos2d::_ccColor4F const&, float, cocos2d::_ccColor4F const&)", referenced from:
-      geode::modifier::AsStaticFunction_playerDestroyed<DMPlayerObject, void (DMPlayerObject::*)(bool)>::Impl<void (DMPlayerObject::*)(bool)>::function(DMPlayerObject*, bool) in 
   "cocos2d::CCMenuItemSprite::create(cocos2d::CCNode*, cocos2d::CCNode*, cocos2d::CCNode*)", referenced from:
       geode::modifier::AsStaticFunction_init<DMEditorPauseLayer, bool (DMEditorPauseLayer::*)(LevelEditorLayer*)>::Impl<bool (DMEditorPauseLayer::*)(LevelEditorLayer*)>::function(DMEditorPauseLayer*, LevelEditorLayer*) in 
 
 
 
-Android32: https://github.com/MaSp005/deathmarkers/actions/runs/13751846937/job/38453770166#step:3:785
+Android32: https://github.com/MaSp005/deathmarkers/actions/runs/13753377869/job/38457161613#step:3:795
  
-/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:270:27: error: no member named 'find_first_of' in 'gd::string'
-  270 |                 int nextSplit = string->find_first_of(at, currentStart);
-      |                                 ~~~~~~  ^
-/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:272:29: error: no member named 'substr' in 'gd::string'
-  272 |                         result.push_back(string->substr(
-      |                                          ~~~~~~  ^
-/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:278:28: error: no member named 'substr' in 'gd::string'
-  278 |                 result.push_back(string->substr(currentStart, nextLength));
-      |                                  ~~~~~~  ^
-3 errors generated.
+ld.lld: error: undefined symbol: split(gd::string const*, char)
+>>> referenced by shared.cpp:120 (/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:120)
+>>>               CMakeFiles/DeathMarkers.dir/src/freakyrobot.deathmarkers.android32.so.lto.shared.cpp.o:(parseDeathList(geode::utils::web::WebResponse*, std::__ndk1::vector<DeathLocationMin, std::__ndk1::allocator<DeathLocationMin>>*))
+>>> referenced by shared.cpp:121 (/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:121)
+>>>               CMakeFiles/DeathMarkers.dir/src/freakyrobot.deathmarkers.android32.so.lto.shared.cpp.o:(parseDeathList(geode::utils::web::WebResponse*, std::__ndk1::vector<DeathLocationMin, std::__ndk1::allocator<DeathLocationMin>>*))
+>>> referenced by shared.cpp:137 (/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:137)
+>>>               CMakeFiles/DeathMarkers.dir/src/freakyrobot.deathmarkers.android32.so.lto.shared.cpp.o:(parseDeathList(geode::utils::web::WebResponse*, std::__ndk1::vector<DeathLocationMin, std::__ndk1::allocator<DeathLocationMin>>*))
+>>> referenced 3 more times
 
 
 
-Android64: https://github.com/MaSp005/deathmarkers/actions/runs/13751846937/job/38453770281#step:3:785
+Android64: https://github.com/MaSp005/deathmarkers/actions/runs/13753377869/job/38457161780#step:3:795
 
-/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:270:27: error: no member named 'find_first_of' in 'gd::string'
-  270 |                 int nextSplit = string->find_first_of(at, currentStart);
-      |                                 ~~~~~~  ^
-/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:272:29: error: no member named 'substr' in 'gd::string'
-  272 |                         result.push_back(string->substr(
-      |                                          ~~~~~~  ^
-/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:278:28: error: no member named 'substr' in 'gd::string'
-  278 |                 result.push_back(string->substr(currentStart, nextLength));
-      |                                  ~~~~~~  ^
-3 errors generated.
+ld.lld: error: undefined symbol: split(gd::string const*, char)
+>>> referenced by shared.cpp:120 (/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:120)
+>>>               CMakeFiles/DeathMarkers.dir/src/freakyrobot.deathmarkers.android64.so.lto.shared.cpp.o:(parseDeathList(geode::utils::web::WebResponse*, std::__ndk1::vector<DeathLocationMin, std::__ndk1::allocator<DeathLocationMin>>*))
+>>> referenced by shared.cpp:121 (/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:121)
+>>>               CMakeFiles/DeathMarkers.dir/src/freakyrobot.deathmarkers.android64.so.lto.shared.cpp.o:(parseDeathList(geode::utils::web::WebResponse*, std::__ndk1::vector<DeathLocationMin, std::__ndk1::allocator<DeathLocationMin>>*))
+>>> referenced by shared.cpp:137 (/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:137)
+>>>               CMakeFiles/DeathMarkers.dir/src/freakyrobot.deathmarkers.android64.so.lto.shared.cpp.o:(parseDeathList(geode::utils::web::WebResponse*, std::__ndk1::vector<DeathLocationMin, std::__ndk1::allocator<DeathLocationMin>>*))
+>>> referenced 3 more times
 
 
 

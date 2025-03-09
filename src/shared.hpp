@@ -89,4 +89,4 @@ void parseDeathList(web::WebResponse* res,
 void parseDeathList(web::WebResponse* res,
 	vector<DeathLocation>* target);
 
-vector<gd::string> split(const gd::string* string, const char at);
+vector<std::string> split(const std::string* string, const char at);
