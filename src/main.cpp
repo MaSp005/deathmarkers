@@ -256,13 +256,16 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 			float distr = static_cast<float>(hist[i]) / maximum;
 			auto rect = CCRect(width * i, 0, width, -(distr * histHeight));
+			auto pos1 = CCPoint(width * i, 0);
+			auto pos2 = CCPoint(width * i + width, -(distr * histHeight));
 			ccColor4F color{};
 			color.r = distr;
 			color.g = 1 - distr;
 			color.b = 0;
 			color.a = 1;
+			
 
-			this->m_fields->m_chartNode->drawRect(rect, color, 0.0f, color);
+			this->m_fields->m_chartNode->drawRect(pos1, pos2, color, 0.0f, color);
 		}
 
 	}

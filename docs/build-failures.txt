@@ -2,169 +2,45 @@ This file is a collection of the failure messages from the latest GitHub Actions
 
 
 
-macOS: https://github.com/MaSp005/deathmarkers/actions/runs/13474105969/job/37651131825#step:3:670
+macOS: https://github.com/MaSp005/deathmarkers/actions/runs/13751846937/job/38453770066#step:3:677
 
-/Users/runner/work/deathmarkers/deathmarkers/src/main.cpp:185:19: error: no matching conversion for functional-style cast from 'const CCPoint' to 'DeathLocationOut'
-                auto deathLoc = DeathLocationOut(this->getPosition());
-                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/runner/work/deathmarkers/deathmarkers/src/shared.hpp:49:7: note: candidate constructor (the implicit copy constructor) not viable: no known conversion from 'const CCPoint' to 'const DeathLocationOut' for 1st argument
-class DeathLocationOut : public DeathLocationMin {
-      ^
-/Users/runner/work/deathmarkers/deathmarkers/src/shared.hpp:49:7: note: candidate constructor (the implicit move constructor) not viable: no known conversion from 'const CCPoint' to 'DeathLocationOut' for 1st argument
-/Users/runner/work/deathmarkers/deathmarkers/src/shared.hpp:49:7: note: candidate constructor (the implicit default constructor) not viable: requires 0 arguments, but 1 was provided
-/Users/runner/work/deathmarkers/deathmarkers/src/main.cpp:429:19: error: no matching conversion for functional-style cast from 'const CCPoint' to 'DeathLocationOut'
-                auto deathLoc = DeathLocationOut(this->getPosition());
-                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/runner/work/deathmarkers/deathmarkers/src/shared.hpp:49:7: note: candidate constructor (the implicit copy constructor) not viable: no known conversion from 'const CCPoint' to 'const DeathLocationOut' for 1st argument
-class DeathLocationOut : public DeathLocationMin {
-      ^
-/Users/runner/work/deathmarkers/deathmarkers/src/shared.hpp:49:7: note: candidate constructor (the implicit move constructor) not viable: no known conversion from 'const CCPoint' to 'DeathLocationOut' for 1st argument
-/Users/runner/work/deathmarkers/deathmarkers/src/shared.hpp:49:7: note: candidate constructor (the implicit default constructor) not viable: requires 0 arguments, but 1 was provided
-2 errors generated.
+Undefined symbols for architecture arm64:
+  "cocos2d::CCDrawNode::drawRect(cocos2d::CCRect const&, cocos2d::_ccColor4F const&, float, cocos2d::_ccColor4F const&)", referenced from:
+      geode::modifier::AsStaticFunction_playerDestroyed<DMPlayerObject, void (DMPlayerObject::*)(bool)>::Impl<void (DMPlayerObject::*)(bool)>::function(DMPlayerObject*, bool) in 
+  "cocos2d::CCMenuItemSprite::create(cocos2d::CCNode*, cocos2d::CCNode*, cocos2d::CCNode*)", referenced from:
+      geode::modifier::AsStaticFunction_init<DMEditorPauseLayer, bool (DMEditorPauseLayer::*)(LevelEditorLayer*)>::Impl<bool (DMEditorPauseLayer::*)(LevelEditorLayer*)>::function(DMEditorPauseLayer*, LevelEditorLayer*) in 
 
 
 
-Android32: https://github.com/MaSp005/deathmarkers/actions/runs/13474105969/job/37651131931#step:3:984
+Android32: https://github.com/MaSp005/deathmarkers/actions/runs/13751846937/job/38453770166#step:3:785
  
-FAILED: CMakeFiles/DeathMarkers.dir/src/editor.cpp.o 
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=armv7-none-linux-androideabi23 --sysroot=/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DDeathMarkers_EXPORTS -DGEODE_COMP_GD_VERSION=22074 -DGEODE_GD_VERSION=2.2074 -DGEODE_GD_VERSION_STRING=\"2.2074\" -DGEODE_MOD_ID=\"freakyrobot.deathmarkers\" -DMAT_JSON_DYNAMIC=1 -DPROJECT_NAME=DeathMarkers -I/home/runner/work/deathmarkers/deathmarkers/build/bindings/bindings -I/home/runner/work/deathmarkers/deathmarkers/bindings-repo/bindings/include -I/home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include -I/home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/cocos/include -I/home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/cocos/extensions -I/home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/fmod -isystem /home/runner/work/deathmarkers/deathmarkers/cpm-cache/fmt/cccb77ae9609d2768ed80dd42cec54f77b1f1455/include -isystem /home/runner/work/deathmarkers/deathmarkers/cpm-cache/tuliphook/8d0d2aa407f52cdee9f79187fca5c9affddf8dd5/include -isystem /home/runner/work/deathmarkers/deathmarkers/cpm-cache/result/a5380f9e23f94b98200baa461086514f602899cb/include -isystem /home/runner/work/deathmarkers/deathmarkers/cpm-cache/json/dbc884f9fcebaf645c7ae9ce79261d1aba0bb13b/include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -march=armv7-a -mthumb -Wformat -Werror=format-security   -O3 -DNDEBUG  -std=gnu++20 -flto=thin -fPIC -fvisibility=hidden -Werror=return-type -ffunction-sections -fdata-sections -Winvalid-pch -Xclang -include-pch -Xclang /home/runner/work/deathmarkers/deathmarkers/build/CMakeFiles/DeathMarkers.dir/cmake_pch.hxx.pch -Xclang -include -Xclang /home/runner/work/deathmarkers/deathmarkers/build/CMakeFiles/DeathMarkers.dir/cmake_pch.hxx -MD -MT CMakeFiles/DeathMarkers.dir/src/editor.cpp.o -MF CMakeFiles/DeathMarkers.dir/src/editor.cpp.o.d -o CMakeFiles/DeathMarkers.dir/src/editor.cpp.o -c /home/runner/work/deathmarkers/deathmarkers/src/editor.cpp
-In file included from <built-in>:1:
-In file included from /home/runner/work/deathmarkers/deathmarkers/build/CMakeFiles/DeathMarkers.dir/cmake_pch.hxx:5:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/DefaultInclude.hpp:4:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/c++stl/gdstdlib.hpp:3:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/platform/platform.hpp:5:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/functional:526:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__functional/boyer_moore_searcher.h:26:
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/unordered_map:637:111: error: call to implicitly-deleted default constructor of 'std::hash<gd::string>'
-  637 |   _LIBCPP_HIDE_FROM_ABI __unordered_map_hasher() _NOEXCEPT_(is_nothrow_default_constructible<_Hash>::value) : _Hash() {}
-      |                                                                                                               ^
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__memory/compressed_pair.h:78:52: note: in instantiation of member function 'std::__unordered_map_hasher<gd::string, std::__hash_value_type<gd::string, bool>, std::hash<gd::string>, std::equal_to<gd::string>>::__unordered_map_hasher' requested here
-   78 |   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR explicit __compressed_pair_elem(__default_init_tag) {}
-      |                                                    ^
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/unordered_map:1088:25: note: in instantiation of member function 'std::__hash_table<std::__hash_value_type<gd::string, bool>, std::__unordered_map_hasher<gd::string, std::__hash_value_type<gd::string, bool>, std::hash<gd::string>, std::equal_to<gd::string>>, std::__unordered_map_equal<gd::string, std::__hash_value_type<gd::string, bool>, std::equal_to<gd::string>, std::hash<gd::string>>, std::allocator<std::__hash_value_type<gd::string, bool>>>::__hash_table' requested here
- 1088 |   _LIBCPP_HIDE_FROM_ABI unordered_map() _NOEXCEPT_(is_nothrow_default_constructible<__table>::value) {}
-      |                         ^
-/home/runner/work/deathmarkers/deathmarkers/src/editor.cpp:155:20: note: in instantiation of member function 'std::unordered_map<gd::string, bool>::unordered_map' requested here
-  155 |                 auto completed = std::unordered_map<gd::string,bool>();
-      |                                  ^
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__functional/hash.h:510:36: note: default constructor of 'hash<gd::string>' is implicitly deleted because base class '__enum_hash<string>' has a deleted default constructor
-  510 | struct _LIBCPP_TEMPLATE_VIS hash : public __enum_hash<_Tp> {};
-      |                                    ^
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__functional/hash.h:504:3: note: '__enum_hash' has been explicitly marked deleted here
-  504 |   __enum_hash()                              = delete;
-      |   ^
-In file included from <built-in>:1:
-In file included from /home/runner/work/deathmarkers/deathmarkers/build/CMakeFiles/DeathMarkers.dir/cmake_pch.hxx:5:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/DefaultInclude.hpp:4:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/c++stl/gdstdlib.hpp:3:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/platform/platform.hpp:5:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/functional:526:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__functional/boyer_moore_searcher.h:26:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/unordered_map:592:
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__hash_table:607:17: error: static assertion failed due to requirement 'integral_constant<bool, false>::value': the specified hash does not meet the Hash requirements
-  607 |   static_assert(__check_hash_requirements<_Key, _Hash>::value,
-      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__hash_table:621:5: note: in instantiation of template class 'std::__enforce_unordered_container_requirements<gd::string, std::hash<gd::string>, std::equal_to<gd::string>>' requested here
-  621 |     typename __enforce_unordered_container_requirements<_Key, _Hash, _Equal>::type
-      |     ^
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/unordered_map:1179:26: note: while substituting explicitly-specified template arguments into function template '__diagnose_unordered_container_requirements' 
- 1179 |     static_assert(sizeof(std::__diagnose_unordered_container_requirements<_Key, _Hash, _Pred>(0)), "");
-      |                          ^
-/home/runner/work/deathmarkers/deathmarkers/src/editor.cpp:155:20: note: in instantiation of member function 'std::unordered_map<gd::string, bool>::~unordered_map' requested here
-  155 |                 auto completed = std::unordered_map<gd::string,bool>();
-      |                                  ^
-In file included from <built-in>:1:
-In file included from /home/runner/work/deathmarkers/deathmarkers/build/CMakeFiles/DeathMarkers.dir/cmake_pch.hxx:5:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/DefaultInclude.hpp:4:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/c++stl/gdstdlib.hpp:3:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/platform/platform.hpp:5:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/functional:526:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__functional/boyer_moore_searcher.h:26:
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/unordered_map:644:75: error: type 'const std::hash<gd::string>' does not provide a call operator
-  644 |   _LIBCPP_HIDE_FROM_ABI size_t operator()(const _Key& __x) const { return static_cast<const _Hash&>(*this)(__x); }
-      |                                                                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__hash_table:1474:21: note: in instantiation of member function 'std::__unordered_map_hasher<gd::string, std::__hash_value_type<gd::string, bool>, std::hash<gd::string>, std::equal_to<gd::string>>::operator()' requested here
- 1474 |   size_t __hash   = hash_function()(__k);
-      |                     ^
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/unordered_map:1745:8: note: in instantiation of function template specialization 'std::__hash_table<std::__hash_value_type<gd::string, bool>, std::__unordered_map_hasher<gd::string, std::__hash_value_type<gd::string, bool>, std::hash<gd::string>, std::equal_to<gd::string>>, std::__unordered_map_equal<gd::string, std::__hash_value_type<gd::string, bool>, std::equal_to<gd::string>, std::hash<gd::string>>, std::allocator<std::__hash_value_type<gd::string, bool>>>::__emplace_unique_key_args<gd::string, const std::piecewise_construct_t &, std::tuple<gd::string &&>, std::tuple<>>' requested here
- 1745 |       .__emplace_unique_key_args(
-      |        ^
-/home/runner/work/deathmarkers/deathmarkers/src/editor.cpp:161:15: note: in instantiation of member function 'std::unordered_map<gd::string, bool>::operator[]' requested here
-  161 |                                         completed[death.userIdent] = true;
-      |                                                  ^
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:270:27: error: no member named 'find_first_of' in 'gd::string'
+  270 |                 int nextSplit = string->find_first_of(at, currentStart);
+      |                                 ~~~~~~  ^
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:272:29: error: no member named 'substr' in 'gd::string'
+  272 |                         result.push_back(string->substr(
+      |                                          ~~~~~~  ^
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:278:28: error: no member named 'substr' in 'gd::string'
+  278 |                 result.push_back(string->substr(currentStart, nextLength));
+      |                                  ~~~~~~  ^
 3 errors generated.
 
 
 
-Android64: https://github.com/MaSp005/deathmarkers/actions/runs/13474105969/job/37651132025#step:3:983
+Android64: https://github.com/MaSp005/deathmarkers/actions/runs/13751846937/job/38453770281#step:3:785
 
-FAILED: CMakeFiles/DeathMarkers.dir/src/editor.cpp.o 
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android23 --sysroot=/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DDeathMarkers_EXPORTS -DGEODE_COMP_GD_VERSION=22074 -DGEODE_GD_VERSION=2.2074 -DGEODE_GD_VERSION_STRING=\"2.2074\" -DGEODE_MOD_ID=\"freakyrobot.deathmarkers\" -DMAT_JSON_DYNAMIC=1 -DPROJECT_NAME=DeathMarkers -I/home/runner/work/deathmarkers/deathmarkers/build/bindings/bindings -I/home/runner/work/deathmarkers/deathmarkers/bindings-repo/bindings/include -I/home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include -I/home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/cocos/include -I/home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/cocos/extensions -I/home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/fmod -isystem /home/runner/work/deathmarkers/deathmarkers/cpm-cache/fmt/cccb77ae9609d2768ed80dd42cec54f77b1f1455/include -isystem /home/runner/work/deathmarkers/deathmarkers/cpm-cache/tuliphook/8d0d2aa407f52cdee9f79187fca5c9affddf8dd5/include -isystem /home/runner/work/deathmarkers/deathmarkers/cpm-cache/result/a5380f9e23f94b98200baa461086514f602899cb/include -isystem /home/runner/work/deathmarkers/deathmarkers/cpm-cache/json/dbc884f9fcebaf645c7ae9ce79261d1aba0bb13b/include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O3 -DNDEBUG  -std=gnu++20 -flto=thin -fPIC -fvisibility=hidden -Werror=return-type -ffunction-sections -fdata-sections -Winvalid-pch -Xclang -include-pch -Xclang /home/runner/work/deathmarkers/deathmarkers/build/CMakeFiles/DeathMarkers.dir/cmake_pch.hxx.pch -Xclang -include -Xclang /home/runner/work/deathmarkers/deathmarkers/build/CMakeFiles/DeathMarkers.dir/cmake_pch.hxx -MD -MT CMakeFiles/DeathMarkers.dir/src/editor.cpp.o -MF CMakeFiles/DeathMarkers.dir/src/editor.cpp.o.d -o CMakeFiles/DeathMarkers.dir/src/editor.cpp.o -c /home/runner/work/deathmarkers/deathmarkers/src/editor.cpp
-In file included from <built-in>:1:
-In file included from /home/runner/work/deathmarkers/deathmarkers/build/CMakeFiles/DeathMarkers.dir/cmake_pch.hxx:5:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/DefaultInclude.hpp:4:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/c++stl/gdstdlib.hpp:3:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/platform/platform.hpp:5:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/functional:526:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__functional/boyer_moore_searcher.h:26:
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/unordered_map:637:111: error: call to implicitly-deleted default constructor of 'std::hash<gd::string>'
-  637 |   _LIBCPP_HIDE_FROM_ABI __unordered_map_hasher() _NOEXCEPT_(is_nothrow_default_constructible<_Hash>::value) : _Hash() {}
-      |                                                                                                               ^
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__memory/compressed_pair.h:78:52: note: in instantiation of member function 'std::__unordered_map_hasher<gd::string, std::__hash_value_type<gd::string, bool>, std::hash<gd::string>, std::equal_to<gd::string>>::__unordered_map_hasher' requested here
-   78 |   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR explicit __compressed_pair_elem(__default_init_tag) {}
-      |                                                    ^
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/unordered_map:1088:25: note: in instantiation of member function 'std::__hash_table<std::__hash_value_type<gd::string, bool>, std::__unordered_map_hasher<gd::string, std::__hash_value_type<gd::string, bool>, std::hash<gd::string>, std::equal_to<gd::string>>, std::__unordered_map_equal<gd::string, std::__hash_value_type<gd::string, bool>, std::equal_to<gd::string>, std::hash<gd::string>>, std::allocator<std::__hash_value_type<gd::string, bool>>>::__hash_table' requested here
- 1088 |   _LIBCPP_HIDE_FROM_ABI unordered_map() _NOEXCEPT_(is_nothrow_default_constructible<__table>::value) {}
-      |                         ^
-/home/runner/work/deathmarkers/deathmarkers/src/editor.cpp:155:20: note: in instantiation of member function 'std::unordered_map<gd::string, bool>::unordered_map' requested here
-  155 |                 auto completed = std::unordered_map<gd::string,bool>();
-      |                                  ^
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__functional/hash.h:510:36: note: default constructor of 'hash<gd::string>' is implicitly deleted because base class '__enum_hash<string>' has a deleted default constructor
-  510 | struct _LIBCPP_TEMPLATE_VIS hash : public __enum_hash<_Tp> {};
-      |                                    ^
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__functional/hash.h:504:3: note: '__enum_hash' has been explicitly marked deleted here
-  504 |   __enum_hash()                              = delete;
-      |   ^
-In file included from <built-in>:1:
-In file included from /home/runner/work/deathmarkers/deathmarkers/build/CMakeFiles/DeathMarkers.dir/cmake_pch.hxx:5:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/DefaultInclude.hpp:4:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/c++stl/gdstdlib.hpp:3:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/platform/platform.hpp:5:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/functional:526:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__functional/boyer_moore_searcher.h:26:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/unordered_map:592:
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__hash_table:607:17: error: static assertion failed due to requirement 'integral_constant<bool, false>::value': the specified hash does not meet the Hash requirements
-  607 |   static_assert(__check_hash_requirements<_Key, _Hash>::value,
-      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__hash_table:621:5: note: in instantiation of template class 'std::__enforce_unordered_container_requirements<gd::string, std::hash<gd::string>, std::equal_to<gd::string>>' requested here
-  621 |     typename __enforce_unordered_container_requirements<_Key, _Hash, _Equal>::type
-      |     ^
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/unordered_map:1179:26: note: while substituting explicitly-specified template arguments into function template '__diagnose_unordered_container_requirements' 
- 1179 |     static_assert(sizeof(std::__diagnose_unordered_container_requirements<_Key, _Hash, _Pred>(0)), "");
-      |                          ^
-/home/runner/work/deathmarkers/deathmarkers/src/editor.cpp:155:20: note: in instantiation of member function 'std::unordered_map<gd::string, bool>::~unordered_map' requested here
-  155 |                 auto completed = std::unordered_map<gd::string,bool>();
-      |                                  ^
-In file included from <built-in>:1:
-In file included from /home/runner/work/deathmarkers/deathmarkers/build/CMakeFiles/DeathMarkers.dir/cmake_pch.hxx:5:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/DefaultInclude.hpp:4:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/c++stl/gdstdlib.hpp:3:
-In file included from /home/runner/work/deathmarkers/deathmarkers/geode-sdk-clone/loader/include/Geode/platform/platform.hpp:5:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/functional:526:
-In file included from /usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__functional/boyer_moore_searcher.h:26:
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/unordered_map:644:75: error: type 'const std::hash<gd::string>' does not provide a call operator
-  644 |   _LIBCPP_HIDE_FROM_ABI size_t operator()(const _Key& __x) const { return static_cast<const _Hash&>(*this)(__x); }
-      |                                                                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/__hash_table:1474:21: note: in instantiation of member function 'std::__unordered_map_hasher<gd::string, std::__hash_value_type<gd::string, bool>, std::hash<gd::string>, std::equal_to<gd::string>>::operator()' requested here
- 1474 |   size_t __hash   = hash_function()(__k);
-      |                     ^
-/usr/local/lib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/unordered_map:1745:8: note: in instantiation of function template specialization 'std::__hash_table<std::__hash_value_type<gd::string, bool>, std::__unordered_map_hasher<gd::string, std::__hash_value_type<gd::string, bool>, std::hash<gd::string>, std::equal_to<gd::string>>, std::__unordered_map_equal<gd::string, std::__hash_value_type<gd::string, bool>, std::equal_to<gd::string>, std::hash<gd::string>>, std::allocator<std::__hash_value_type<gd::string, bool>>>::__emplace_unique_key_args<gd::string, const std::piecewise_construct_t &, std::tuple<gd::string &&>, std::tuple<>>' requested here
- 1745 |       .__emplace_unique_key_args(
-      |        ^
-/home/runner/work/deathmarkers/deathmarkers/src/editor.cpp:161:15: note: in instantiation of member function 'std::unordered_map<gd::string, bool>::operator[]' requested here
-  161 |                                         completed[death.userIdent] = true;
-      |                                                  ^
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:270:27: error: no member named 'find_first_of' in 'gd::string'
+  270 |                 int nextSplit = string->find_first_of(at, currentStart);
+      |                                 ~~~~~~  ^
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:272:29: error: no member named 'substr' in 'gd::string'
+  272 |                         result.push_back(string->substr(
+      |                                          ~~~~~~  ^
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:278:28: error: no member named 'substr' in 'gd::string'
+  278 |                 result.push_back(string->substr(currentStart, nextLength));
+      |                                  ~~~~~~  ^
 3 errors generated.
+
+
 
 > geode project check
 | Info | Fetching dependency from index

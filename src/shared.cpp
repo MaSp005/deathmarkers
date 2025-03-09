@@ -262,8 +262,8 @@ void parseDeathList(web::WebResponse* res,
 
 }
 
-vector<gd::string> split(const gd::string* string, const char at) {
-	auto result = vector<gd::string>();
+vector<std::string> split(const std::string* string, const char at) {
+	auto result = vector<std::string>();
 	int currentStart = 0;
 
 	while (true) {
