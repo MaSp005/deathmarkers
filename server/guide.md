@@ -17,7 +17,7 @@
 </head><body>
 <main>
 
-# Creator's Guide <span style="font-size:50%">to [DeathMarkers](https://github.com/MaSp005/deathmarkers)</span><img src="/banner.webp">
+# Creator's Guide <span style="font-size:50%">to [DeathMarkers](https://geode-sdk.org/mods/freakyrobot.deathmarkers)</span><img src="/banner.webp">
 
 You've probably landed here because you are interested in using DeathMarkers to **improve** the gameplay/experience in the levels you create. **Great!** That's exactly what the mod was made to do.
 
@@ -76,8 +76,32 @@ As of now, the mod only (but eagerly) *tracks* a lot of information about player
 
 If you want to help make this whole dream a bit more of a reality, either by contributing directly or by helping iron out issues, be sure to take a look at the [GitHub repository](https://github.com/MaSp005/deathmarkers) of the project. <span class="love"></span>
 
+## General Tips
+
+I am by no means a gameplay messiah, but the following are some tips for better gameplay I have picked up over time for creators. They intentionally do not use examples from real levels, in an attempt to provide tips that apply to a wider range of gameplay styles.
+
+> Bear in mind, every level you create is yours to make decisions about. GD levels are an art form, there is no right or wrong when building them. However, if you want players to have fun with your level (and prevent the dreaded "gameplay sucks" comments, which, by the way, contribute nothing) you should invest some time into making your levels, well, fun to play.
+
+**Know how to handle gameplay issues.** If true issues in gameplay are found, creators often try to deal with them by making it auto, adding more safeguards or adding jump indicators everywhere. This is often referred to as "babying the player" and frowned upon. To properly rectify issues in your level, you'll need to know what is causing the spike in deaths. As the creator of a level, this is difficult to figure out, as you know everything about the level. Players, however, do not. Thus, they are much more prone to die when the upcoming gameplay is hard to identify. This can be due to a number of reasons, but most commonly:
+
+- **Gameplay/Decoration is not distinguishable.** Some screen elements are not clearly identifiable as gameplay or decoration. Combatting this is dependent on the style of your level, but most importantly, gameplay elements and decoration should have a noticeable contrast in colour. (Also, jump indicators and spikes are to be distinguishable at a glance, even on their own before having seen the other.)
+
+- **Unpredictable transitions.** When a transition from one part to another does not show upcoming gameplay until it is too late to react to it. Most of the time, this can be rectified by:
+
+  - showing a simplified visual of the upcoming gameplay (e.g. when the screen goes dark, show the player and minimal information necessary to time the first input of the upcoming part),
+  - drawing more attention to parts of the screen that contain the next bits of gameplay (e.g. keeping gameplay-deco contrast higher in the first few seconds of the new part), or
+  - delaying input until the player has had enough time to evaluate the first input (e.g. in a ship section, placing a landing pad after the transition for the player to rest on).
+
+- **J-Blocks.** If, after a very short black or blue orb landing, the player should *not* jump, but the fall was so short that the click from the orb is still ongoing when they land, they are likely frustrated if the landing surface does not prevent them from jumping with a J-Block. However, if the player *is* supposed to jump right after, and they are forced to perform two quick clicks due to a J-Block preventing them from holding through the second input, (which are invisible, by the way) you should either remove the J-Blocks, or (if you need the second click for sync) replace the subsequent jump with another kind of input.
+
+- **Convoluted gameplay.** Most gameplay boils down to a simple pattern of inputs, like you would see in highway scrolling rhythm games. How this gameplay is portrayed and communicated in GD is the very core of gameplay creation. Gameplay is commonly considered "convoluted" if the player's movements are much more complicated than they need to be, for example, being thrown around multiple chains of jump pads between jumps or quickly changing directions and gamemode. Such designs obscure the actual required inputs and make the level harder to understand, let alone sightread. Many creators end up placing more and more obvious jump indicators to dictate the player's inputs directly, while the gameplay structures themselves lose relevance. Of course, higher energy songs require higher energy gameplay and, thus, quicker and more complex movements. To remedy such problems, you can, of course, simplify the gameplay, OR create supporting indicators like path of flight highlighters which help with understanding the path a player will take in cases where the structuring itself is not clear about this.
+
+**Do not take death markers too seriously.** People dying to a particular spot may be due to a wide range of reasons, some out of your control. As of now, the mod does not have the right features to allow you to inspect possible reasons for a given high death count location (though it will in the future). Deaths may be due to anything. Use your best judgement for whether you want to address them or not. **Most importantly: Listen to player feedback.**
+
+> This section always open for discussion on the [discord](https://discord.gg/ZsXeKEwZqA).
+
 </main>
 
-> **LEGAL STUFF**<br>See [my homepage](https://masp005.dev/legal) regarding hosting and contact.<br>This page does not collect any data.<br>As for the mod, see the [GitHub repository](https://github.com/MaSp005/deathmarkers).
+> **LEGAL STUFF**<br>See [my homepage](https://masp005.dev/legal) regarding hosting and contact.<br>This page does not collect any data.<br>As for the mod it promotes, see the [GitHub repository](https://github.com/MaSp005/deathmarkers).
 <script src="/zoom.js"></script>
 </body></html>

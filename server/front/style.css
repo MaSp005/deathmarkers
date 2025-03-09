@@ -31,8 +31,7 @@ h6 {
 p,
 li {
   color: #b0b2b8;
-  letter-spacing: .5;
-  word-spacing: 1;
+  text-align: justify;
   line-height: 1.5;
 }
 
