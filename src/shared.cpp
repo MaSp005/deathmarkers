@@ -114,11 +114,11 @@ void parseDeathList(web::WebResponse* res,
 		return log::error("Error reading list response: Body could not be read.");
 
 	// Read and split up body
-	auto okObj = body.ok().value();
-	if (okObj.empty()) return log::info("Responded with zero deaths.");
+	std::string const okObj = move(body.ok().value());
+	if (okObj.empty()) return log::info("Responded with no data.");
 
-	vector<std::string> lines = split(&okObj, '\n');
-	vector<std::string> header = split(&lines.at(0), ',');
+	vector<std::string> lines = split(okObj, '\n');
+	vector<std::string> header = split(lines.at(0), ',');
 	lines.erase(lines.begin());
 
 	// Identify columns
@@ -134,7 +134,7 @@ void parseDeathList(web::WebResponse* res,
 		auto const& line = lines.at(i);
 		if (line.empty()) return;
 
-		vector<std::string> coords = split(&line, ',');
+		vector<std::string> coords = split(line, ',');
 		if (coords.size() != header.size()) {
 			log::warn(
 				"Error listing deaths: Inequal number of elements: {} | {}",
@@ -190,9 +190,11 @@ void parseDeathList(web::WebResponse* res,
 		return log::error("Error reading list response: Body could not be read.");
 
 	// Read and split up body
-	gd::string okObj = body.ok().value();
-	vector<std::string> lines = split(&okObj, '\n');
-	vector<std::string> header = split(&lines.at(0), ',');
+	std::string const okObj = move(body.ok().value());
+	if (okObj.empty()) return log::info("Responded with no data.");
+
+	vector<std::string> lines = split(okObj, '\n');
+	vector<std::string> header = split(lines.at(0), ',');
 	lines.erase(lines.begin());
 
 	// Identify columns
@@ -216,7 +218,7 @@ void parseDeathList(web::WebResponse* res,
 		auto const& line = lines.at(i);
 		if (line.empty()) return;
 
-		vector<std::string> coords = split(&line, ',');
+		vector<std::string> coords = split(line, ',');
 		if (coords.size() != header.size()) {
 			log::warn(
 				"Error analyzing deaths: Inequal number of elements: {} | {}",
@@ -262,20 +264,20 @@ void parseDeathList(web::WebResponse* res,
 
 }
 
-vector<std::string> split(const std::string* string, const char at) {
+vector<std::string> split(const std::string& string, const char at) {
 	auto result = vector<std::string>();
 	int currentStart = 0;
 
 	while (true) {
-		int nextSplit = string->find_first_of(at, currentStart);
+		int nextSplit = string.find_first_of(at, currentStart);
 		if (nextSplit == std::string::npos) {
-			result.push_back(string->substr(
-				currentStart, string->size() - currentStart
+			result.push_back(string.substr(
+				currentStart, string.size() - currentStart
 			));
 			return result;
 		}
 		int nextLength = nextSplit - currentStart;
-		result.push_back(string->substr(currentStart, nextLength));
+		result.push_back(string.substr(currentStart, nextLength));
 		currentStart = nextSplit + 1;
 	}
 }

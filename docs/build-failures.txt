@@ -2,7 +2,7 @@ This file is a collection of the failure messages from the latest GitHub Actions
 
 
 
-macOS: https://github.com/MaSp005/deathmarkers/actions/runs/13753377869/job/38457161489#step:3:681
+macOS: https://github.com/MaSp005/deathmarkers/actions/runs/13753642725/job/38457737963#step:3:682
 
 Undefined symbols for architecture arm64:
   "cocos2d::CCMenuItemSprite::create(cocos2d::CCNode*, cocos2d::CCNode*, cocos2d::CCNode*)", referenced from:
@@ -10,29 +10,26 @@ Undefined symbols for architecture arm64:
 
 
 
-Android32: https://github.com/MaSp005/deathmarkers/actions/runs/13753377869/job/38457161613#step:3:795
+Android32: https://github.com/MaSp005/deathmarkers/actions/runs/13753642725/job/38457738058#step:3:790
  
-ld.lld: error: undefined symbol: split(gd::string const*, char)
->>> referenced by shared.cpp:120 (/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:120)
->>>               CMakeFiles/DeathMarkers.dir/src/freakyrobot.deathmarkers.android32.so.lto.shared.cpp.o:(parseDeathList(geode::utils::web::WebResponse*, std::__ndk1::vector<DeathLocationMin, std::__ndk1::allocator<DeathLocationMin>>*))
->>> referenced by shared.cpp:121 (/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:121)
->>>               CMakeFiles/DeathMarkers.dir/src/freakyrobot.deathmarkers.android32.so.lto.shared.cpp.o:(parseDeathList(geode::utils::web::WebResponse*, std::__ndk1::vector<DeathLocationMin, std::__ndk1::allocator<DeathLocationMin>>*))
->>> referenced by shared.cpp:137 (/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:137)
->>>               CMakeFiles/DeathMarkers.dir/src/freakyrobot.deathmarkers.android32.so.lto.shared.cpp.o:(parseDeathList(geode::utils::web::WebResponse*, std::__ndk1::vector<DeathLocationMin, std::__ndk1::allocator<DeathLocationMin>>*))
->>> referenced 3 more times
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:194:30: error: no matching function for call to 'split'
+  194 |         vector<std::string> lines = split(&okObj, '\n');
+      |                                     ^~~~~
+/home/runner/work/deathmarkers/deathmarkers/src/shared.hpp:92:21: note: candidate function not viable: no known conversion from 'gd::string *' to 'const std::string *' (aka 'const basic_string<char> *') for 1st argument
+   92 | vector<std::string> split(const std::string* string, const char at);
+      |                     ^     ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
-Android64: https://github.com/MaSp005/deathmarkers/actions/runs/13753377869/job/38457161780#step:3:795
+Android64: https://github.com/MaSp005/deathmarkers/actions/runs/13753642725/job/38457738151#step:3:789
 
-ld.lld: error: undefined symbol: split(gd::string const*, char)
->>> referenced by shared.cpp:120 (/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:120)
->>>               CMakeFiles/DeathMarkers.dir/src/freakyrobot.deathmarkers.android64.so.lto.shared.cpp.o:(parseDeathList(geode::utils::web::WebResponse*, std::__ndk1::vector<DeathLocationMin, std::__ndk1::allocator<DeathLocationMin>>*))
->>> referenced by shared.cpp:121 (/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:121)
->>>               CMakeFiles/DeathMarkers.dir/src/freakyrobot.deathmarkers.android64.so.lto.shared.cpp.o:(parseDeathList(geode::utils::web::WebResponse*, std::__ndk1::vector<DeathLocationMin, std::__ndk1::allocator<DeathLocationMin>>*))
->>> referenced by shared.cpp:137 (/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:137)
->>>               CMakeFiles/DeathMarkers.dir/src/freakyrobot.deathmarkers.android64.so.lto.shared.cpp.o:(parseDeathList(geode::utils::web::WebResponse*, std::__ndk1::vector<DeathLocationMin, std::__ndk1::allocator<DeathLocationMin>>*))
->>> referenced 3 more times
+/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:194:30: error: no matching function for call to 'split'
+  194 |         vector<std::string> lines = split(&okObj, '\n');
+      |                                     ^~~~~
+/home/runner/work/deathmarkers/deathmarkers/src/shared.hpp:92:21: note: candidate function not viable: no known conversion from 'gd::string *' to 'const std::string *' (aka 'const basic_string<char> *') for 1st argument
+   92 | vector<std::string> split(const std::string* string, const char at);
+      |                     ^     ~~~~~~~~~~~~~~~~~~~~~~~~~
+1 error generated.
 
 
 
