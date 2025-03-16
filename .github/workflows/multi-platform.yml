@@ -3,6 +3,8 @@ name: Build Geode Mod
 on:
   workflow_dispatch:
   push:
+    branches:
+      - "main"
 
 jobs:
   build:
@@ -13,8 +15,8 @@ jobs:
         - name: Windows
           os: windows-latest
 
-        - name: macOS
-          os: macos-latest
+        # - name: macOS
+        #   os: macos-latest
 
         - name: Android32
           os: ubuntu-latest
