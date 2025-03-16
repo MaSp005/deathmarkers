@@ -77,7 +77,9 @@ Select salt: e.g. `ZqQhF28asA` <- Different every time a level analysis is reque
 
 ### But what about people playing without an account?
 
-Not getting in the database. That's it. The mod won't even try to submit anything if it knows that there is no account.
+In principle, we're accessing `GameManager::m_playerUserID` and `GameManager::m_playerName` which are the user id (a separate id from your account id and assigned to logged out users as well) and account name (same as, say `GJAccountManager::m_username`, and if not logged in, taking the name in the icon kit).
+
+Everyone playing logged in will be uniquely identified. Everyone else is assumed an individual player if they play on one device and do not change their name.
 
 # API
 

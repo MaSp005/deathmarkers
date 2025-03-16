@@ -7,6 +7,7 @@
 #include "shared.hpp"
 
 // TODO: Check for incompatibilities with other mods
+// TODO: Limit rendering based on camera
 
 using namespace geode::prelude;
 
@@ -71,14 +72,15 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 		if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
 
-		// TODO: Info-button
+		// TODO: Info-button?
 
 		// Prepare UI
 		this->m_fields->m_dmNode->setID("markers"_spr);
 		this->m_fields->m_dmNode->setZOrder(2 << 28); // everyone using 99999 smh
 		this->m_objectLayer->addChild(this->m_fields->m_dmNode);
 
-		// refetch on level start in case it changed
+		// refetch on level start in case it changed (player changed account)
+		// CONSIDER: Use GJAccountManager instead to ban unstable non-account users
 		this->m_fields->m_playerProps.userid =
 			GameManager::get()->m_playerUserID.value();
 		this->m_fields->m_playerProps.username =

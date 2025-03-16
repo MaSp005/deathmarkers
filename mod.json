@@ -79,7 +79,9 @@
 			"resources/*"
 		]
 	},
-	"dependencies": [],
+	"dependencies": {
+		"geode.node-ids": ">=1.13.0"
+	},
 	"tags": [
 		"online",
 		"utility",

@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="xiYQnjZuGAK0kINvY0NI" name="Death occurring">
-        <mxGraphModel dx="552" dy="905" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="700" pageHeight="400" math="0" shadow="0">
+        <mxGraphModel dx="510" dy="647" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="700" pageHeight="400" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -47,7 +47,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="rmPj36xEzQe9r_7l5fX9" name="Submit Death &amp; Queue">
-        <mxGraphModel dx="381" dy="624" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="600" math="0" shadow="0">
+        <mxGraphModel dx="510" dy="647" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="600" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -179,7 +179,7 @@
                 <mxCell id="42" style="edgeStyle=none;html=1;" parent="1" source="35" target="17" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="46" value="Failure" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="42" vertex="1" connectable="0">
+                <mxCell id="46" value="No" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="42" vertex="1" connectable="0">
                     <mxGeometry x="-0.2308" y="-2" relative="1" as="geometry">
                         <mxPoint as="offset"/>
                     </mxGeometry>
@@ -191,7 +191,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="48" value="Success" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="47" vertex="1" connectable="0">
+                <mxCell id="48" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="47" vertex="1" connectable="0">
                     <mxGeometry x="-0.761" relative="1" as="geometry">
                         <mxPoint x="11" as="offset"/>
                     </mxGeometry>

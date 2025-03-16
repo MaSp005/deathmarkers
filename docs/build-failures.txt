@@ -1,45 +1,9 @@
 This file is a collection of the failure messages from the latest GitHub Actions build. As stated in CONTRIBUTING.md, contributions for multi-platform availability are always welcome.
 
 
-
-macOS: https://github.com/MaSp005/deathmarkers/actions/runs/13753642725/job/38457737963#step:3:682
+macOS is excluded from new builds in the workflow yml to allow the mod to be packaged with all (working) platforms.
+macOS: https://github.com/MaSp005/deathmarkers/actions/runs/13878054977/job/38832886693#step:3:699
 
 Undefined symbols for architecture arm64:
   "cocos2d::CCMenuItemSprite::create(cocos2d::CCNode*, cocos2d::CCNode*, cocos2d::CCNode*)", referenced from:
       geode::modifier::AsStaticFunction_init<DMEditorPauseLayer, bool (DMEditorPauseLayer::*)(LevelEditorLayer*)>::Impl<bool (DMEditorPauseLayer::*)(LevelEditorLayer*)>::function(DMEditorPauseLayer*, LevelEditorLayer*) in 
-
-
-
-Android32: https://github.com/MaSp005/deathmarkers/actions/runs/13753642725/job/38457738058#step:3:790
- 
-/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:194:30: error: no matching function for call to 'split'
-  194 |         vector<std::string> lines = split(&okObj, '\n');
-      |                                     ^~~~~
-/home/runner/work/deathmarkers/deathmarkers/src/shared.hpp:92:21: note: candidate function not viable: no known conversion from 'gd::string *' to 'const std::string *' (aka 'const basic_string<char> *') for 1st argument
-   92 | vector<std::string> split(const std::string* string, const char at);
-      |                     ^     ~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-Android64: https://github.com/MaSp005/deathmarkers/actions/runs/13753642725/job/38457738151#step:3:789
-
-/home/runner/work/deathmarkers/deathmarkers/src/shared.cpp:194:30: error: no matching function for call to 'split'
-  194 |         vector<std::string> lines = split(&okObj, '\n');
-      |                                     ^~~~~
-/home/runner/work/deathmarkers/deathmarkers/src/shared.hpp:92:21: note: candidate function not viable: no known conversion from 'gd::string *' to 'const std::string *' (aka 'const basic_string<char> *') for 1st argument
-   92 | vector<std::string> split(const std::string* string, const char at);
-      |                     ^     ~~~~~~~~~~~~~~~~~~~~~~~~~
-1 error generated.
-
-
-
-> geode project check
-| Info | Fetching dependency from index
-| Info | Dependency found: geode.node-ids, version 1.19.0
-| Info | Downloading dependency
-| Info | Success
-| Info | Writing dependency to temp file
-| Info | Dependency 'geode.node-ids' found
-thread 'main' panicked at src/project.rs:489:64:
-called `Result::unwrap()` on an `Err` value: Os { code: 5, kind: PermissionDenied, message: "Zugriff verweigert" }
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
