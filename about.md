@@ -12,8 +12,6 @@ but also for <cg>in-depth analysis of gameplay</c>.
 - Built-in analysis <cg>helper tools</c>
 - (minimal) Player path tracing
 
-## Currently only on Windows!
-
 ## Disclaimer
 
 The mod makes use of your *username and user ID* to create an identifier for you. <cg>This identifier **can not be traced back to you**</c>; it is unique to you for the purpose of grouping together attempts (/deaths) that were from the same player. Your identifier is *different* for every level you play, so your deaths *cannot* be grouped together across levels.
@@ -22,4 +20,4 @@ You can <cr>prevent</c> the mod from sharing your deaths and still show others' 
 
 ## Special Thanks
 
-**Adam_729** for creating the [original mod](https://github.com/Adam7290/deathmarkers)! As this is my first mod, a lot of the original source code helped me figure out the process of modding with Geode.
+**Adam_729** for creating the [first mod of this kind](https://github.com/Adam7290/deathmarkers)! As this is my first mod, a lot of the original source code helped me figure out the process of modding with Geode.

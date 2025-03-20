@@ -33,7 +33,7 @@ This stuff is not self-explanatory, though, which is why this document walks you
 
 ## Table of contents
 
-> Last updated: Feb 13, 2025<br>For mod version: v1.0.0
+> [Last updated](https://github.com/MaSp005/deathmarkers/commits/main/server/guide.md): Mar 17, 2025<br>For mod version: v1.0.0
 
 <?>TOC
 
@@ -67,7 +67,6 @@ A **setback** is a death in which the player dies significantly earlier than the
 ![Overlay of two paths across a green-orb chain, demonstrating that the timing on the first orb impacts the trajectory and causing a sequence to be impossible](/anticipated-jumps.webp)
 
 **Anticipated jumps** are a combination of inputs in which the first input can be hit at any timing with no direct consequences, and will still allow the second input to happen, but limit the timing window to one where death is guaranteed. These combinations can be of any length, where a slightly missed timing on the first input guarantees death at least by the last input.
-
 -->
 
 ## Upcoming
@@ -80,7 +79,7 @@ If you want to help make this whole dream a bit more of a reality, either by con
 
 I am by no means a gameplay messiah, but the following are some tips for better gameplay I have picked up over time for creators. They intentionally do not use examples from real levels, in an attempt to provide tips that apply to a wider range of gameplay styles.
 
-> Bear in mind, every level you create is yours to make decisions about. GD levels are an art form, there is no right or wrong when building them. However, if you want players to have fun with your level (and prevent the dreaded "gameplay sucks" comments, which, by the way, contribute nothing) you should invest some time into making your levels, well, fun to play.
+> Bear in mind, every level you create is yours to make decisions about. GD levels are an art form, there is no right or wrong when building them. However, level creation is also a practice of game design, and game design focuses on making players have fun. To make a successful level, both aspects need to have significant thought put into them. The following are some tips in the "fun gameplay" angle of level creation.
 
 **Know how to handle gameplay issues.** If true issues in gameplay are found, creators often try to deal with them by making it auto, adding more safeguards or adding jump indicators everywhere. This is often referred to as "babying the player" and frowned upon. To properly rectify issues in your level, you'll need to know what is causing the spike in deaths. As the creator of a level, this is difficult to figure out, as you know everything about the level. Players, however, do not. Thus, they are much more prone to die when the upcoming gameplay is hard to identify. This can be due to a number of reasons, but most commonly:
 

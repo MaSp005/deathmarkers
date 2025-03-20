@@ -26,4 +26,4 @@ DeathMarkers is installed through [Geode](https://geode-sdk.org/), the mod can b
 
 The mod makes use of your *username and user ID* to create an identifier for you. **This identifier can not be traced back to you**; it is unique to you for the purpose of grouping together attempts (/deaths) that were from the same player. Your identifier is *different* for every level you play, so your deaths **cannot be grouped together across levels**, your account cannot be traced back from a given death, and your specific deaths cannot be determined by anybody.
 
-Extensive documentation of the algorithm can be found in [doc.md](./blob/main/doc.md).
+Extensive documentation of how this works can be found in [doc.md](./blob/main/doc.md).
