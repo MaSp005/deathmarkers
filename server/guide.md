@@ -26,8 +26,8 @@ As you (probably) know by now, this mod collects **every player's deaths** with 
 This stuff is not self-explanatory, though, which is why this document walks you through **the interface(s)** the mod offers to creators, as well as a guide on **interpreting** the data to make an impact on your level quality.
 
 <div class="links">
-<a target="_blank" href="https://github.com/MaSp005/deathmarkers"><img src="https://raw.githubusercontent.com/geode-sdk/geode/faedd885374b45d649913eafa8ac7461eb2815b2/loader/resources/github.png"></a>
-<a target="_blank" href="https://geode-sdk.org/mods/freakyrobot.deathmarkers"><img src="https://raw.githubusercontent.com/geode-sdk/geode/faedd885374b45d649913eafa8ac7461eb2815b2/loader/resources/logos/geode-logo.png"></a>
+<a target="_blank" href="https://github.com/MaSp005/deathmarkers"><img src="/github.webp"></a>
+<a target="_blank" href="https://geode-sdk.org/mods/freakyrobot.deathmarkers"><img src="/geode.webp"></a>
 <a target="_blank" href="https://discord.gg/hzDFNaNgCf"><img src="/discord.webp"></a>
 </div>
 
