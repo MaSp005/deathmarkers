@@ -18,8 +18,6 @@ The system works with format numbers, starting from 1 as the first version. They
 
 # Database
 
-The server works with [`better-sqlite3`](https://www.npmjs.com/package/better-sqlite3) and thus has only one database and no login.
-
 The database contains one table per format version, in order to store the corresponding incoming deaths in the correct version table, and sending deaths combined from all formats.
 
 ## Table `format1`

@@ -1,0 +1,9 @@
+{
+  "PORT": 8048,
+  "DATABASE": {
+    "SCRIPT": "sqlite", // Filename of .js in database/ directory, follow sqlite.js for form
+    "FILENAME": "./deaths.db" // sqlite.js requires DATABASE.FILENAME
+    // Other database scripts can require other attributes in here, e.g. URI, USERNAME, PASSWORD
+  },
+  "GUIDE_FILENAME": "./guide.md" // From cwd
+}

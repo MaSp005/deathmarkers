@@ -66,3 +66,4 @@ build-*/
 # Server dir stuff
 server/node_modules
 */*.db
+config.json

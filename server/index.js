@@ -1,20 +1,16 @@
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
   console.log(`
   -b      Benchmark select features in action
-  -i [fn] Database Filename
     `);
   process.exit(0);
 }
 
-const DATABASE_FILENAME = process.argv.includes("-i") ?
-  process.argv[process.argv.indexOf("-c") + 1] : "deaths.db";
-const PORT = 8048;
+const {
+  PORT, GUIDE_FILENAME, DATABASE
+} = require("./config.json");
 const BUFFER_SIZE = 500;
-
 const alphabet = "ABCDEFGHIJOKLMNOPQRSTUVWXYZabcdefghijoklmnopqrstuvwxyz0123456789";
 const random = l => new Array(l).fill(0).map(_ => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
-
-const GUIDE_FILENAME = "./guide.md";
 
 const benchmark = (() => {
   if (!process.argv.includes("-b")) return () => { };
@@ -29,7 +25,7 @@ const benchmark = (() => {
   }
 })();
 
-const db = require("better-sqlite3")(DATABASE_FILENAME);
+const db = require("./database/" + DATABASE.SCRIPT);
 const expr = require("express");
 const app = expr();
 const crypto = require("crypto");
@@ -102,16 +98,6 @@ function createUserIdent(userid, username, levelid) {
   return crypto.createHash("sha1").update(source).digest("hex");
 }
 
-try {
-  db.transaction(() => {
-    db.exec(fs.readFileSync('schema.sql', 'utf8'));
-  })();
-} catch (e) {
-  console.error("Error preparing database:");
-  console.error(e);
-  process.exit(1);
-}
-
 app.get("/list", (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
@@ -120,18 +106,8 @@ app.get("/list", (req, res) => {
   let accept = req.query.response || "csv";
   if (accept != "csv") return res.sendStatus(400);
 
-  let isPlatformer = req.query.platformer == "true";
-  let columns = isPlatformer ? "x,y" : "x,y,percentage";
-  let query = isPlatformer ?
-    `SELECT ${columns} FROM format1 WHERE levelid == @levelId UNION
-  SELECT ${columns} FROM format2 WHERE levelid == @levelId` :
-    `SELECT ${columns} FROM format1 WHERE levelid == @levelId AND percentage < 101 UNION
-  SELECT ${columns} FROM format2 WHERE levelid == @levelId AND percentage < 101;`;
-
   benchmark("query");
-  let deaths = db.prepare(query)
-    .raw(true)
-    .all({ levelId });
+  let { deaths, columns } = db.list(levelId, req.query.platformer == "true");
   benchmark();
 
   res.contentType("text/csv");
@@ -155,7 +131,7 @@ app.get("/analysis", (req, res) => {
   let salt = "_" + random(10);
 
   benchmark("query");
-  let deaths = db.prepare(`SELECT ${columns} FROM format1 WHERE levelid = ?;`).raw(true).all(levelId);
+  let deaths = db.analyze(levelId, columns);
   benchmark();
 
   res.contentType("text/csv");
@@ -227,16 +203,7 @@ app.all("/submit", expr.text({
 
   benchmark("insert");
   try {
-    switch (format) {
-      case 1:
-        db.prepare("INSERT INTO format1 VALUES (@userident, @levelid, @levelversion, @practice, @x, @y, @percentage)")
-          .run(req.body);
-        break;
-      case 2:
-        db.prepare("INSERT INTO format2 VALUES (@userident, @levelid, @levelversion, @practice, @x, @y, @percentage, @coins, @itemdata)")
-          .run(req.body);
-        break;
-    }
+    db.register(format, req.body);
     res.sendStatus(204);
   } catch (e) {
     console.warn(e);
