@@ -2,17 +2,21 @@
 #include "shared.hpp"
 #include "smallestCircle.hpp"
 
-class DeathLocationStack {
-public:
-	std::vector<DeathLocation*> deaths;
-	Circle circle;
-	float density = 0;
+namespace dm {
+
+	class DeathLocationStack {
+	public:
+		std::vector<DeathLocation*> deaths;
+		Circle circle;
+		float density = 0;
 	
-	DeathLocationStack();
-	DeathLocationStack(std::vector<DeathLocation*> deaths);
+		DeathLocationStack();
+		DeathLocationStack(std::vector<DeathLocation*> deaths);
 
-	void recalculate();
-};
+		void recalculate();
+	};
 
-void identifyClusters(std::vector<DeathLocation>* const deaths,
-	float maxDistance, std::vector<DeathLocationStack>* stacks);
+	void identifyClusters(std::vector<DeathLocation>* const deaths,
+		float maxDistance, std::vector<DeathLocationStack>* stacks);
+
+}

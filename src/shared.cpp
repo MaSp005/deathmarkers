@@ -1,5 +1,7 @@
 #include "shared.hpp"
 
+using namespace dm;
+
 DeathLocationMin::DeathLocationMin(float x, float y, int percentage) {
 	this->pos = CCPoint(x, y);
 	this->percentage = percentage;
@@ -105,7 +107,7 @@ void DeathLocation::updateNode() {
 }
 
 
-void parseDeathList(web::WebResponse* res,
+void dm::parseDeathList(web::WebResponse* res,
 	vector<DeathLocationMin>* target) {
 
 	auto const body = res->string();
@@ -181,7 +183,7 @@ void parseDeathList(web::WebResponse* res,
 
 }
 
-void parseDeathList(web::WebResponse* res,
+void dm::parseDeathList(web::WebResponse* res,
 	vector<DeathLocation>* target) {
 
 	auto const body = res->string();
@@ -264,7 +266,7 @@ void parseDeathList(web::WebResponse* res,
 
 }
 
-vector<std::string> split(const std::string& string, const char at) {
+vector<std::string> dm::split(const std::string& string, const char at) {
 	auto result = vector<std::string>();
 	int currentStart = 0;
 

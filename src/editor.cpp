@@ -1,5 +1,7 @@
 #include "editor.hpp"
 
+using namespace dm;
+
 #include <Geode/modify/LevelEditorLayer.hpp>
 class $modify(DMEditorLayer, LevelEditorLayer) {
 

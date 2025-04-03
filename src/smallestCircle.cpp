@@ -29,6 +29,7 @@ using std::size_t;
 using std::vector;
 using std::max;
 using std::min;
+using namespace dm;
 
 
 /*---- Members of struct Circle ----*/
@@ -61,7 +62,7 @@ static std::default_random_engine randGen((std::random_device())());
 
 
 // Initially: No boundary points known
-Circle makeSmallestEnclosingCircle(vector<CCPoint> points) {
+Circle dm::makeSmallestEnclosingCircle(vector<CCPoint> points) {
 	// Randomize order
 	std::shuffle(points.begin(), points.end(), randGen);
 	
@@ -83,7 +84,7 @@ static Circle makeSmallestEnclosingCircleOnePoint(const vector<CCPoint> &points,
 		const CCPoint &q = points.at(i);
 		if (!c.contains(q)) {
 			if (c.r == 0)
-				c = makeDiameter(p, q);
+				c = dm::makeDiameter(p, q);
 			else
 				c = makeSmallestEnclosingCircleTwoPoints(points, i + 1, p, q);
 		}
@@ -94,7 +95,7 @@ static Circle makeSmallestEnclosingCircleOnePoint(const vector<CCPoint> &points,
 
 // Two boundary points known
 static Circle makeSmallestEnclosingCircleTwoPoints(const vector<CCPoint> &points, size_t end, const CCPoint &p, const CCPoint &q) {
-	Circle circ = makeDiameter(p, q);
+	Circle circ = dm::makeDiameter(p, q);
 	Circle left  = Circle::INVALID;
 	Circle right = Circle::INVALID;
 	
@@ -107,7 +108,7 @@ static Circle makeSmallestEnclosingCircleTwoPoints(const vector<CCPoint> &points
 		
 		// Form a circumcircle and classify it on left or right side
 		double cross = pq.cross(r - p);
-		Circle c = makeCircumcircle(p, q, r);
+		Circle c = dm::makeCircumcircle(p, q, r);
 		if (c.r < 0)
 			continue;
 		else if (cross > 0 && (left.r < 0 || pq.cross(c.c - p) > pq.cross(left.c - p)))
@@ -128,13 +129,13 @@ static Circle makeSmallestEnclosingCircleTwoPoints(const vector<CCPoint> &points
 }
 
 
-Circle makeDiameter(const CCPoint &a, const CCPoint &b) {
+Circle dm::makeDiameter(const CCPoint &a, const CCPoint &b) {
 	CCPoint c{(a.x + b.x) / 2, (a.y + b.y) / 2};
 	return Circle{c, max(c.getDistance(a), c.getDistance(b))};
 }
 
 
-Circle makeCircumcircle(const CCPoint &a, const CCPoint &b, const CCPoint &c) {
+Circle dm::makeCircumcircle(const CCPoint &a, const CCPoint &b, const CCPoint &c) {
 	// Mathematical algorithm from Wikipedia: Circumscribed circle
 	float ox = (min(min(a.x, b.x), c.x) + max(max(a.x, b.x), c.x)) / 2;
 	float oy = (min(min(a.y, b.y), c.y) + max(max(a.y, b.y), c.y)) / 2;

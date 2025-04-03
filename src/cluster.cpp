@@ -1,5 +1,7 @@
 #include "cluster.hpp"
 
+using namespace dm;
+
 DeathLocationStack::DeathLocationStack(vector<DeathLocation*> deaths) {
 	this->deaths = deaths;
 	this->recalculate();
@@ -86,7 +88,7 @@ int findNearest(vector<DeathLocationStack> const* stacks,
 	return minimum;
 }
 
-void identifyClusters(vector<DeathLocation>* deaths,
+void dm::identifyClusters(vector<DeathLocation>* deaths,
 	float maxDistance, vector<DeathLocationStack>* stacks) {
 
 	/*

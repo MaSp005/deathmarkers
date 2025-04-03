@@ -25,30 +25,34 @@
 #include "shared.hpp"
 
 
-struct Circle final {
+namespace dm {
+
+	struct Circle final {
 	
-	public: static const Circle INVALID;
+		public: static const Circle INVALID;
 	
-	private: static const double MULTIPLICATIVE_EPSILON;
+		private: static const double MULTIPLICATIVE_EPSILON;
 	
-	public: CCPoint c;   // Center
-	public: float r = 0;  // Radius
+		public: CCPoint c;   // Center
+		public: float r = 0;  // Radius
 	
 	
-	public: bool contains(const CCPoint &p) const;
+		public: bool contains(const CCPoint &p) const;
 	
-	public: bool contains(const std::vector<CCPoint> &ps) const;
+		public: bool contains(const std::vector<CCPoint> &ps) const;
 	
-};
+	};
 
 
-/* 
- * (Main function) Returns the smallest circle that encloses all the given points.
- * Runs in expected O(n) time, randomized. Note: If 0 points are given, a circle of
- * negative radius is returned. If 1 point is given, a circle of radius 0 is returned.
- */
-Circle makeSmallestEnclosingCircle(std::vector<CCPoint> points);
+	/* 
+	 * (Main function) Returns the smallest circle that encloses all the given points.
+	 * Runs in expected O(n) time, randomized. Note: If 0 points are given, a circle of
+	 * negative radius is returned. If 1 point is given, a circle of radius 0 is returned.
+	 */
+	Circle makeSmallestEnclosingCircle(std::vector<CCPoint> points);
 
-// For unit tests
-Circle makeDiameter(const CCPoint &a, const CCPoint &b);
-Circle makeCircumcircle(const CCPoint &a, const CCPoint &b, const CCPoint &c);
+	// For unit tests
+	Circle makeDiameter(const CCPoint &a, const CCPoint &b);
+	Circle makeCircumcircle(const CCPoint &a, const CCPoint &b, const CCPoint &c);
+
+}

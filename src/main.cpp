@@ -10,6 +10,7 @@
 // TODO: Limit rendering based on camera
 
 using namespace geode::prelude;
+using namespace dm;
 
 // FUNCTIONS
 
