@@ -98,7 +98,7 @@ function createUserIdent(userid, username, levelid) {
   return crypto.createHash("sha1").update(source).digest("hex");
 }
 
-app.get("/list", (req, res) => {
+app.get("/list", async (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
   let levelId = parseInt(req.query.levelid);
@@ -107,7 +107,7 @@ app.get("/list", (req, res) => {
   if (accept != "csv") return res.sendStatus(400);
 
   benchmark("query");
-  let { deaths, columns } = db.list(levelId, req.query.platformer == "true");
+  let { deaths, columns } = await db.list(levelId, req.query.platformer == "true");
   benchmark();
 
   res.contentType("text/csv");
@@ -119,7 +119,7 @@ app.get("/list", (req, res) => {
   benchmark();
 });
 
-app.get("/analysis", (req, res) => {
+app.get("/analysis", async (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
   let levelId = parseInt(req.query.levelid);
@@ -131,7 +131,7 @@ app.get("/analysis", (req, res) => {
   let salt = "_" + random(10);
 
   benchmark("query");
-  let deaths = db.analyze(levelId, columns);
+  let deaths = await db.analyze(levelId, columns);
   benchmark();
 
   res.contentType("text/csv");
@@ -149,7 +149,7 @@ app.get("/analysis", (req, res) => {
 
 app.all("/submit", expr.text({
   type: "*/*"
-}), (req, res) => {
+}), async (req, res) => {
   benchmark("parseSubmission");
   try {
     req.body = JSON.parse(req.body.toString());
@@ -203,7 +203,7 @@ app.all("/submit", expr.text({
 
   benchmark("insert");
   try {
-    db.register(format, req.body);
+    await db.register(format, req.body);
     res.sendStatus(204);
   } catch (e) {
     console.warn(e);

@@ -4,7 +4,7 @@ const db = require("better-sqlite3")(DATABASE_FILENAME);
 
 try {
   db.transaction(() => {
-    db.exec(require("fs").readFileSync('schema.sql', 'utf8'));
+    db.exec(require("fs").readFileSync('./database/sqlite-schema.sql', 'utf8'));
   })();
 } catch (e) {
   console.error("Error preparing database:");
@@ -14,7 +14,7 @@ try {
 
 module.exports = {
 
-  list: (levelId, isPlatformer) => {
+  list: async (levelId, isPlatformer) => {
 
     let columns = isPlatformer ? "x,y" : "x,y,percentage";
     let query = isPlatformer ?
@@ -32,14 +32,14 @@ module.exports = {
 
   },
 
-  analyze: (levelId, columns) => {
+  analyze: async (levelId, columns) => {
 
     return db.prepare(`SELECT ${columns} FROM format1 WHERE levelid = ?;`)
       .raw(true).all(levelId);
 
   },
 
-  register: (format, data) => {
+  register: async (format, data) => {
 
     switch (format) {
       case 1:
