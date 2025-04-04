@@ -2,8 +2,13 @@
   "PORT": 8048, // Default value, embedded in mod source
   "DATABASE": {
     "SCRIPT": "sqlite", // Filename of .js in database/ directory, follow sqlite.js for form
-    "FILENAME": "./deaths.db" // sqlite.js requires DATABASE.FILENAME
-    // Other database scripts can require other attributes in here, e.g. URI, USERNAME, PASSWORD
+    "FILENAME": "./deaths.db", // sqlite.js requires DATABASE.FILENAME
+    "POSTGRES": { // postgres.js-specific data
+      "database": "",
+      "user": "",
+      "password": ""
+    }
+    // New database scripts can require other attributes in here.
   },
   "GUIDE_FILENAME": "./guide.md" // From cwd, not the script being executed
 }

@@ -19,6 +19,7 @@
     "markdown-it-named-headings": "^1.1.0"
   },
   "optionalDependencies": {
-    "better-sqlite3": "^11.5.0"
+    "better-sqlite3": "^11.5.0",
+    "pg": "^8.14.1"
   }
 }
