@@ -58,6 +58,56 @@ function csvStream(array, columns, map = r => r) {
   })
 }
 
+function binaryStream(array, columns, map = r => r) {
+  columns = columns.split(",").map(c => ({
+    userident: d => Buffer.from(d, "hex"),
+    levelversion: d => {
+      const b = Buffer.alloc(1);
+      b.writeUInt8(d);
+      return b;
+    },
+    practice: d => {
+      const b = Buffer.alloc(1);
+      b.writeUInt8(d);
+      return b;
+    },
+    x: d => {
+      const b = Buffer.alloc(4);
+      b.writeFloatLE(d);
+      return b;
+    },
+    y: d => {
+      const b = Buffer.alloc(4);
+      b.writeFloatLE(d);
+      return b;
+    },
+    percentage: d => {
+      const b = Buffer.alloc(2);
+      b.writeUInt16LE(d);
+      return b;
+    }
+  })[c]);
+  return new Readable({
+    read() {
+      let buffer = [];
+      for (const row of array) {
+        buffer.push(
+          Buffer.concat(
+            map(row).map((d, i) => columns[i](d))
+          )
+        );
+
+        if (buffer.length >= BUFFER_SIZE) {
+          this.push(Buffer.concat(buffer));
+          buffer = [];
+        }
+      }
+      this.push(Buffer.concat(buffer));
+      this.push(null);
+    }
+  })
+}
+
 function renderGuide() {
   console.log("Rerendering guide...");
   benchmark("guideRender");
@@ -104,18 +154,16 @@ app.get("/list", async (req, res) => {
   let levelId = parseInt(req.query.levelid);
 
   let accept = req.query.response || "csv";
-  if (accept != "csv") return res.sendStatus(400);
+  if (accept != "csv" && accept != "bin") return res.sendStatus(400);
 
   benchmark("query");
   let { deaths, columns } = await db.list(levelId, req.query.platformer == "true");
   benchmark();
 
-  res.contentType("text/csv");
+  res.contentType(accept == "csv" ? "text/csv" : "application/octet-stream");
 
   benchmark("serve");
-  csvStream(deaths, columns).pipe(res);
-  // let csv = columns + "\n" + deaths.map(r => r.join(",")).join("\n");
-  // res.send(csv);
+  (accept == "csv" ? csvStream : binaryStream)(deaths, columns).pipe(res);
   benchmark();
 });
 
@@ -125,7 +173,7 @@ app.get("/analysis", async (req, res) => {
   let levelId = parseInt(req.query.levelid);
 
   let accept = req.query.response || "csv";
-  if (accept != "csv") return res.sendStatus(400);
+  if (accept != "csv" && accept != "bin") return res.sendStatus(400);
 
   let columns = "userident,levelversion,practice,x,y,percentage";
   let salt = "_" + random(10);
@@ -134,10 +182,10 @@ app.get("/analysis", async (req, res) => {
   let deaths = await db.analyze(levelId, columns);
   benchmark();
 
-  res.contentType("text/csv");
+  res.contentType(accept == "csv" ? "text/csv" : "application/octet-stream");
 
   benchmark("serve");
-  csvStream(deaths, columns,
+  (accept == "csv" ? csvStream : binaryStream)(deaths, columns,
     d => ([
       crypto.createHash("sha1")
         .update(d[0] + salt).digest("hex"),
