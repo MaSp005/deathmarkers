@@ -20,10 +20,10 @@ module.exports = {
 
     let columns = isPlatformer ? "x,y" : "x,y,percentage";
     let query = isPlatformer ?
-      `SELECT ${columns} FROM format1 WHERE levelid == $1 UNION
-    SELECT ${columns} FROM format2 WHERE levelid == $1` :
-      `SELECT ${columns} FROM format1 WHERE levelid == $1 AND percentage < 101 UNION
-    SELECT ${columns} FROM format2 WHERE levelid == $1 AND percentage < 101;`;
+      `SELECT ${columns} FROM format1 WHERE levelid = $1 UNION
+    SELECT ${columns} FROM format2 WHERE levelid = $1` :
+      `SELECT ${columns} FROM format1 WHERE levelid = $1 AND percentage < 101 UNION
+    SELECT ${columns} FROM format2 WHERE levelid = $1 AND percentage < 101;`;
 
     return {
       deaths: (await db.query({
@@ -38,7 +38,7 @@ module.exports = {
 
   analyze: async (levelId, columns) => {
 
-    return await (db.query({
+    return (await db.query({
       text: `SELECT ${columns} FROM format1 WHERE levelid = $1;`,
       values: [levelId],
       rowMode: "array"
