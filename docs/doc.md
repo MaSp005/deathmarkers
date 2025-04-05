@@ -150,9 +150,8 @@ Using `&response=bin` on `/list` and `/analysis` yields the requested data in bi
 **Example CSV response for comparison:**
 `userident,levelversion,practice,x,y,percentage`
 `472457f3142e4a5c17c6d37e60297c5c99e61382,2,1,5296.254532601192,2415.0162601709135,24`
-`4bd5f4752d5e04db4c6abfcfb6fce26419b60ecc,4,1,29309.769622839314,3332.1952802377787,101`
 
-**The same request in binary:** (represented as hexadecimal)
+**The same response in binary:** (represented as hexadecimal)
 `47 24 57 f3 14 2e 4a 5c 17 c6 d3 7e 60 29 7c 5c 99 e6 13 82 02 01 45 a5 82 09 45 16 f0 43 00 18`
 `|0x0 userident ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ 0x13| ^ ​ ​ ^ |16 x ​ ​ 19| |1A y ​ ​ 1D| |< >|`
 `​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ 14 levelversion ​ ​ practice 15 ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ 1E-1F ^ percentage`
