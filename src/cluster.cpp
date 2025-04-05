@@ -99,7 +99,7 @@ void dm::identifyClusters(vector<DeathLocation>* deaths,
 	*  Assumes deaths vector is sorted by x-coordinate
 	*/
 
-	log::info("Clustering {} entries with maximum distance {}",
+	log::debug("Clustering {} entries with maximum distance {}",
 		deaths->size(), maxDistance);
 	stacks->clear();
 	stacks->reserve(deaths->size());
@@ -171,5 +171,5 @@ void dm::identifyClusters(vector<DeathLocation>* deaths,
 		return false;
 	});
 
-	log::info("Finished clustering into {} stacks.", stacks->size());
+	log::debug("Finished clustering into {} stacks.", stacks->size());
 }

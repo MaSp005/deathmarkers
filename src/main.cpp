@@ -136,7 +136,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 						cb(false);
 					} else {
 						log::info("Received death list.");
-						parseDeathList(res, &this->m_fields->m_deaths);
+						parseBinDeathList(res, &this->m_fields->m_deaths, !this->m_fields->m_levelProps.platformer);
 						log::info("Finished parsing.");
 						this->m_fields->m_fetched = true;
 
@@ -156,7 +156,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 		req.param("levelid", this->m_fields->m_levelProps.levelId);
 		req.param("platformer", this->m_fields->m_levelProps.platformer);
-		req.param("response", "csv");
+		req.param("response", "bin");
 		req.userAgent(HTTP_AGENT);
 		req.timeout(HTTP_TIMEOUT);
 

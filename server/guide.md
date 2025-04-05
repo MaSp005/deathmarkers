@@ -4,7 +4,7 @@
   looks inside
   html
 
-  no but the server.js just carries this over to the html being sent, and its much easier for me to write this guide in markdown than html all the way
+  no but the server just carries this over to the html being sent, and its much easier for me to write this guide in markdown than html all the way
 -->
 <!DOCTYPE html>
 <html><head>
