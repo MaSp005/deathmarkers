@@ -107,7 +107,7 @@ void DeathLocation::updateNode() {
 }
 
 
-void dm::parseDeathList(web::WebResponse* res,
+void dm::parseCsvDeathList(web::WebResponse* res,
 	vector<DeathLocationMin>* target) {
 
 	auto const body = res->string();
@@ -183,7 +183,7 @@ void dm::parseDeathList(web::WebResponse* res,
 
 }
 
-void dm::parseDeathList(web::WebResponse* res,
+void dm::parseCsvDeathList(web::WebResponse* res,
 	vector<DeathLocation>* target) {
 
 	auto const body = res->string();
@@ -261,6 +261,39 @@ void dm::parseDeathList(web::WebResponse* res,
 		deathLoc.practice = practice;
 		deathLoc.percentage = percent;
 
+		target->push_back(deathLoc);
+	}
+
+}
+
+void dm::parseBinDeathList(web::WebResponse* res,
+	vector<DeathLocationMin>* target, bool hasPercentage) {
+
+	auto const body = res->data();
+
+	if (!body.size()) return;
+
+	int const elementWidth = 4 + 4 + (hasPercentage ? 2 : 0);
+
+	log::info(
+		"{} bytes of info, segWidth {}",
+		body.size(), elementWidth
+	);
+
+	for (auto off = 0; off <= body.size() - elementWidth; off += elementWidth) {
+		union {
+			struct {
+				float x;
+				float y;
+				uint16_t perc;
+			} obj;
+			uint8_t raw[10];
+		} stencil{};
+
+		std::memcpy(stencil.raw, body.data() + off, elementWidth);
+
+		auto deathLoc = DeathLocationMin(stencil.obj.x, stencil.obj.y);
+		deathLoc.percentage = stencil.obj.perc;
 		target->push_back(deathLoc);
 	}
 

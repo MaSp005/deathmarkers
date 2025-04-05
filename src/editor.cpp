@@ -58,7 +58,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 					}
 					else {
 						log::info("Received death list.");
-						parseDeathList(res, &this->m_fields->m_deaths);
+						parseCsvDeathList(res, &this->m_fields->m_deaths);
 						log::info("Finished parsing.");
 						analyzeData();
 						startUI();

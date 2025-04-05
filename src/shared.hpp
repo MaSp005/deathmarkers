@@ -86,9 +86,14 @@ namespace dm {
 		void updateNode();
 	};
 
-	void parseDeathList(web::WebResponse* res,
+	void parseCsvDeathList(web::WebResponse* res,
 		vector<DeathLocationMin>* target);
-	void parseDeathList(web::WebResponse* res,
+	void parseCsvDeathList(web::WebResponse* res,
+		vector<DeathLocation>* target);
+
+	void parseBinDeathList(web::WebResponse* res,
+		vector<DeathLocationMin>* target, bool hasPercentage);
+	void parseBinDeathList(web::WebResponse* res,
 		vector<DeathLocation>* target);
 
 	vector<std::string> split(const std::string& string, const char at);
