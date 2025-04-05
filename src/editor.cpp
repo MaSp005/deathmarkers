@@ -58,7 +58,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 					}
 					else {
 						log::info("Received death list.");
-						parseCsvDeathList(res, &this->m_fields->m_deaths);
+						parseBinDeathList(res, &this->m_fields->m_deaths);
 						log::info("Finished parsing.");
 						analyzeData();
 						startUI();
@@ -83,7 +83,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		web::WebRequest req = web::WebRequest();
 
 		req.param("levelid", levelId);
-		req.param("response", "csv");
+		req.param("response", "bin");
 		req.userAgent(HTTP_AGENT);
 		req.timeout(HTTP_TIMEOUT);
 

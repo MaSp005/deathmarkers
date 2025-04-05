@@ -107,6 +107,19 @@ void DeathLocation::updateNode() {
 }
 
 
+std::string uint8_to_hex_string(const uint8_t *v, const size_t s) {
+  std::stringstream ss;
+
+  ss << std::hex << std::setfill('0');
+
+  for (int i = 0; i < s; i++) {
+    ss << std::hex << std::setw(2) << static_cast<int>(v[i]);
+  }
+
+  return ss.str();
+}
+
+
 void dm::parseCsvDeathList(web::WebResponse* res,
 	vector<DeathLocationMin>* target) {
 
@@ -270,10 +283,16 @@ void dm::parseBinDeathList(web::WebResponse* res,
 	vector<DeathLocationMin>* target, bool hasPercentage) {
 
 	auto const body = res->data();
-
 	if (!body.size()) return;
 
 	int const elementWidth = 4 + 4 + (hasPercentage ? 2 : 0);
+	int const deathCount = body.size() / elementWidth;
+	if (body.size() % elementWidth) {
+		log::warn("{:x} exccess bytes, probably data misalignment! Skipping...",
+			body.size() % elementWidth);
+		return;
+	}
+	target->reserve(deathCount);
 
 	log::info(
 		"{} bytes of info, segWidth {}",
@@ -281,18 +300,72 @@ void dm::parseBinDeathList(web::WebResponse* res,
 	);
 
 	for (auto off = 0; off <= body.size() - elementWidth; off += elementWidth) {
-		union {
-			struct {
+#pragma pack(push, 1)
+		union stencil {
+			struct dmObj {
 				float x;
 				float y;
 				uint16_t perc;
 			} obj;
 			uint8_t raw[10];
 		} stencil{};
+#pragma pack(pop)
 
 		std::memcpy(stencil.raw, body.data() + off, elementWidth);
 
 		auto deathLoc = DeathLocationMin(stencil.obj.x, stencil.obj.y);
+		deathLoc.percentage = stencil.obj.perc;
+		target->push_back(deathLoc);
+	}
+
+}
+
+void dm::parseBinDeathList(web::WebResponse* res,
+	vector<DeathLocation>* target) {
+
+	auto const body = res->data();
+	if (!body.size()) return;
+
+	int const elementWidth = 20 + 1 + 1 + 4 + 4 + 2;
+	int const deathCount = body.size() / elementWidth;
+	if (body.size() % elementWidth) {
+		log::warn("{:x} exccess bytes, probably data misalignment! Skipping...",
+			body.size() % elementWidth);
+		return;
+	}
+	target->reserve(deathCount);
+
+	log::info(
+		"{} bytes of info, segWidth {}",
+		body.size(), elementWidth
+	);
+
+	for (auto off = 0; off <= body.size() - elementWidth; off += elementWidth) {
+#pragma pack(push, 1)
+		union stencil {
+			struct dmObj {
+				uint8_t ident[20];
+				uint8_t levelversion;
+				uint8_t practice;
+				float x;
+				float y;
+				uint16_t perc;
+			} obj;
+			uint8_t raw[32];
+		} stencil{};
+#pragma pack(pop)
+
+		std::memcpy(stencil.raw, body.data() + off, elementWidth);
+
+		auto deathLoc = DeathLocation(stencil.obj.x, stencil.obj.y);
+		std::string userident = uint8_to_hex_string(stencil.obj.ident, 20);
+		log::info("gen userid: {}", userident);
+		deathLoc.userIdent = userident;
+		deathLoc.levelVersion = stencil.obj.levelversion;
+		deathLoc.practice = stencil.obj.practice != 0;
+		if (stencil.obj.practice > 1)
+			log::warn("Practice attribute = {:x}, probable data misalignment!",
+				stencil.obj.practice);
 		deathLoc.percentage = stencil.obj.perc;
 		target->push_back(deathLoc);
 	}
