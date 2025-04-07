@@ -7,19 +7,19 @@
   no but the server just carries this over to the html being sent, and its much easier for me to write this guide in markdown than html all the way
 -->
 <!DOCTYPE html>
-<html><head>
+<html lang="en"><head>
   <title>DeathMarkers Creator Guide</title>
   <link rel="stylesheet" href="/style.css">
   <link rel="canonical" href="https://deathmarkers.masp005.dev/">
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="description" content="">
+  <meta name="description" content="DeathMarkers is a Geometry Dash mod that displays the locations where other players have failed. This is a Guide for Level Creators on how to use the data to their advantage.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="script-src 'https://deathmarkers.masp005.dev/'">
 </head><body>
 <main>
 
-# Creator's Guide <span style="font-size:50%">to [DeathMarkers](https://geode-sdk.org/mods/freakyrobot.deathmarkers)</span><img src="/banner.webp">
+# Creator's Guide <span style="font-size:50%">to [DeathMarkers](https://geode-sdk.org/mods/freakyrobot.deathmarkers)</span><img alt="Banner Image" src="/banner.webp">
 
 You've probably landed here because you are interested in using DeathMarkers to **improve** the gameplay/experience in the levels you create. **Great!** That's exactly what the mod was made to do.
 
@@ -28,9 +28,9 @@ As you (probably) know by now, this mod collects **every player's deaths** with 
 This stuff is not self-explanatory, though, which is why this document walks you through **the interface(s)** the mod offers to creators, as well as a guide on **interpreting** the data to make an impact on your level quality.
 
 <div class="links">
-<a target="_blank" href="https://github.com/MaSp005/deathmarkers"><img src="/github.webp"></a>
-<a target="_blank" href="https://geode-sdk.org/mods/freakyrobot.deathmarkers"><img src="/geode.webp"></a>
-<a target="_blank" href="https://discord.gg/hzDFNaNgCf"><img src="/discord.webp"></a>
+<a name="GitHub" target="_blank" href="https://github.com/MaSp005/deathmarkers"><img alt="The GitHub Logo" src="/github.webp"></a>
+<a name="Geode" target="_blank" href="https://geode-sdk.org/mods/freakyrobot.deathmarkers"><img alt="The Geode Logo" src="/geode.webp"></a>
+<a name="Discord" target="_blank" href="https://discord.gg/hzDFNaNgCf"><img alt="The Discord Logo" src="/discord.webp"></a>
 </div>
 
 ## Table of contents
@@ -104,5 +104,5 @@ I am by no means a gameplay messiah, but the following are some tips for better 
 </main>
 
 > **LEGAL STUFF**<br>See [my homepage](https://masp005.dev/legal) regarding hosting and contact.<br>This page does not collect any data.<br>As for the mod it promotes, see the [GitHub repository](https://github.com/MaSp005/deathmarkers).
-<script src="/zoom.js"></script>
+<script src="/zoom.js" defer></script>
 </body></html>

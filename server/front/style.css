@@ -1,6 +1,7 @@
 @font-face {
   font-family: 'Red Hat Display';
   src: url(/RedHatDisplay.ttf);
+  font-display: swap;
 }
 
 body {
