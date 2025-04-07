@@ -10,10 +10,12 @@
 <html><head>
   <title>DeathMarkers Creator Guide</title>
   <link rel="stylesheet" href="/style.css">
+  <link rel="canonical" href="https://deathmarkers.masp005.dev/">
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'https://deathmarkers.masp005.dev/'">
 </head><body>
 <main>
 

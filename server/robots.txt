@@ -1,0 +1,4 @@
+user-agent: *
+disallow: /list
+disallow: /analysis
+disallow: /submit

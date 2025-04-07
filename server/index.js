@@ -36,9 +36,8 @@ const { Readable } = require("stream");
 
 app.use(expr.static("front"));
 
-let guideHtml = "";
-let guideLastRead = 0;
-renderGuide();
+const guideHtml = renderGuide();
+const robots = fs.readFileSync("./robots.txt", "utf8");
 
 function csvStream(array, columns, map = r => r) {
   return new Readable({
@@ -133,12 +132,12 @@ function renderGuide() {
   markdown = markdown.replace("<?>TOC",
     chapters.join("\n"));
 
-  guideHtml = md.render(markdown);
+  let html = md.render(markdown);
   // markdown preview requires directory, running server hosts files on root
-  guideHtml = guideHtml.replace(/src=".*?front\//g, "src=\"");
+  html = html.replace(/src=".*?front\//g, "src=\"");
   // Replace newlines and whitespace between HTML tags
-  guideHtml = guideHtml.replace(/>\s+</g, "><");
-  guideLastRead = fs.statSync(GUIDE_FILENAME).mtime;
+  html = html.replace(/>\s+</g, "><");
+  return html;
   benchmark();
 }
 
@@ -260,12 +259,19 @@ app.all("/submit", expr.text({
   benchmark();
 });
 
+app.get("/robots.txt", (req, res) => {
+  res.contentType("text/plain");
+  res.send(robots);
+})
+
 app.get("/", (req, res) => {
-  if (fs.statSync(GUIDE_FILENAME).mtime > guideLastRead) renderGuide();
+  res.header("Cross-Origin-Opener-Policy", "same-origin");
+  res.header("X-Frame-Options", "DENY");
   res.send(guideHtml);
 });
 
 app.all("*", (req, res) => {
+  res.contentType("text/html");
   res.redirect("/");
 });
 
