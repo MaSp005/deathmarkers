@@ -15,7 +15,6 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="description" content="DeathMarkers is a Geometry Dash mod that displays the locations where other players have failed. This is a Guide for Level Creators on how to use the data to their advantage.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="script-src 'https://deathmarkers.masp005.dev/'">
 </head><body>
 <main>
 
