@@ -218,8 +218,7 @@ app.all("/submit", expr.text({
 
     if (typeof req.body.userident != "string") {
       if (!req.body.playername || !req.body.userid)
-        return res.status(400)
-          .send("Neither userident nor playername and userid were supplied");
+        return res.status(400).send("Neither userident nor playername and userid were supplied");
 
       req.body.userident = createUserIdent(req.body.userid,
         req.body.playername, req.body.levelid);
@@ -228,9 +227,14 @@ app.all("/submit", expr.text({
         return res.status(400).send("userident has incorrect length or illegal characters (should be 40 hex characters)");
     }
 
-    if (typeof req.body.x != "number" || typeof req.body.y != "number") return res.sendStatus(400);
+    if (typeof req.body.levelid != "percentage")
+      return res.status(400).send("percentage was not supplied or not numerical");
+    req.body.percentage = Math.min(99, Math.max(0, req.body.percentage));
 
-    if (typeof req.body.percentage != "number") return res.sendStatus(400);
+    if (typeof req.body.x != "percentage")
+      return res.status(400).send("x was not supplied or not numerical");
+    if (typeof req.body.y != "percentage")
+      return res.status(400).send("y was not supplied or not numerical");
 
     if (format >= 2) {
       if (!req.body.coins) {
