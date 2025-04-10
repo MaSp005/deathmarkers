@@ -141,19 +141,15 @@ Body Data (`application/json`):
 - Optional: `itemdata` (double): Value of Item ID 0.
 -->
 
-Delivers: `400`, `500` or `204` Status. `400` responses supply a human-readable error source.
+Delivers: `400` or `204` Status. `400` responses supply a human-readable error source.
 
 # Binary transmission
 
 Using `&response=bin` on `/list` and `/analysis` yields the requested data in binary format for faster parsing and ~1/3 the transmission size. Due to the constant-size data types of death objects, the structure of binary responses is simple:
 
-**Example CSV response for comparison:**
-`userident,levelversion,practice,x,y,percentage`
-`472457f3142e4a5c17c6d37e60297c5c99e61382,2,1,5296.254532601192,2415.0162601709135,24`
+**Example CSV response for comparison:**<br>`userident,levelversion,practice,x,y,percentage`<br>`472457f3142e4a5c17c6d37e60297c5c99e61382,2,1,5296.254532601192,2415.0162601709135,24`
 
-**The same response in binary:** (represented as hexadecimal)
-`47 24 57 f3 14 2e 4a 5c 17 c6 d3 7e 60 29 7c 5c 99 e6 13 82 02 01 45 a5 82 09 45 16 f0 43 00 18`
-`|0x0 userident ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ 0x13| ^ ​ ​ ^ |16 x ​ ​ 19| |1A y ​ ​ 1D| |< >|`
-`​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ 14 levelversion ​ ​ practice 15 ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ 1E-1F ^ percentage`
+![Binary Arrangement Breakdown](./binary-arrangement.png)
+
 \* `x` and `y` are encoded using **binary32** (IEEE 754) (aka. float) into 4 bytes in **little endian**.
 \* `percentage` is a **little endian** 2-byte/16-bit integer.
