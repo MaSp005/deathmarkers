@@ -58,33 +58,29 @@ function csvStream(array, columns, map = r => r) {
 }
 
 function binaryStream(array, columns, map = r => r) {
+  const int8Buffer = d => {
+    const b = Buffer.alloc(1);
+    b.writeUInt8(d);
+    return b;
+  }
+  const int16Buffer = d => {
+    const b = Buffer.alloc(2);
+    b.writeUInt16LE(d);
+    return b;
+  }
+  const floatBuffer = d => {
+    const b = Buffer.alloc(4);
+    b.writeFloatLE(d);
+    return b;
+  }
+
   columns = columns.split(",").map(c => ({
     userident: d => Buffer.from(d, "hex"),
-    levelversion: d => {
-      const b = Buffer.alloc(1);
-      b.writeUInt8(d);
-      return b;
-    },
-    practice: d => {
-      const b = Buffer.alloc(1);
-      b.writeUInt8(d);
-      return b;
-    },
-    x: d => {
-      const b = Buffer.alloc(4);
-      b.writeFloatLE(d);
-      return b;
-    },
-    y: d => {
-      const b = Buffer.alloc(4);
-      b.writeFloatLE(d);
-      return b;
-    },
-    percentage: d => {
-      const b = Buffer.alloc(2);
-      b.writeUInt16LE(d);
-      return b;
-    }
+    levelversion: int8Buffer,
+    practice: int8Buffer,
+    x: floatBuffer,
+    y: floatBuffer,
+    percentage: int16Buffer
   })[c]);
   return new Readable({
     read() {
