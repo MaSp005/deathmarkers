@@ -223,13 +223,13 @@ app.all("/submit", expr.text({
         return res.status(400).send("userident has incorrect length or illegal characters (should be 40 hex characters)");
     }
 
-    if (typeof req.body.levelid != "percentage")
+    if (typeof req.body.percentage != "number")
       return res.status(400).send("percentage was not supplied or not numerical");
     req.body.percentage = Math.min(99, Math.max(0, req.body.percentage));
 
-    if (typeof req.body.x != "percentage")
+    if (typeof req.body.x != "number")
       return res.status(400).send("x was not supplied or not numerical");
-    if (typeof req.body.y != "percentage")
+    if (typeof req.body.y != "number")
       return res.status(400).send("y was not supplied or not numerical");
 
     if (format >= 2) {
