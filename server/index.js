@@ -88,7 +88,7 @@ function binaryStream(array, columns, map = r => r) {
   })[c]);
   return new Readable({
     read() {
-      let buffer = [];
+      let buffer = [int8Buffer(1)]; // Versioning Byte
       for (const row of array) {
         buffer.push(
           Buffer.concat(

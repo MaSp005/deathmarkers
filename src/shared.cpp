@@ -283,23 +283,24 @@ void dm::parseBinDeathList(web::WebResponse* res,
 	vector<DeathLocationMin>* target, bool hasPercentage) {
 
 	auto const body = res->data();
-	if (!body.size()) return;
-
 	int const elementWidth = 4 + 4 + (hasPercentage ? 2 : 0);
+	if (body.size() <= elementWidth) return;
+	uint8_t version = body[0];
+
 	int const deathCount = body.size() / elementWidth;
-	if (body.size() % elementWidth) {
+	if ((body.size() - 1) % elementWidth) {
 		log::warn("{:x} exccess bytes, probably data misalignment! Skipping...",
-			body.size() % elementWidth);
+			(body.size() - 1) % elementWidth);
 		return;
 	}
 	target->reserve(deathCount);
 
 	log::info(
-		"{} bytes of info, segWidth {}",
-		body.size(), elementWidth
+		"Got {} bytes of info, segWidth {} -> {} deaths",
+		body.size(), elementWidth, deathCount
 	);
 
-	for (auto off = 0; off <= body.size() - elementWidth; off += elementWidth) {
+	for (auto off = 1; off <= body.size() - elementWidth + 1; off += elementWidth) {
 #pragma pack(push, 1)
 		union stencil {
 			struct dmObj {
@@ -324,23 +325,24 @@ void dm::parseBinDeathList(web::WebResponse* res,
 	vector<DeathLocation>* target) {
 
 	auto const body = res->data();
-	if (!body.size()) return;
-
 	int const elementWidth = 20 + 1 + 1 + 4 + 4 + 2;
+	if (body.size() <= elementWidth) return;
+	uint8_t version = body[0];
+
 	int const deathCount = body.size() / elementWidth;
-	if (body.size() % elementWidth) {
+	if ((body.size() - 1) % elementWidth) {
 		log::warn("{:x} exccess bytes, probably data misalignment! Skipping...",
-			body.size() % elementWidth);
+			(body.size() - 1) % elementWidth);
 		return;
 	}
 	target->reserve(deathCount);
 
 	log::info(
-		"{} bytes of info, segWidth {}",
-		body.size(), elementWidth
+		"Got {} bytes of info, segWidth {} -> {} deaths",
+		body.size(), elementWidth, deathCount
 	);
 
-	for (auto off = 0; off <= body.size() - elementWidth; off += elementWidth) {
+	for (auto off = 1; off <= body.size() - elementWidth + 1; off += elementWidth) {
 #pragma pack(push, 1)
 		union stencil {
 			struct dmObj {
