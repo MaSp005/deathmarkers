@@ -1,23 +1,3 @@
-<!-- 
-  https://i.kym-cdn.com/photos/images/newsfeed/002/515/832/ee7.jpg 
-  opens .md
-  looks inside
-  html
-
-  no but the server just carries this over to the html being sent, and its much easier for me to write this guide in markdown than html all the way
--->
-<!DOCTYPE html>
-<html lang="en"><head>
-  <title>DeathMarkers Creator Guide</title>
-  <link rel="stylesheet" href="/style.css">
-  <link rel="canonical" href="https://deathmarkers.masp005.dev/">
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="description" content="DeathMarkers is a Geometry Dash mod that displays the locations where other players have failed. This is a Guide for Level Creators on how to use the data to their advantage.">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-</head><body>
-<main>
-
 # Creator's Guide <span style="font-size:50%">to [DeathMarkers](https://geode-sdk.org/mods/freakyrobot.deathmarkers)</span><img alt="Banner Image" src="/banner.webp">
 
 You've probably landed here because you are interested in using DeathMarkers to **improve** the gameplay/experience in the levels you create. **Great!** That's exactly what the mod was made to do.
@@ -99,9 +79,3 @@ I am by no means a gameplay messiah, but the following are some tips for better 
 **Do not take death markers too seriously.** People dying to a particular spot may be due to a wide range of reasons, some out of your control. As of now, the mod does not have the right features to allow you to inspect possible reasons for a given high death count location (though it will in the future). Deaths may be due to anything. Use your best judgement for whether you want to address them or not. **Most importantly: Listen to player feedback.**
 
 > This section always open for discussion on the [discord](https://discord.gg/ZsXeKEwZqA).
-
-</main>
-
-> **LEGAL STUFF**<br>See [my homepage](https://masp005.dev/legal) regarding hosting and contact.<br>This page does not collect any data.<br>As for the mod it promotes, see the [GitHub repository](https://github.com/MaSp005/deathmarkers).
-<script src="/zoom.js" defer></script>
-</body></html>

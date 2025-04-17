@@ -6,7 +6,7 @@ if (process.argv.includes("--help") || process.argv.includes("-h")) {
 }
 
 const {
-  PORT, GUIDE_FILENAME, DATABASE
+  PORT, DATABASE
 } = require("./config.json");
 const BUFFER_SIZE = 500;
 const alphabet = "ABCDEFGHIJOKLMNOPQRSTUVWXYZabcdefghijoklmnopqrstuvwxyz0123456789";
@@ -36,7 +36,11 @@ const { Readable } = require("stream");
 
 app.use(expr.static("front"));
 
-const guideHtml = renderGuide();
+const outline = fs.readFileSync("./outline.html", "utf8");
+const guideHtml = {};
+fs.readdirSync("./pages").forEach(fn => {
+  guideHtml[fn.replace(".md", "")] = renderGuide(fn);
+});
 const robots = fs.readFileSync("./robots.txt", "utf8");
 
 function csvStream(array, columns, map = r => r) {
@@ -103,10 +107,11 @@ function binaryStream(array, columns, map = r => r) {
   })
 }
 
-function renderGuide() {
-  console.log("Rerendering guide...");
+function renderGuide(fn) {
+  console.log(`Rendering guide ${fn}...`);
   benchmark("guideRender");
-  let markdown = fs.readFileSync(GUIDE_FILENAME, "utf8");
+  let markdown = fs.readFileSync(`./pages/${fn}`, "utf8");
+  markdown = outline.replace("~~~", markdown);
   markdown = markdown.replace(/<!--.*?-->\n?/gs, ""); // Remove comments
   let chapters = markdown.split("\n")
     .filter(x => x.startsWith("##"))
@@ -133,8 +138,8 @@ function renderGuide() {
   html = html.replace(/src=".*?front\//g, "src=\"");
   // Replace newlines and whitespace between HTML tags
   html = html.replace(/>\s+</g, "><");
-  return html;
   benchmark();
+  return html;
 }
 
 function createUserIdent(userid, username, levelid) {
@@ -264,14 +269,17 @@ app.get("/robots.txt", (req, res) => {
   res.send(robots);
 })
 
-app.get("/", (req, res) => {
-  res.header("Cross-Origin-Opener-Policy", "same-origin");
-  res.header("X-Frame-Options", "DENY");
-  res.send(guideHtml);
+app.get("*", (req, res) => {
+  guide = req.path.slice(1) || "index";
+  if (guide in guideHtml) {
+    res.header("Cross-Origin-Opener-Policy", "same-origin");
+    res.header("X-Frame-Options", "DENY");
+    res.contentType("text/html");
+    res.send(guideHtml[guide]);
+  } else res.redirect("/");
 });
 
 app.all("*", (req, res) => {
-  res.contentType("text/html");
   res.redirect("/");
 });
 

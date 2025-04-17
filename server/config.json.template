@@ -9,6 +9,5 @@
       "password": ""
     }
     // New database scripts can require other attributes in here.
-  },
-  "GUIDE_FILENAME": "./guide.md" // From cwd, not the script being executed
+  }
 }
