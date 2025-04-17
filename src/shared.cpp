@@ -129,7 +129,7 @@ void dm::parseCsvDeathList(web::WebResponse* res,
 		return log::error("Error reading list response: Body could not be read.");
 
 	// Read and split up body
-	std::string const okObj = move(body.ok().value());
+	std::string const okObj = std::move(body.ok().value());
 	if (okObj.empty()) return log::info("Responded with no data.");
 
 	vector<std::string> lines = split(okObj, '\n');
@@ -205,7 +205,7 @@ void dm::parseCsvDeathList(web::WebResponse* res,
 		return log::error("Error reading list response: Body could not be read.");
 
 	// Read and split up body
-	std::string const okObj = move(body.ok().value());
+	std::string const okObj = std::move(body.ok().value());
 	if (okObj.empty()) return log::info("Responded with no data.");
 
 	vector<std::string> lines = split(okObj, '\n');
@@ -359,7 +359,6 @@ void dm::parseBinDeathList(web::WebResponse* res,
 
 		auto deathLoc = DeathLocation(stencil.obj.x, stencil.obj.y);
 		std::string userident = uint8_to_hex_string(stencil.obj.ident, 20);
-		log::info("gen userid: {}", userident);
 		deathLoc.userIdent = userident;
 		deathLoc.levelVersion = stencil.obj.levelversion;
 		deathLoc.practice = stencil.obj.practice != 0;
