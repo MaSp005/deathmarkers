@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This document only concerns the changelog of the **Mod**, not the server.
 
-## [Unreleased]
+## [1.0.1] - 2025-04-18
 
 ### Changed
 
-- v1.1 Fetching Deaths now uses a faster method of transmission
+- Fetching Deaths now uses a faster method of transmission
 
 ## [1.0.0] - 2025-03-17
 

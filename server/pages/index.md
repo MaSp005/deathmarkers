@@ -14,7 +14,7 @@ This stuff is not self-explanatory, though, which is why this document walks you
 
 ## Table of contents
 
-> [Last updated](https://github.com/MaSp005/deathmarkers/commits/main/server/guide.md): Mar 17, 2025<br>For mod version: v1.0.0
+> [Last updated](https://github.com/MaSp005/deathmarkers/commits/main/server/pages/index.md): Apr 18, 2025<br>For mod version: v1.0.1
 
 <?>TOC
 
