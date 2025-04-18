@@ -151,13 +151,15 @@ function createUserIdent(userid, username, levelid) {
 app.get("/list", async (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
+  if (req.query.platformer != "true" && req.query.platformer != "false") return res.sendStatus(400);
   let levelId = parseInt(req.query.levelid);
+  let isPlatformer = req.query.platformer == "true";
 
   let accept = req.query.response || "csv";
   if (accept != "csv" && accept != "bin") return res.sendStatus(400);
 
   benchmark("query");
-  let { deaths, columns } = await db.list(levelId, req.query.platformer == "true");
+  let { deaths, columns } = await db.list(levelId, isPlatformer);
   benchmark();
 
   res.contentType(accept == "csv" ? "text/csv" : "application/octet-stream");

@@ -288,17 +288,16 @@ void dm::parseBinDeathList(web::WebResponse* res,
 	uint8_t version = body[0];
 
 	int const deathCount = body.size() / elementWidth;
+	log::info(
+		"Got {} bytes of info, segment width {} (has percentage: {}) -> versioning byte {:#02x} + {} deaths",
+		body.size(), elementWidth, hasPercentage ? "y" : "n", version, deathCount
+	);
 	if ((body.size() - 1) % elementWidth) {
 		log::warn("{:x} exccess bytes, probably data misalignment! Skipping...",
 			(body.size() - 1) % elementWidth);
 		return;
 	}
 	target->reserve(deathCount);
-
-	log::info(
-		"Got {} bytes of info, segWidth {} -> {} deaths",
-		body.size(), elementWidth, deathCount
-	);
 
 	for (auto off = 1; off <= body.size() - elementWidth + 1; off += elementWidth) {
 #pragma pack(push, 1)
@@ -330,17 +329,16 @@ void dm::parseBinDeathList(web::WebResponse* res,
 	uint8_t version = body[0];
 
 	int const deathCount = body.size() / elementWidth;
+	log::info(
+		"Got {} bytes of info, segment width {} -> versioning byte {:#02x} + {} deaths",
+		body.size(), elementWidth, version, deathCount
+	);
 	if ((body.size() - 1) % elementWidth) {
 		log::warn("{:x} exccess bytes, probably data misalignment! Skipping...",
 			(body.size() - 1) % elementWidth);
 		return;
 	}
 	target->reserve(deathCount);
-
-	log::info(
-		"Got {} bytes of info, segWidth {} -> {} deaths",
-		body.size(), elementWidth, deathCount
-	);
 
 	for (auto off = 1; off <= body.size() - elementWidth + 1; off += elementWidth) {
 #pragma pack(push, 1)

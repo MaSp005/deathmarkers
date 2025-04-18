@@ -157,7 +157,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		web::WebRequest req = web::WebRequest();
 
 		req.param("levelid", this->m_fields->m_levelProps.levelId);
-		req.param("platformer", this->m_fields->m_levelProps.platformer);
+		req.param("platformer", this->m_fields->m_levelProps.platformer ? "true" : "false");
 		req.param("response", "bin");
 		req.userAgent(HTTP_AGENT);
 		req.timeout(HTTP_TIMEOUT);
