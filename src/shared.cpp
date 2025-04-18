@@ -292,8 +292,12 @@ void dm::parseBinDeathList(web::WebResponse* res,
 		"Got {} bytes of info, segment width {} (has percentage: {}) -> versioning byte {:#02x} + {} deaths",
 		body.size(), elementWidth, hasPercentage ? "y" : "n", version, deathCount
 	);
+	if (version != 1) {
+		log::warn("Unknown version {}! Skipping...", version);
+		return;
+	}
 	if ((body.size() - 1) % elementWidth) {
-		log::warn("{:x} exccess bytes, probably data misalignment! Skipping...",
+		log::warn("{} exccess bytes, probably data misalignment! Skipping...",
 			(body.size() - 1) % elementWidth);
 		return;
 	}
@@ -333,8 +337,12 @@ void dm::parseBinDeathList(web::WebResponse* res,
 		"Got {} bytes of info, segment width {} -> versioning byte {:#02x} + {} deaths",
 		body.size(), elementWidth, version, deathCount
 	);
+	if (version != 1) {
+		log::warn("Unknown version {}! Skipping...", version);
+		return;
+	}
 	if ((body.size() - 1) % elementWidth) {
-		log::warn("{:x} exccess bytes, probably data misalignment! Skipping...",
+		log::warn("{} exccess bytes, probably data misalignment! Skipping...",
 			(body.size() - 1) % elementWidth);
 		return;
 	}

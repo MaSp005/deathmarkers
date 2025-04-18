@@ -8,7 +8,8 @@ if (process.argv.includes("--help") || process.argv.includes("-h")) {
 const {
   PORT, DATABASE
 } = require("./config.json");
-const BUFFER_SIZE = 500;
+const BUFFER_SIZE = 500; // # of deaths to push at once
+const BINARY_VERSION = 1; // Incremental
 const alphabet = "ABCDEFGHIJOKLMNOPQRSTUVWXYZabcdefghijoklmnopqrstuvwxyz0123456789";
 const random = l => new Array(l).fill(0).map(_ => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
 
@@ -88,7 +89,7 @@ function binaryStream(array, columns, map = r => r) {
   })[c]);
   return new Readable({
     read() {
-      let buffer = [int8Buffer(1)]; // Versioning Byte
+      let buffer = [int8Buffer(BINARY_VERSION)]; // Versioning Byte
       for (const row of array) {
         buffer.push(
           Buffer.concat(
