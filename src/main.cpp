@@ -8,6 +8,8 @@
 
 // TODO: Check for incompatibilities with other mods
 // TODO: Limit rendering based on camera
+// TODO: Rotate markers with camera
+// TODO: For analysis: double-link deaths for last/previous death analysis
 
 using namespace geode::prelude;
 using namespace dm;

@@ -151,6 +151,6 @@ Using `&response=bin` on `/list` and `/analysis` yields the requested data in bi
 
 ![Binary Arrangement Breakdown](./binary-arrangement.png)
 
-\* `x` and `y` are encoded using **binary32** (IEEE 754) (aka. float) into 4 bytes in **little endian**.
-\* `percentage` is a **little endian** 2-byte/16-bit integer.
-\* The very first byte of the response is a **versioning byte** for future compatibility, deaths only start after.
+* `x` and `y` are encoded using **binary32** (IEEE 754) (aka. float) into 4 bytes in **little endian**.
+* `percentage` is a **little endian** 2-byte/16-bit integer.
+* The very first byte of the response is a **versioning byte** for future compatibility, deaths only start after.
