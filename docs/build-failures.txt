@@ -1,9 +1,0 @@
-This file is a collection of the failure messages from the latest GitHub Actions build. As stated in CONTRIBUTING.md, contributions for multi-platform availability are always welcome.
-
-
-macOS is excluded from new builds in the workflow yml to allow the mod to be packaged with all (working) platforms.
-macOS: https://github.com/MaSp005/deathmarkers/actions/runs/13878054977/job/38832886693#step:3:699
-
-Undefined symbols for architecture arm64:
-  "cocos2d::CCMenuItemSprite::create(cocos2d::CCNode*, cocos2d::CCNode*, cocos2d::CCNode*)", referenced from:
-      geode::modifier::AsStaticFunction_init<DMEditorPauseLayer, bool (DMEditorPauseLayer::*)(LevelEditorLayer*)>::Impl<bool (DMEditorPauseLayer::*)(LevelEditorLayer*)>::function(DMEditorPauseLayer*, LevelEditorLayer*) in 
