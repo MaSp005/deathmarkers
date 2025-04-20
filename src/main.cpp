@@ -124,7 +124,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 	void fetch(std::function<void(bool)> cb) {
 
 		if (this->m_fields->m_fetched) return cb(true);
-		
+
 		log::info("Listing Deaths...");
 
 		// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
@@ -264,11 +264,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 			auto pos1 = CCPoint(width * i, 0);
 			auto pos2 = CCPoint(width * i + width, -(distr * histHeight));
 			ccColor4F color{};
-			color.r = distr;
-			color.g = 1 - distr;
+			color.r = 1 - ((1 - distr) * (1 - distr));
+			color.g = 1 - (distr * distr);
 			color.b = 0;
 			color.a = 1;
-			
 
 			this->m_fields->m_chartNode->drawRect(pos1, pos2, color, 0.0f, color);
 		}
@@ -372,7 +371,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 	void checkQueue() {
 
 		if (this->m_fields->m_queuedSubmissions.empty()) return;
-		
+
 		if (this->m_fields->m_fetched) {
 			log::debug(
 				"Clearing Queue. {} deaths pending.",
