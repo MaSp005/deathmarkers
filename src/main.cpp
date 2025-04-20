@@ -424,6 +424,10 @@ class $modify(DMPlayerObject, PlayerObject) {
 		PlayerObject::playerDestroyed(secondPlr);
 		if (secondPlr) return;
 
+		// Check if PlayerObject is the PRIMARY one and not from Globed
+		if (this->getID() != "PlayerObject") return;
+		if (this->getParent()->getID() != "batch-layer") return;
+
 		auto playLayer = static_cast<DMPlayLayer*>(
 			GameManager::get()->getPlayLayer()
 		);
