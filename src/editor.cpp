@@ -1,6 +1,7 @@
 #include "editor.hpp"
 
 using namespace dm;
+constexpr auto BUTTON_ID = "load-button"_spr;
 
 #include <Geode/modify/LevelEditorLayer.hpp>
 class $modify(DMEditorLayer, LevelEditorLayer) {
@@ -10,7 +11,6 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 		CCNode* m_stackNode = nullptr;
 		CCNode* m_dmNode = nullptr;
-		CCMenuItemSprite* m_button = nullptr;
 
 		vector<DeathLocation> m_deaths;
 
@@ -36,7 +36,16 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 			)->show();
 			this->m_fields->m_enabled = false;
 			this->m_fields->m_loaded = false;
+			if (auto button = this->getChildByIDRecursive(BUTTON_ID)) {
+				static_cast<CCMenuItemSprite*>(button)->unselected();
+			}
 			return;
+		}
+
+		if (auto button = this->getChildByIDRecursive(BUTTON_ID)) {
+			auto menuEl = static_cast<CCMenuItemSprite*>(button);
+			menuEl->unselected();
+			menuEl->setEnabled(false);
 		}
 
 		// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
@@ -55,6 +64,11 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 						)->show();
 						this->m_fields->m_enabled = false;
 						this->m_fields->m_loaded = false;
+						if (auto button = this->getChildByIDRecursive(BUTTON_ID)) {
+							auto menuEl = static_cast<CCMenuItemSprite*>(button);
+							menuEl->setEnabled(true);
+							menuEl->unselected();
+						}
 					}
 					else {
 						log::info("Received death list.");
@@ -74,6 +88,11 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 					)->show();
 					this->m_fields->m_enabled = false;
 					this->m_fields->m_loaded = false;
+					if (auto button = this->getChildByIDRecursive(BUTTON_ID)) {
+						auto menuEl = static_cast<CCMenuItemSprite*>(button);
+						menuEl->setEnabled(true);
+						menuEl->unselected();
+					}
 				};
 			}
 		);
@@ -97,14 +116,13 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 			this->m_fields->m_enabled = true;
 
 			if (!this->m_fields->m_loaded) {
-				this->m_fields->m_button->setEnabled(false),
 				fetch();
-			}
-			else startUI();
-		}
-		else {
+			} else startUI();
+		} else {
 			this->m_fields->m_enabled = false;
-			this->m_fields->m_button->unselected();
+			if (auto button = this->getChildByIDRecursive(BUTTON_ID)) {
+				static_cast<CCMenuItemSprite*>(button)->unselected();
+			}
 
 			this->m_fields->m_dmNode->removeAllChildrenWithCleanup(true);
 			this->m_fields->m_dmNode->removeFromParent();
@@ -195,18 +213,20 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 	void startUI() {
 		
-		this->m_fields->m_button->setEnabled(true);
-		this->m_fields->m_button->selected();
+		if (auto button = this->getChildByIDRecursive(BUTTON_ID)) {
+			auto menuEl = static_cast<CCMenuItemSprite*>(button);
+			menuEl->setEnabled(true);
+			menuEl->selected();
+		}
 
 		if (!this->m_fields->m_showedGuide) {
 
 			geode::createQuickPopup(
 				"DeathMarkers",
-				to_string(this->m_fields->m_deaths.size()) + " deaths were found.",
+				fmt::format("{} deaths were found.", this->m_fields->m_deaths.size()),
 				"Continue", "Open Guide",
 				[](auto, bool open) {
-					if (!open) return;
-					web::openLinkInBrowser(API_BASE);
+					if (open) web::openLinkInBrowser(API_BASE);
 				}
 			);
 			this->m_fields->m_showedGuide = true;
@@ -280,28 +300,32 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 #include <Geode/modify/EditorPauseLayer.hpp>
 class $modify(DMEditorPauseLayer, EditorPauseLayer) {
 
+	struct Fields {
+		CCMenuItemSprite* m_button;
+	};
+
 	bool init(LevelEditorLayer * layer) {
 
 		if (!EditorPauseLayer::init(layer)) return false;
 
-		auto editor = static_cast<DMEditorLayer*>(this->m_editorLayer);
-
+		auto editor = static_cast<DMEditorLayer*>(layer);
 		auto offSprite = CCSprite::create("marker-button-deact.png"_spr);
-
-		if (!editor->m_fields->m_button) {
-			editor->m_fields->m_button = CCMenuItemExt::createSprite(
-				offSprite,
-				CCSprite::create("marker-button-on.png"_spr),
-				LoadingSpinner::create(offSprite->getContentWidth()),
-				[editor](auto el) {
-					editor->toggleDeathMarkers();
-				}
-			);
-			editor->m_fields->m_button->setID("load-button"_spr);
-		}
+		auto onSprite = CCSprite::create("marker-button-on.png"_spr);
+		this->m_fields->m_button = CCMenuItemExt::createSprite(
+			offSprite,
+			onSprite,
+			LoadingSpinner::create(offSprite->getContentWidth()),
+			[editor](auto el) {
+				editor->toggleDeathMarkers();
+			}
+		);
+		this->m_fields->m_button->setID(BUTTON_ID);
+		editor->m_fields->m_enabled ?
+			this->m_fields->m_button->selected() :
+			this->m_fields->m_button->unselected();
 
 		auto menu = this->getChildByID("guidelines-menu");
-		menu->addChild(editor->m_fields->m_button);
+		menu->addChild(this->m_fields->m_button);
 		menu->updateLayout(true);
 
 		return true;
