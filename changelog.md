@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This document only concerns the changelog of the **Mod**, not the server.
 
+## [1.0.2] - 2025-04-20
+
+### Fixed
+
+- Fix the game crashing when the editor pause menu is opened a second time if Relocate Build Tools is not installed. ([#1](https://github.com/MaSp005/deathmarkers/issues/1))
+
 ## [1.0.1] - 2025-04-18
 
 ### Changed
