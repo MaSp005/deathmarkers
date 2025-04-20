@@ -130,7 +130,7 @@ void dm::parseCsvDeathList(web::WebResponse* res,
 
 	// Read and split up body
 	std::string const okObj = std::move(body.ok().value());
-	if (okObj.empty()) return log::info("Responded with no data.");
+	if (okObj.empty()) return log::debug("Responded with no data.");
 
 	vector<std::string> lines = split(okObj, '\n');
 	vector<std::string> header = split(lines.at(0), ',');
@@ -206,7 +206,7 @@ void dm::parseCsvDeathList(web::WebResponse* res,
 
 	// Read and split up body
 	std::string const okObj = std::move(body.ok().value());
-	if (okObj.empty()) return log::info("Responded with no data.");
+	if (okObj.empty()) return log::debug("Responded with no data.");
 
 	vector<std::string> lines = split(okObj, '\n');
 	vector<std::string> header = split(lines.at(0), ',');

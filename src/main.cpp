@@ -109,7 +109,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		this->fetch(
 			[this](bool success) {
 				if (Mod::get()->getSettingValue<bool>("always-show")) {
-					log::info("Always show enabled, rendering...");
+					log::debug("Always show enabled, rendering...");
 					this->renderMarkers();
 				}
 
@@ -137,9 +137,9 @@ class $modify(DMPlayLayer, PlayLayer) {
 								   res->string().unwrapOr("Body could not be read."));
 						cb(false);
 					} else {
-						log::info("Received death list.");
+						log::debug("Received death list.");
 						parseBinDeathList(res, &this->m_fields->m_deaths, !this->m_fields->m_levelProps.platformer);
-						log::info("Finished parsing.");
+						log::debug("Finished parsing.");
 						this->m_fields->m_fetched = true;
 
 						cb(true);
@@ -324,7 +324,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 						cb(false);
 					}
 					else {
-						log::info("Posted Death.");
+						log::debug("Posted Death.");
 						cb(true);
 					}
 				}
@@ -374,7 +374,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		if (this->m_fields->m_queuedSubmissions.empty()) return;
 		
 		if (this->m_fields->m_fetched) {
-			log::info(
+			log::debug(
 				"Clearing Queue. {} deaths pending.",
 				this->m_fields->m_queuedSubmissions.size()
 			);
@@ -392,7 +392,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 				}
 			);
 		} else {
-			log::info("Attempting to fetch...");
+			log::debug("Attempting to fetch...");
 
 			this->fetch(
 				[this](bool success) {
