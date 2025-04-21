@@ -408,29 +408,22 @@ class $modify(DMPlayLayer, PlayLayer) {
 #include <Geode/modify/PlayerObject.hpp>
 class $modify(DMPlayerObject, PlayerObject) {
 
-	static void onModify(auto & self) {
-
-		// Hook before QOLMod (-6969) hook that completely overrides playerDestroyed
-		if (!self.setHookPriority("PlayerObject::playerDestroyed", -6970)) {
-			log::error("Failed to set hook priority of PlayerObject::playerDestroyed to -6970 (somehow)");
-		}
-
-	}
-
 	void playerDestroyed(bool secondPlr) {
 
 		// Forward to original, we dont want noclip in here
 		PlayerObject::playerDestroyed(secondPlr);
 		if (secondPlr) return;
 
-		// Check if PlayerObject is the PRIMARY one and not from Globed
-		if (this->getID() != "PlayerObject") return;
-		if (this->getParent()->getID() != "batch-layer") return;
-
 		auto playLayer = static_cast<DMPlayLayer*>(
 			GameManager::get()->getPlayLayer()
 		);
 		if (!playLayer) return;
+
+		// Check if PlayerObject is the PRIMARY one and not from Globed
+		if (!(
+			(!m_gameLayer->m_player1 || m_gameLayer->m_player1 == this) ||
+			(!m_gameLayer->m_player2 || m_gameLayer->m_player2 == this)
+		)) return;
 
 		// Populate percentage as current time or progress percentage
 		int percent = playLayer->m_fields->m_levelProps.platformer ?
