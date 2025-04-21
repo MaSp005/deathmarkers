@@ -121,6 +121,13 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	}
 
+	// Sometimes this method creates the progress bar delayed
+	void setupHasCompleted() {
+		PlayLayer::setupHasCompleted();
+		
+		if (Mod::get()->getSettingValue<bool>("always-show")) this->renderHistogram();
+	}
+
 	void fetch(std::function<void(bool)> cb) {
 
 		if (this->m_fields->m_fetched) return cb(true);
@@ -233,8 +240,8 @@ class $modify(DMPlayLayer, PlayLayer) {
 		}
 
 		if (!this->m_fields->m_chartAttached) {
-			auto progBarNode = this->getChildByID("progress-bar");
-			if (progBarNode == nullptr) return;
+			auto progBarNode = this->m_progressBar;
+			if (!progBarNode) return;
 
 			this->m_fields->m_chartNode = CCDrawNode::create();
 			this->m_fields->m_chartNode->setID("chart"_spr);
