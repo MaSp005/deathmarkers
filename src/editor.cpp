@@ -71,9 +71,9 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 						}
 					}
 					else {
-						log::info("Received death list.");
+						log::debug("Received death list.");
 						parseBinDeathList(res, &this->m_fields->m_deaths);
-						log::info("Finished parsing.");
+						log::debug("Finished parsing.");
 						analyzeData();
 						startUI();
 					}

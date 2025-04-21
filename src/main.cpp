@@ -109,7 +109,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		this->fetch(
 			[this](bool success) {
 				if (Mod::get()->getSettingValue<bool>("always-show")) {
-					log::info("Always show enabled, rendering...");
+					log::debug("Always show enabled, rendering...");
 					this->renderMarkers();
 				}
 
@@ -124,7 +124,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 	void fetch(std::function<void(bool)> cb) {
 
 		if (this->m_fields->m_fetched) return cb(true);
-		
+
 		log::info("Listing Deaths...");
 
 		// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
@@ -137,9 +137,9 @@ class $modify(DMPlayLayer, PlayLayer) {
 								   res->string().unwrapOr("Body could not be read."));
 						cb(false);
 					} else {
-						log::info("Received death list.");
+						log::debug("Received death list.");
 						parseBinDeathList(res, &this->m_fields->m_deaths, !this->m_fields->m_levelProps.platformer);
-						log::info("Finished parsing.");
+						log::debug("Finished parsing.");
 						this->m_fields->m_fetched = true;
 
 						cb(true);
@@ -264,11 +264,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 			auto pos1 = CCPoint(width * i, 0);
 			auto pos2 = CCPoint(width * i + width, -(distr * histHeight));
 			ccColor4F color{};
-			color.r = distr;
-			color.g = 1 - distr;
+			color.r = 1 - ((1 - distr) * (1 - distr));
+			color.g = 1 - (distr * distr);
 			color.b = 0;
 			color.a = 1;
-			
 
 			this->m_fields->m_chartNode->drawRect(pos1, pos2, color, 0.0f, color);
 		}
@@ -324,7 +323,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 						cb(false);
 					}
 					else {
-						log::info("Posted Death.");
+						log::debug("Posted Death.");
 						cb(true);
 					}
 				}
@@ -372,9 +371,9 @@ class $modify(DMPlayLayer, PlayLayer) {
 	void checkQueue() {
 
 		if (this->m_fields->m_queuedSubmissions.empty()) return;
-		
+
 		if (this->m_fields->m_fetched) {
-			log::info(
+			log::debug(
 				"Clearing Queue. {} deaths pending.",
 				this->m_fields->m_queuedSubmissions.size()
 			);
@@ -392,7 +391,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 				}
 			);
 		} else {
-			log::info("Attempting to fetch...");
+			log::debug("Attempting to fetch...");
 
 			this->fetch(
 				[this](bool success) {
@@ -423,6 +422,10 @@ class $modify(DMPlayerObject, PlayerObject) {
 		// Forward to original, we dont want noclip in here
 		PlayerObject::playerDestroyed(secondPlr);
 		if (secondPlr) return;
+
+		// Check if PlayerObject is the PRIMARY one and not from Globed
+		if (this->getID() != "PlayerObject") return;
+		if (this->getParent()->getID() != "batch-layer") return;
 
 		auto playLayer = static_cast<DMPlayLayer*>(
 			GameManager::get()->getPlayLayer()
