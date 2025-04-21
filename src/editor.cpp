@@ -263,8 +263,8 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 			this->m_fields->m_darkNode->setPosition(CCPoint(0, 0));
 			this->m_fields->m_darkNode->setAnchorPoint(CCPoint(0, 0));
 			this->m_fields->m_darkNode->setColor({0, 0, 0});
-			this->m_fields->m_darkNode->setOpacity(128);
-			this->m_fields->m_darkNode->setZOrder(-1);
+			this->m_fields->m_darkNode->setOpacity(Mod::get()->getSettingValue<int64_t>("darken-editor"));
+			this->m_fields->m_darkNode->setZOrder(-4);
 		}
 
 		this->m_editorUI->addChild(this->m_fields->m_darkNode);

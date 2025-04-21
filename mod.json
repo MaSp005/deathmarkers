@@ -70,10 +70,25 @@
 		"stacks-in-editor": {
 			"type": "bool",
 			"name": "Marker Stacks in Editor",
-			"description": "Whether to mark groups of death markers in close proximity with a special indicator. Causes lag with large amounts of markers in a level. Disambiguates deaths laying at the exact same coordiantes.",
+			"description": "Whether to mark groups of death markers in close proximity with a special indicator. Causes lag with large amounts of markers in a level, but disambiguates deaths laying at the exact same coordiantes.",
 			"default": true
+		},
+		"darken-editor": {
+			"type": "int",
+			"name": "Darkener in Editor",
+			"description": "How much the level should be darkened in the editor when markers are being shown. 0 = Full brightness, 255 = Blackout (not recommended)",
+			"min": 0,
+			"max": 255,
+			"default": 64,
+			"controls": {
+				"arrows": false,
+				"big-arrows": false,
+				"slider": true,
+				"slider-step": 1,
+				"input": true
+			}
 		}
-	},
+},
 	"resources": {
 		"sprites": [
 			"resources/*"
