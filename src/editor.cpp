@@ -11,6 +11,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 		CCNode* m_stackNode = nullptr;
 		CCNode* m_dmNode = nullptr;
+		CCNodeRGBA* m_darkNode = nullptr;
 
 		vector<DeathLocation> m_deaths;
 
@@ -130,6 +131,8 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 			this->m_fields->m_stackNode->removeAllChildrenWithCleanup(true);
 			this->m_fields->m_stackNode->removeFromParent();
 
+			this->m_fields->m_darkNode->removeFromParent();
+
 			for (auto& deathLoc : this->m_fields->m_deaths)
 				deathLoc.node = nullptr;
 
@@ -247,19 +250,24 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 			this->m_fields->m_dmNode->addChild(node);
 		}
 
-		// TODO: Fix darkener node
-		/*
-		auto winSize = CCDirector::sharedDirector()->getWinSize();
-		auto darkNode = CCNodeRGBA::create();
-		darkNode->setID("darkener"_spr);
-		darkNode->setContentSize(winSize);
-		darkNode->setColor(ccColor3B(0, 0, 0));
-		darkNode->setOpacity(128);
-		darkNode->setZOrder(-1);
-		darkNode->setPosition(CCPoint(0, 0));
-		darkNode->setAnchorPoint(CCPoint(0, 0));
-		this->m_editorUI->addChild(darkNode);
-		*/
+		if (!this->m_fields->m_darkNode) {
+			auto winSize = CCDirector::sharedDirector()->getWinSize();
+
+			this->m_fields->m_darkNode = CCSprite::createWithSpriteFrameName("lightsquare_01_01_color_001.png");
+			this->m_fields->m_darkNode->setID("darkener"_spr);
+			auto& spriteSize = this->m_fields->m_darkNode->getContentSize();
+			this->m_fields->m_darkNode->setScale(
+				winSize.width / spriteSize.width,
+				winSize.height / spriteSize.height
+			);
+			this->m_fields->m_darkNode->setPosition(CCPoint(0, 0));
+			this->m_fields->m_darkNode->setAnchorPoint(CCPoint(0, 0));
+			this->m_fields->m_darkNode->setColor({0, 0, 0});
+			this->m_fields->m_darkNode->setOpacity(128);
+			this->m_fields->m_darkNode->setZOrder(-1);
+		}
+
+		this->m_editorUI->addChild(this->m_fields->m_darkNode);
 
 		this->m_editorUI->addChild(this->m_fields->m_dmNode);
 		this->m_editorUI->addChild(this->m_fields->m_stackNode);
