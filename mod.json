@@ -24,14 +24,34 @@
 		"share-deaths": {
 			"type": "bool",
 			"name": "Share my deaths",
-			"description": "Contributes to the ecosystem of level creators trying to gain insight on their gameplay. Your deaths remain anonymous. Visit the GitHub for more information.",
+			"description": "Contributes to the ecosystem of level creators trying to gain insight on their gameplay. <cg>Your deaths remain anonymous.</cg> Visit the GitHub Repository for more information.",
 			"default": true
+		},
+		"title-conditions": {
+			"type": "title",
+			"name": "Rendering conditions"
 		},
 		"always-show": {
 			"type": "bool",
 			"name": "Always show Markers in-game",
-			"description": "Draws Markers in-game even while playing normally. May impede visibility and performance. You should not normally use this. This overrides the \"Draw in practice\" and \"Only on New Best\" settings.",
+			"description": "Draws Markers in-game even while playing normally. May impede visibility and performance, you should not normally use this.",
 			"default": false
+		},
+		"draw-in-practice": {
+			"type": "bool",
+			"name": "Markers in Practice",
+			"description": "Whether to draw death markers in Practice Mode and Testmode.",
+			"default": false
+		},
+		"newbest-only": {
+			"type": "bool",
+			"name": "Show Markers only on New Best",
+			"description": "Whether to show death markers only when you achieve a new best percentage. Will show regarless in Platformer mode and if you beat the level before.",
+			"default": false
+		},
+		"title-visuals": {
+			"type": "title",
+			"name": "Visuals"
 		},
 		"prog-bar-hist-height": {
 			"type": "int",
@@ -61,11 +81,9 @@
 				"big-arrows": false
 			}
 		},
-		"draw-in-practice": {
-			"type": "bool",
-			"name": "Markers in Practice",
-			"description": "Whether to draw death markers in Practice Mode and Testmode.",
-			"default": false
+		"title-editor": {
+			"type": "title",
+			"name": "Editor"
 		},
 		"stacks-in-editor": {
 			"type": "bool",
@@ -87,12 +105,6 @@
 				"slider-step": 1,
 				"input": true
 			}
-		},
-		"newbest-only": {
-			"type": "bool",
-			"name": "Show Markers only on New Best",
-			"description": "Whether to show death markers only when you achieve a new best percentage. Ignored in Platformer mode",
-			"default": false
 		}
 	},
 	"resources": {
