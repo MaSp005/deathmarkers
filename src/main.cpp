@@ -123,9 +123,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	// Sometimes this method creates the progress bar delayed
 	void setupHasCompleted() {
+
 		PlayLayer::setupHasCompleted();
-		
 		if (Mod::get()->getSettingValue<bool>("always-show")) this->renderHistogram();
+
 	}
 
 	void fetch(std::function<void(bool)> cb) {
@@ -179,12 +180,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 		if (Mod::get()->getSettingValue<bool>("always-show")) return;
 
-		m_fields->m_dmNode->removeAllChildrenWithCleanup(true);
-		m_fields->m_dmNode->cleanup();
-
-		if (!this->m_fields->m_chartAttached) return;
-		this->m_fields->m_chartNode->clear();
-		this->m_fields->m_chartNode->cleanup();
+		clearMarkers();
 
 	}
 
@@ -203,6 +199,11 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 		PlayLayer::togglePracticeMode(toggle);
 		this->m_fields->m_levelProps.practice = toggle;
+
+		if (Mod::get()->getSettingValue<bool>("always-show") && (!toggle || Mod::get()->getSettingValue<bool>("draw-in-practice"))) {
+			renderMarkers();
+			renderHistogram();
+		} else clearMarkers();
 
 	}
 
@@ -278,6 +279,17 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 			this->m_fields->m_chartNode->drawRect(pos1, pos2, color, 0.0f, color);
 		}
+
+	}
+
+	void clearMarkers() {
+
+		m_fields->m_dmNode->removeAllChildrenWithCleanup(true);
+		m_fields->m_dmNode->cleanup();
+
+		if (!this->m_fields->m_chartAttached) return;
+		this->m_fields->m_chartNode->clear();
+		this->m_fields->m_chartNode->cleanup();
 
 	}
 
