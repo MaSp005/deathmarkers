@@ -44,6 +44,9 @@ fs.readdirSync("./pages").forEach(fn => {
 });
 const robots = fs.readFileSync("./robots.txt", "utf8");
 
+const excluded = fs.readFileSync("exclude", "utf8").split("\n").filter(x => /\d+/.test(x)).map(x => parseInt(x));
+console.log(excluded);
+
 function csvStream(array, columns, map = r => r) {
   return new Readable({
     read() {
@@ -215,6 +218,7 @@ app.all("/submit", expr.text({
 
     if (typeof req.body.levelid != "number")
       return res.status(400).send("levelid was not supplied or not numerical");
+    if (excluded.includes(req.body.levelid)) return res.sendStatus(204); // Silently skip everything else
 
     if (typeof req.body.levelversion != "number") req.body.levelversion = 0;
 
