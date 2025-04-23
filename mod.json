@@ -30,7 +30,7 @@
 		"always-show": {
 			"type": "bool",
 			"name": "Always show Markers in-game",
-			"description": "Draws Markers in-game even while playing normally. May impede visibility and performance. You should not normally use this.",
+			"description": "Draws Markers in-game even while playing normally. May impede visibility and performance. You should not normally use this. This overrides the \"Draw in practice\" and \"Only on New Best\" settings.",
 			"default": false
 		},
 		"prog-bar-hist-height": {
@@ -87,8 +87,14 @@
 				"slider-step": 1,
 				"input": true
 			}
+		},
+		"newbest-only": {
+			"type": "bool",
+			"name": "Show Markers only on New Best",
+			"description": "Whether to show death markers only when you achieve a new best percentage. Ignored in Platformer mode",
+			"default": false
 		}
-},
+	},
 	"resources": {
 		"sprites": [
 			"resources/*"

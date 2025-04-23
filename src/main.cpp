@@ -445,7 +445,11 @@ class $modify(DMPlayerObject, PlayerObject) {
 
 		playLayer->trySubmitDeath(deathLoc);
 
-		auto render = shouldDraw(playLayer->m_fields->m_levelProps);
+		bool newBest = playLayer->m_fields->m_levelProps.platformer || (
+			playLayer->getCurrentPercentInt() >= playLayer->m_level->m_normalPercent.value() ||
+			playLayer->m_level->m_normalPercent.value() == 100
+		);
+		auto render = shouldDraw(playLayer->m_fields->m_levelProps) && (!Mod::get()->getSettingValue<bool>("newbest-only") || newBest);
 
 		// Render Death Markers
 		if (render) {
