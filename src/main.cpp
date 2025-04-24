@@ -216,10 +216,12 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	void renderMarkers() {
 
+		double fadeTime = Mod::get()->getSettingValue<float>("fade-time") / 2;
 		for (auto& deathLoc : this->m_fields->m_deaths) {
 			auto node = deathLoc.createAnimatedNode(
 				false,
-				(static_cast<double>(rand()) / RAND_MAX) * .25f
+				(static_cast<double>(rand()) / RAND_MAX) * fadeTime,
+				fadeTime
 			);
 			this->m_fields->m_dmNode->addChild(node);
 		}
@@ -465,15 +467,17 @@ class $modify(DMPlayerObject, PlayerObject) {
 
 		// Render Death Markers
 		if (render) {
+			double fadeTime = Mod::get()->getSettingValue<float>("fade-time") / 2;
+
 			if (Mod::get()->getSettingValue<bool>("always-show")) {
 				playLayer->m_fields->m_dmNode->addChild(
-					deathLoc.createAnimatedNode(false, 0)
+					deathLoc.createAnimatedNode(false, 0, fadeTime)
 				);
 			}
 			else {
 				playLayer->renderMarkers();
 				playLayer->m_fields->m_dmNode->addChild(
-					deathLoc.createAnimatedNode(true, 0)
+					deathLoc.createAnimatedNode(true, 0, fadeTime)
 				);
 			}
 		}
