@@ -1,4 +1,10 @@
 # Level-IDs which should not be entered into the database
 # Should mostly be "Farm attempts" levels and the like
+# Rename to "exclude" to use
 
 117822892
+112085442
+69069068
+61039309
+25742125
+59502563
