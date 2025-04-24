@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This document only concerns the changelog of the **Mod**, not the server.
 
+## [1.1.0] - 2025-04-23
+
+### Added
+
+- Adjustable darkener in the editor
+- Ability to show deaths only on a new best
+- Setting to adjust fade-in time of markers
+
+### Changed
+
+- Reorganize Mod's settings menu
+
+### Fixed
+
+- Fix deaths not being submitted in some circumstances
+- Fix the histogram sometimes not showing at level start despite "Always show" being enabled
+- Fix drawing states in practice with "Always show" enabled
+
 ## [1.0.3] - 2025-04-20
 
 ### Fixed
