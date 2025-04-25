@@ -27,17 +27,18 @@ CCNode* DeathLocationMin::createNode(bool isCurrent) const {
 }
 
 CCNode* DeathLocationMin::createAnimatedNode(
-	bool isCurrent, double delay) const {
+	bool isCurrent, double delay, double fadeTime) const {
 	auto node = this->createNode(isCurrent, true);
-	node->runAction(CCSequence::createWithTwoActions(
-		CCDelayTime::create(delay),
-		CCSpawn::createWithTwoActions(
-			CCEaseBounceOut::create(
-				CCMoveTo::create(0.25f, this->pos)
-			),
-			CCFadeIn::create(0.25f)
-		)
-	));
+	if (delay || fadeTime)
+		node->runAction(CCSequence::createWithTwoActions(
+			CCDelayTime::create(delay),
+			CCSpawn::createWithTwoActions(
+				CCEaseBounceOut::create(
+					CCMoveTo::create(fadeTime, this->pos)
+				),
+				CCFadeIn::create(fadeTime)
+			)
+		));
 	return node;
 }
 

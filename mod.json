@@ -8,7 +8,7 @@
 	},
 	"id": "freakyrobot.deathmarkers",
 	"name": "DeathMarkers",
-	"version": "v1.0.3",
+	"version": "v1.1.0",
 	"developer": "FreakyRobot",
 	"description": "Online death collection for creators and players",
 	"links": {
@@ -24,14 +24,34 @@
 		"share-deaths": {
 			"type": "bool",
 			"name": "Share my deaths",
-			"description": "Contributes to the ecosystem of level creators trying to gain insight on their gameplay. Your deaths remain anonymous. Visit the GitHub for more information.",
+			"description": "Contributes to the ecosystem of level creators trying to gain insight on their gameplay. <cg>Your deaths remain anonymous.</cg> Visit the GitHub Repository for more information.",
 			"default": true
+		},
+		"title-conditions": {
+			"type": "title",
+			"name": "Rendering conditions"
 		},
 		"always-show": {
 			"type": "bool",
 			"name": "Always show Markers in-game",
-			"description": "Draws Markers in-game even while playing normally. May impede visibility and performance. You should not normally use this.",
+			"description": "Draws Markers in-game even while playing normally. May impede visibility and performance, you should not normally use this.",
 			"default": false
+		},
+		"draw-in-practice": {
+			"type": "bool",
+			"name": "Markers in Practice",
+			"description": "Whether to draw death markers in Practice Mode and Testmode.",
+			"default": false
+		},
+		"newbest-only": {
+			"type": "bool",
+			"name": "Show Markers only on New Best",
+			"description": "Whether to show death markers only when you achieve a new best percentage. Will show regarless in Platformer mode and if you beat the level before.",
+			"default": false
+		},
+		"title-visuals": {
+			"type": "title",
+			"name": "Visuals"
 		},
 		"prog-bar-hist-height": {
 			"type": "int",
@@ -56,22 +76,49 @@
 			"max": 1,
 			"control": {
 				"slider": true,
-				"slider-step": 0.1,
+				"slider-step": 0.025,
 				"arrows": false,
 				"big-arrows": false
 			}
 		},
-		"draw-in-practice": {
-			"type": "bool",
-			"name": "Markers in Practice",
-			"description": "Whether to draw death markers in Practice Mode and Testmode.",
-			"default": false
+		"fade-time": {
+			"type": "float",
+			"name": "Fade Time",
+			"description": "Determines how long it takes until all markers have entered their final position. (For reference, after dying, it takes 1 or 0.5 seconds for the screen to reset depending on your setting)",
+			"default": 0.5,
+			"min": 0,
+			"max": 1,
+			"control": {
+				"slider": true,
+				"slider-step": 0.025,
+				"arrows": false,
+				"big-arrows": false
+			}
+		},
+		"title-editor": {
+			"type": "title",
+			"name": "Editor"
 		},
 		"stacks-in-editor": {
 			"type": "bool",
 			"name": "Marker Stacks in Editor",
-			"description": "Whether to mark groups of death markers in close proximity with a special indicator. Causes lag with large amounts of markers in a level. Disambiguates deaths laying at the exact same coordiantes.",
+			"description": "Whether to mark groups of death markers in close proximity with a special indicator. Causes lag with large amounts of markers in a level, but disambiguates deaths laying at the exact same coordiantes.",
 			"default": true
+		},
+		"darken-editor": {
+			"type": "int",
+			"name": "Darkener in Editor",
+			"description": "How much the level should be darkened in the editor when markers are being shown. 0 = Full brightness, 255 = Blackout (not recommended)",
+			"min": 0,
+			"max": 255,
+			"default": 64,
+			"controls": {
+				"arrows": false,
+				"big-arrows": false,
+				"slider": true,
+				"slider-step": 1,
+				"input": true
+			}
 		}
 	},
 	"resources": {

@@ -43,7 +43,7 @@ namespace dm {
 		DeathLocationMin(CCPoint pos);
 
 		CCNode* createNode(bool isCurrent) const;
-		CCNode* createAnimatedNode(bool isCurrent, double delay) const;
+		CCNode* createAnimatedNode(bool isCurrent, double delay, double fadeTime) const;
 		CCNode* createNode(bool isCurrent, bool preAnim) const;
 	};
 

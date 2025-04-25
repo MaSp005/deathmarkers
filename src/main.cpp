@@ -121,6 +121,14 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	}
 
+	// Sometimes this method creates the progress bar delayed
+	void setupHasCompleted() {
+
+		PlayLayer::setupHasCompleted();
+		if (Mod::get()->getSettingValue<bool>("always-show")) this->renderHistogram();
+
+	}
+
 	void fetch(std::function<void(bool)> cb) {
 
 		if (this->m_fields->m_fetched) return cb(true);
@@ -172,12 +180,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 		if (Mod::get()->getSettingValue<bool>("always-show")) return;
 
-		m_fields->m_dmNode->removeAllChildrenWithCleanup(true);
-		m_fields->m_dmNode->cleanup();
-
-		if (!this->m_fields->m_chartAttached) return;
-		this->m_fields->m_chartNode->clear();
-		this->m_fields->m_chartNode->cleanup();
+		clearMarkers();
 
 	}
 
@@ -197,6 +200,11 @@ class $modify(DMPlayLayer, PlayLayer) {
 		PlayLayer::togglePracticeMode(toggle);
 		this->m_fields->m_levelProps.practice = toggle;
 
+		if (Mod::get()->getSettingValue<bool>("always-show") && (!toggle || Mod::get()->getSettingValue<bool>("draw-in-practice"))) {
+			renderMarkers();
+			renderHistogram();
+		} else clearMarkers();
+
 	}
 
 	void onQuit() {
@@ -208,10 +216,12 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	void renderMarkers() {
 
+		double fadeTime = Mod::get()->getSettingValue<float>("fade-time") / 2;
 		for (auto& deathLoc : this->m_fields->m_deaths) {
 			auto node = deathLoc.createAnimatedNode(
 				false,
-				(static_cast<double>(rand()) / RAND_MAX) * .25f
+				(static_cast<double>(rand()) / RAND_MAX) * fadeTime,
+				fadeTime
 			);
 			this->m_fields->m_dmNode->addChild(node);
 		}
@@ -233,8 +243,8 @@ class $modify(DMPlayLayer, PlayLayer) {
 		}
 
 		if (!this->m_fields->m_chartAttached) {
-			auto progBarNode = this->getChildByID("progress-bar");
-			if (progBarNode == nullptr) return;
+			auto progBarNode = this->m_progressBar;
+			if (!progBarNode) return;
 
 			this->m_fields->m_chartNode = CCDrawNode::create();
 			this->m_fields->m_chartNode->setID("chart"_spr);
@@ -271,6 +281,17 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 			this->m_fields->m_chartNode->drawRect(pos1, pos2, color, 0.0f, color);
 		}
+
+	}
+
+	void clearMarkers() {
+
+		m_fields->m_dmNode->removeAllChildrenWithCleanup(true);
+		m_fields->m_dmNode->cleanup();
+
+		if (!this->m_fields->m_chartAttached) return;
+		this->m_fields->m_chartNode->clear();
+		this->m_fields->m_chartNode->cleanup();
 
 	}
 
@@ -408,29 +429,22 @@ class $modify(DMPlayLayer, PlayLayer) {
 #include <Geode/modify/PlayerObject.hpp>
 class $modify(DMPlayerObject, PlayerObject) {
 
-	static void onModify(auto & self) {
-
-		// Hook before QOLMod (-6969) hook that completely overrides playerDestroyed
-		if (!self.setHookPriority("PlayerObject::playerDestroyed", -6970)) {
-			log::error("Failed to set hook priority of PlayerObject::playerDestroyed to -6970 (somehow)");
-		}
-
-	}
-
 	void playerDestroyed(bool secondPlr) {
 
 		// Forward to original, we dont want noclip in here
 		PlayerObject::playerDestroyed(secondPlr);
 		if (secondPlr) return;
 
-		// Check if PlayerObject is the PRIMARY one and not from Globed
-		if (this->getID() != "PlayerObject") return;
-		if (this->getParent()->getID() != "batch-layer") return;
-
 		auto playLayer = static_cast<DMPlayLayer*>(
 			GameManager::get()->getPlayLayer()
 		);
 		if (!playLayer) return;
+
+		// Check if PlayerObject is the PRIMARY one and not from Globed
+		if (!(
+			(!m_gameLayer->m_player1 || m_gameLayer->m_player1 == this) ||
+			(!m_gameLayer->m_player2 || m_gameLayer->m_player2 == this)
+		)) return;
 
 		// Populate percentage as current time or progress percentage
 		int percent = playLayer->m_fields->m_levelProps.platformer ?
@@ -445,19 +459,25 @@ class $modify(DMPlayerObject, PlayerObject) {
 
 		playLayer->trySubmitDeath(deathLoc);
 
-		auto render = shouldDraw(playLayer->m_fields->m_levelProps);
+		bool newBest = playLayer->m_fields->m_levelProps.platformer || (
+			playLayer->getCurrentPercentInt() >= playLayer->m_level->m_normalPercent.value() ||
+			playLayer->m_level->m_normalPercent.value() == 100
+		);
+		auto render = shouldDraw(playLayer->m_fields->m_levelProps) && (!Mod::get()->getSettingValue<bool>("newbest-only") || newBest);
 
 		// Render Death Markers
 		if (render) {
+			double fadeTime = Mod::get()->getSettingValue<float>("fade-time") / 2;
+
 			if (Mod::get()->getSettingValue<bool>("always-show")) {
 				playLayer->m_fields->m_dmNode->addChild(
-					deathLoc.createAnimatedNode(false, 0)
+					deathLoc.createAnimatedNode(false, 0, fadeTime)
 				);
 			}
 			else {
 				playLayer->renderMarkers();
 				playLayer->m_fields->m_dmNode->addChild(
-					deathLoc.createAnimatedNode(true, 0)
+					deathLoc.createAnimatedNode(true, 0, fadeTime)
 				);
 			}
 		}
