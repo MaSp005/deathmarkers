@@ -380,7 +380,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 		std::string const url = API_BASE + "submit";
 		auto myjson = matjson::Value();
 		myjson.set("levelid", matjson::Value(
-			static_cast<int>(playLayer->m_level->m_levelID)
+			playLayer->m_level->m_levelID.value()
 		));
 		myjson.set("levelversion", matjson::Value(
 			playLayer->m_level->m_levelVersion

@@ -27,7 +27,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 		this->m_fields->m_loaded = true;
 		this->m_fields->m_deaths.clear();
 
-		long levelId = this->m_level->m_levelID;
+		int levelId = this->m_level->m_levelID;
 		if (levelId == 0) levelId = this->m_level->m_originalLevel;
 		if (levelId == 0) {
 			FLAlertLayer::create(
