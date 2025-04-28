@@ -135,6 +135,19 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 		log::info("Listing Deaths...");
 
+		if (Mod::get()->getSettingValue<bool>("store-local")) {
+			// Normally, when fetching we append, but this will not fail
+			// so we can safely clear and overwrite here.
+			this->m_fields->m_deaths.clear();
+			this->m_fields->m_deaths = getLocalDeaths(
+				this->m_fields->m_levelProps.levelId,
+				!this->m_fields->m_levelProps.platformer
+			);
+			log::debug("Finished parsing local saves.");
+			this->m_fields->m_fetched = true;
+			return cb(true);
+		}
+
 		// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
 		m_fields->m_listener.bind(
 			[this, cb](web::WebTask::Event* const e) {
@@ -209,8 +222,16 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	void onQuit() {
 
-		this->m_fields->m_deaths.clear();
 		PlayLayer::onQuit();
+
+		if (!Mod::get()->getSettingValue<bool>("store-local")) return;
+
+		storeLocalDeaths(
+			this->m_fields->m_levelProps.levelId,
+			this->m_fields->m_deaths,
+			!this->m_fields->m_levelProps.platformer
+		);
+		this->m_fields->m_deaths.clear();
 
 	}
 

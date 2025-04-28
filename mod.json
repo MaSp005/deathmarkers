@@ -24,8 +24,14 @@
 		"share-deaths": {
 			"type": "bool",
 			"name": "Share my deaths",
-			"description": "Contributes to the ecosystem of level creators trying to gain insight on their gameplay. <cg>Your deaths remain anonymous.</cg> Visit the GitHub Repository for more information.",
+			"description": "Contributes to the ecosystem of level creators trying to gain insight on their gameplay. <cg>Your deaths remain anonymous.</c> Visit the GitHub Repository for more information.",
 			"default": true
+		},
+		"store-local": {
+			"type": "bool",
+			"name": "Show only local deaths",
+			"description": "Store your deaths locally and only load them instead of the online collection. <cr>The mod does not store deaths locally if this is disabled.</c> This does not affect whether your deaths are submitted to the server.",
+			"default": false
 		},
 		"title-conditions": {
 			"type": "title",
@@ -46,7 +52,7 @@
 		"newbest-only": {
 			"type": "bool",
 			"name": "Show Markers only on New Best",
-			"description": "Whether to show death markers only when you achieve a new best percentage. Will show regarless in Platformer mode and if you beat the level before.",
+			"description": "Whether to show death markers only when you achieve a new best percentage. Will show regardless in Platformer mode and if you have beaten the level before.",
 			"default": false
 		},
 		"title-visuals": {

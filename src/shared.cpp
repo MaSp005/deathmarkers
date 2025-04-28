@@ -121,6 +121,93 @@ std::string uint8_to_hex_string(const uint8_t *v, const size_t s) {
 }
 
 
+std::optional<DeathLocationMin> readCSVLine(std::string buffer, bool hasPercentage) {
+	if (buffer.empty()) return std::nullopt;
+
+	vector<std::string> coords = split(buffer, ',');
+	if (coords.size() != (hasPercentage ? 3 : 2)) {
+		log::warn(
+			"Error listing deaths: Invalid number of elements: {} ({})",
+			coords, hasPercentage
+		);
+		return std::nullopt;
+	}
+
+	// Reserve variables, extract strings
+	float x;
+	float y;
+	auto const& xStr = coords.at(0);
+	auto const& yStr = coords.at(1);
+
+	// Interpret Strings into Numbers
+	try {
+		x = stof(xStr);
+		y = stof(yStr);
+	} catch (invalid_argument) {
+		log::warn("Unexpected Non-Number coordinate listing deaths: {}", coords);
+		return std::nullopt;
+	}
+
+	auto deathLoc = DeathLocationMin(x, y);
+
+	// If applicable, extract and interpret percentage
+	if (hasPercentage) {
+		int percent;
+		auto const& percentStr = coords.at(2);
+		try {
+			percent = stoi(percentStr);
+		} catch (invalid_argument) {
+			log::warn(
+				"Unexpected Non-Number coordinate listing deaths: {}",
+				coords
+			);
+			return std::nullopt;
+		}
+		deathLoc.percentage = percent;
+	}
+
+	return std::optional<DeathLocationMin>(deathLoc);
+}
+
+vector<DeathLocationMin> dm::getLocalDeaths(int levelId, bool hasPercentage) {
+	filesystem::path filePath = Mod::get()->getSaveDir() / numToString(levelId);
+	vector<DeathLocationMin> deaths;
+	if (!filesystem::exists(filePath)) {
+		log::debug("No file found at {}.", filePath);
+		return deaths;
+	}
+	
+	auto stream = ifstream(filePath);
+	std::string buffer;
+	char single;
+	while (stream.read(&single, 1)) {
+		if (single == '\n') {
+			// Process and clear buffer
+			auto deathLoc = readCSVLine(buffer, hasPercentage);
+			if (deathLoc.has_value()) deaths.push_back(deathLoc.value());
+
+			buffer = "";
+		} else buffer += single;
+	}
+	auto deathLoc = readCSVLine(buffer, hasPercentage);
+	if (deathLoc.has_value()) deaths.push_back(deathLoc.value());
+	stream.close();
+	return deaths;
+}
+
+void dm::storeLocalDeaths(int levelId, vector<DeathLocationMin>& deaths,
+	bool hasPercentage) {
+	filesystem::path filePath = Mod::get()->getSaveDir() / numToString(levelId);
+	
+	auto stream = ofstream(filePath);
+	for (auto i = deaths.begin(); i < deaths.end(); i++) {
+		stream << i->pos.x << "," << i->pos.y;
+		if (hasPercentage) stream << "," << i->percentage;
+		stream << "\n";
+	}
+};
+
+
 void dm::parseBinDeathList(web::WebResponse* res,
 	vector<DeathLocationMin>* target, bool hasPercentage) {
 
@@ -219,4 +306,22 @@ void dm::parseBinDeathList(web::WebResponse* res,
 		target->push_back(deathLoc);
 	}
 
+}
+
+vector<std::string> dm::split(const std::string& string, const char at) {
+	auto result = vector<std::string>();
+	int currentStart = 0;
+
+	while (true) {
+		int nextSplit = string.find_first_of(at, currentStart);
+		if (nextSplit == std::string::npos) {
+			result.push_back(string.substr(
+				currentStart, string.size() - currentStart
+			));
+			return result;
+		}
+		int nextLength = nextSplit - currentStart;
+		result.push_back(string.substr(currentStart, nextLength));
+		currentStart = nextSplit + 1;
+	}
 }

@@ -86,9 +86,15 @@ namespace dm {
 		void updateNode();
 	};
 
+	vector<DeathLocationMin> getLocalDeaths(int levelId, bool hasPercentage);
+	void storeLocalDeaths(int levelId, vector<DeathLocationMin>& deaths,
+		bool hasPercentage);
+
 	void parseBinDeathList(web::WebResponse* res,
 		vector<DeathLocationMin>* target, bool hasPercentage);
 	void parseBinDeathList(web::WebResponse* res,
 		vector<DeathLocation>* target);
+
+	vector<std::string> split(const std::string& string, const char at);
 
 }
