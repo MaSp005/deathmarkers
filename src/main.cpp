@@ -117,6 +117,8 @@ class $modify(DMPlayLayer, PlayLayer) {
 			}
 		);
 
+		this->schedule(schedule_selector(DMPlayLayer::updateMarkers), 0);
+
 		return true;
 
 	}
@@ -245,6 +247,22 @@ class $modify(DMPlayLayer, PlayLayer) {
 				fadeTime
 			);
 			this->m_fields->m_dmNode->addChild(node);
+		}
+		updateMarkers(0.0f);
+
+	}
+
+	void updateMarkers(float) {
+
+		auto sceneRotation = this->m_gameState.m_cameraAngle;
+		float inverseScale = Mod::get()->getSettingValue<float>("marker-scale") /
+			this->m_objectLayer->getScale();
+
+		auto children = this->m_fields->m_dmNode->getChildren();
+		for (int i = 0; i < this->m_fields->m_dmNode->getChildrenCount(); i++) {
+			auto child = static_cast<CCNode*>(children->objectAtIndex(i));
+			child->setScale(inverseScale);
+			child->setRotation(-sceneRotation);
 		}
 
 	}
