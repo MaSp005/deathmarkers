@@ -1,8 +1,11 @@
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
   console.log(`
+Generates a number of deaths. By default, backs up the file and replaces it with generated records.
+Only works with SQLite database, not intended for production.
+    
   -a           Appends to the existing Database instead of replacing all records
   -B           Does not back up the database before writing (recommended with -a)
-  -g           Just counts number of entries per level id in the database, does nothing else
+  -g           Counts number of entries per level id in the database and exits.
   -c [count]   Determined count of dummy deaths to add (2000 by default)
   -l [levelid] Changes levelid on every added record (otherwise random per entry)
   -i [fn]      Database Filename (deaths.db by default)

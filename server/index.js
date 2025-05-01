@@ -44,7 +44,8 @@ fs.readdirSync("./pages").forEach(fn => {
 });
 const robots = fs.readFileSync("./robots.txt", "utf8");
 
-const excluded = fs.readFileSync("exclude", "utf8").split("\n").filter(x => /\d+/.test(x)).map(x => parseInt(x));
+
+const excluded = fs.readFileSync("exclude", "utf8").split("\n").map(x => x.trim()).filter(x => /\d+/.test(x)).map(x => parseInt(x));
 console.log(excluded);
 
 function csvStream(array, columns, map = r => r) {
