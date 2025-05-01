@@ -20,6 +20,7 @@
   },
   "optionalDependencies": {
     "better-sqlite3": "^11.5.0",
-    "pg": "^8.14.1"
+    "pg": "^8.14.1",
+    "terminal-kit": "^3.1.2"
   }
 }
