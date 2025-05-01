@@ -25,28 +25,44 @@ function padRight(str, len) {
 }
 
 async function getLevels(exclude) {
+  term.moveTo(0, term.height);
+  term.eraseLine();
+  term.bgRed.black(" LOADING ");
   let query = `SELECT a.levelid, COUNT(*) AS c${exclude ? "" : ", COUNT(b.levelid)"} FROM format1 AS a ${exclude ? "WHERE a.levelid NOT IN (SELECT levelid FROM known)" :
-      "LEFT JOIN known AS b ON a.levelid = b.levelid"
+    "LEFT JOIN known AS b ON a.levelid = b.levelid"
     } GROUP BY a.levelid ORDER BY c DESC;`;
-  return (await db.query({
+  let res = await db.query({
     text: query,
     rowMode: "array"
-  })).rows;
+  });
+  updateInstructions();
+  return res.rows;
 }
 
 async function getUsers(levelId) {
+  term.moveTo(0, term.height);
+  term.eraseLine();
+  term.bgRed.black(" LOADING ");
   let query = `SELECT userident, COUNT(*) AS c FROM format1 WHERE levelid=$1 GROUP BY userident ORDER BY c DESC;`;
-  return (await db.query({
+  let res = await db.query({
     text: query,
     values: [levelId],
     rowMode: "array"
-  })).rows;
+  })
+  updateInstructions();
+  return res.rows;
+}
+
+function updateInstructions() {
+  term.moveTo(0, term.height);
+  term.eraseLine();
+  term.inverse(` ↑↓ Select   ${!phase ? "→/ENTER Investigate" : "← Return"}   R Reload   E Toggle Verified   Q Quit   Y Verify `);
 }
 
 async function updateLevels() {
   offset[0] = Math.max(0, selected[0] - 5);
   term.moveTo(0, 1);
-  levels.slice(offset[0], offset[0] + term.height).forEach((l, i) => {
+  levels.slice(offset[0], offset[0] + term.height - 1).forEach((l, i) => {
     let text = `${padRight(l[0].toString(), 10)} | ${padRight(l[1].toString(), 6)}`;
     let call = term;
     if (i + offset[0] == selected[0]) call = call.inverse;
@@ -60,7 +76,7 @@ async function updateLevels() {
 async function updateUsers() {
   offset[1] = Math.max(0, selected[1] - 5);
   term.moveTo(22, 1);
-  users.slice(offset[1], offset[1] + term.height).forEach((u, i) => {
+  users.slice(offset[1], offset[1] + term.height - 1).forEach((u, i) => {
     let text = `${u[0].slice(0, 8)} | ${padRight(u[1].toString(), 6)}`;
     if (i + offset[0] != selected[1]) term(text);
     else term.inverse(text);
@@ -70,9 +86,8 @@ async function updateUsers() {
 }
 
 async function clearUsers() {
-  term.moveTo(22, 2);
-  Array(term.height).fill(0).forEach((_, i) => {
-    term.moveTo(22, i + 2);
+  Array(term.height - 1).fill(0).forEach((_, i) => {
+    term.moveTo(22, i + 1);
     term("                 ");
   });
 }
@@ -94,9 +109,10 @@ term.on('key', function (key, matches, data) {
     case 'ENTER':
     case 'RIGHT':
       if (!levels) break;
+      if (phase) break;
+      phase++;
       getUsers(levels[selected[0]][0]).then(u => {
         users = u;
-        phase++;
         selected[phase] = 0;
         updateUsers();
       });
@@ -129,8 +145,9 @@ term.on('key', function (key, matches, data) {
       term.clear();
       process.exit(0);
     default:
-      break;
+      return;
   }
+  updateInstructions();
 });
 
 (async () => {
@@ -139,5 +156,6 @@ term.on('key', function (key, matches, data) {
 
   levels = await getLevels(exclude);
   updateLevels();
+  updateInstructions();
   // console.log(await getLevels(false));
 })();
