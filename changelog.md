@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This document only concerns the changelog of the **Mod**, not the server.
 
-## [Unreleased]
+## [1.2.0] - 2025-05-03
 
 ### Added
 
-- v1.2 macOS support ([#3](https://github.com/MaSp005/deathmarkers/pull/3))
-- v1.2 Option to load deaths from local storage instead of the server.
+- macOS support ([#3](https://github.com/MaSp005/deathmarkers/pull/3))
+- iOS support
+- Option to load deaths from local storage instead of the server
+
+### Changed
+
+- Make markers rotate and zoom with the camera
 
 ## [1.1.0] - 2025-04-23
 
