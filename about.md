@@ -12,6 +12,12 @@ but also for <cg>in-depth analysis of gameplay</c>.
 - Built-in analysis <cg>helper tools</c>
 - (minimal) Player path tracing
 
+## Solo Use
+
+If you wish to use the mod to record your death locations to learn your weak points in a level, you can enable the "Show only local deaths" setting. That way, your deaths are also stored locally and markers are only loaded from there.
+
+If you don't need the locally stored markers anymore, you can head to this mod's data directory and delete the file corresponding to the ID of the level you want to clean.
+
 ## Disclaimer
 
 The mod makes use of your *username and user ID* to create an identifier for you. <cg>This identifier **can not be traced back to you**</c>; it is unique to you for the purpose of grouping together attempts (/deaths) that were from the same player. Your identifier is *different* for every level you play, so your deaths *cannot* be grouped together across levels.
