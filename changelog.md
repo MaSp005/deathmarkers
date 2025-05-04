@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This document only concerns the changelog of the **Mod**, not the server.
 
+## [1.2.1] - 2025-05-04
+
+### Changed
+
+- Upgrade to Geode v4.4.0
+- No longer render out-of-view markers
+
 ## [1.2.0] - 2025-05-03
 
 ### Added
