@@ -66,6 +66,11 @@ CCNode* DeathLocationMin::createNode(bool isCurrent, bool preAnim) const {
 	return sprite;
 }
 
+// Comparison based on x-position for common sorting (invoked by std::sort by default)
+bool DeathLocationMin::operator<(const DeathLocationMin& other) const {
+	return (this->pos.x < other.pos.x);
+};
+
 
 DeathLocationOut::DeathLocationOut(float x, float y) :
 	DeathLocationMin::DeathLocationMin(x, y) {}
@@ -324,4 +329,21 @@ vector<std::string> dm::split(const std::string& string, const char at) {
 		result.push_back(string.substr(currentStart, nextLength));
 		currentStart = nextSplit + 1;
 	}
+}
+
+
+vector<DeathLocationMin>::iterator dm::binarySearchNearestXPosOnScreen(
+	vector<DeathLocationMin>::iterator from,
+	vector<DeathLocationMin>::iterator to, CCLayer* parent, float x) {
+
+	if (to - from <= 1) return from;
+
+	auto middle = from + ((to - from) >> 1);
+
+	auto dist = parent->convertToWorldSpace(middle->pos).x;
+	if (dist > x) to = middle;
+	else from = middle;
+
+	return binarySearchNearestXPosOnScreen(from, to, parent, x);
+
 }

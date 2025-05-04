@@ -6,11 +6,6 @@
 #include <stdio.h>
 #include "shared.hpp"
 
-// TODO: Check for incompatibilities with other mods
-// TODO: Limit rendering based on camera
-// TODO: Rotate markers with camera
-// TODO: For analysis: double-link deaths for last/previous death analysis
-
 using namespace geode::prelude;
 using namespace dm;
 
@@ -110,7 +105,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 			[this](bool success) {
 				if (Mod::get()->getSettingValue<bool>("always-show")) {
 					log::debug("Always show enabled, rendering...");
-					this->renderMarkers();
+					this->renderMarkers(
+						this->m_fields->m_deaths.begin(),
+						this->m_fields->m_deaths.end()
+					);
 				}
 
 				this->checkQueue();
@@ -162,6 +160,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 					} else {
 						log::debug("Received death list.");
 						parseBinDeathList(res, &this->m_fields->m_deaths, !this->m_fields->m_levelProps.platformer);
+						sort(
+							this->m_fields->m_deaths.begin(),
+							this->m_fields->m_deaths.end()
+						);
 						log::debug("Finished parsing.");
 						this->m_fields->m_fetched = true;
 
@@ -216,7 +218,10 @@ class $modify(DMPlayLayer, PlayLayer) {
 		this->m_fields->m_levelProps.practice = toggle;
 
 		if (Mod::get()->getSettingValue<bool>("always-show") && (!toggle || Mod::get()->getSettingValue<bool>("draw-in-practice"))) {
-			renderMarkers();
+			renderMarkers(
+				this->m_fields->m_deaths.begin(),
+				this->m_fields->m_deaths.end()
+			);
 			renderHistogram();
 		} else clearMarkers();
 
@@ -237,11 +242,11 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	}
 
-	void renderMarkers() {
+	void renderMarkers(const vector<DeathLocationMin>::iterator begin, const vector<DeathLocationMin>::iterator end) {
 
 		double fadeTime = Mod::get()->getSettingValue<float>("fade-time") / 2;
-		for (auto& deathLoc : this->m_fields->m_deaths) {
-			auto node = deathLoc.createAnimatedNode(
+		for (auto deathLoc = begin; deathLoc < end; deathLoc++) {
+			auto node = deathLoc->createAnimatedNode(
 				false,
 				(static_cast<double>(rand()) / RAND_MAX) * fadeTime,
 				fadeTime
@@ -331,6 +336,28 @@ class $modify(DMPlayLayer, PlayLayer) {
 		if (!this->m_fields->m_chartAttached) return;
 		this->m_fields->m_chartNode->clear();
 		this->m_fields->m_chartNode->cleanup();
+
+	}
+
+	void renderMarkersInFrame() {
+
+		auto begin = this->m_fields->m_deaths.begin();
+		auto end = this->m_fields->m_deaths.end();
+
+		// For all this jargon, see the "Screen Limit" slide in docs/doc.dio
+		auto winSize = CCDirector::sharedDirector()->getWinSize();
+		auto halfWinWidth = winSize.width / 2;
+		float winDiagonal =
+			(sqrt(winSize.width * winSize.width + winSize.height * winSize.height)
+			/ this->m_objectLayer->getScale() + 70) / 2;
+		log::debug("{} {}", halfWinWidth, winDiagonal);
+
+		begin = binarySearchNearestXPosOnScreen(begin, end, this->m_objectLayer,
+			halfWinWidth - winDiagonal);
+		end = binarySearchNearestXPosOnScreen(begin, end, this->m_objectLayer,
+			halfWinWidth + winDiagonal);
+		
+		renderMarkers(begin, end);
 
 	}
 
@@ -514,7 +541,7 @@ class $modify(DMPlayerObject, PlayerObject) {
 				);
 			}
 			else {
-				playLayer->renderMarkers();
+				playLayer->renderMarkersInFrame();
 				playLayer->m_fields->m_dmNode->addChild(
 					deathLoc.createAnimatedNode(true, 0, fadeTime)
 				);

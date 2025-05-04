@@ -193,7 +193,7 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 			stable_sort(
 				this->m_fields->m_deaths.begin(),
 				this->m_fields->m_deaths.end(),
-				[](DeathLocation a, DeathLocation b) {
+				[](const DeathLocation& a, const DeathLocation& b) {
 					return a.userIdent.compare(b.userIdent) < 0;
 				}
 			);
@@ -203,13 +203,10 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 
 		completed.clear();
 
-		// Sort Deaths list along x-axis for better positional searching performance
+		// Sort Deaths list along x-axis for better positional searching performance during clustering
 		sort(
 			this->m_fields->m_deaths.begin(),
-			this->m_fields->m_deaths.end(),
-			[](DeathLocation a, DeathLocation b) {
-				return (a.pos.x < b.pos.x);
-			}
+			this->m_fields->m_deaths.end()
 		);
 
 	}

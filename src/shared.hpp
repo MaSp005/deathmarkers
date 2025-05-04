@@ -45,6 +45,8 @@ namespace dm {
 		CCNode* createNode(bool isCurrent) const;
 		CCNode* createAnimatedNode(bool isCurrent, double delay, double fadeTime) const;
 		CCNode* createNode(bool isCurrent, bool preAnim) const;
+
+		bool operator<(const DeathLocationMin& other) const;
 	};
 
 	// Holds all information about a death location that can be sent to the server
@@ -96,5 +98,9 @@ namespace dm {
 		vector<DeathLocation>* target);
 
 	vector<std::string> split(const std::string& string, const char at);
+
+	vector<DeathLocationMin>::iterator binarySearchNearestXPosOnScreen(
+		vector<DeathLocationMin>::iterator from,
+		vector<DeathLocationMin>::iterator to, CCLayer* parent, float x);
 
 }
