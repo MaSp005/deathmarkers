@@ -73,6 +73,8 @@ namespace dm {
 		int levelVersion = 1;
 		bool practice = false;
 		bool clustered = false;
+		vector<DeathLocation>::iterator previous;
+		vector<DeathLocation>::iterator next;
 		/*
 		bool coin1 = false;
 		bool coin2 = false;
