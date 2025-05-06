@@ -1,3 +1,8 @@
+---
+title: DeathMarkers Creator Guide | Main
+description: DeathMarkers is a Geometry Dash mod that displays the locations where other players have failed. This is a Guide for Level Creators on how to use the data to their advantage.
+---
+
 # Creator's Guide <span style="font-size:50%">to [DeathMarkers](https://geode-sdk.org/mods/freakyrobot.deathmarkers)</span><img alt="Banner Image" src="/banner.webp">
 
 You've probably landed here because you are interested in using DeathMarkers to **improve** the gameplay/experience in the levels you create. **Great!** That's exactly what the mod was made to do.

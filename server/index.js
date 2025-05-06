@@ -32,6 +32,7 @@ const app = expr();
 const crypto = require("crypto");
 const fs = require("fs");
 const md = require("markdown-it")({ html: true, breaks: true })
+  .use(require("@mdit-vue/plugin-frontmatter").frontmatterPlugin)
   .use(require('markdown-it-named-headings'));
 const { Readable } = require("stream");
 
@@ -43,10 +44,7 @@ fs.readdirSync("./pages").forEach(fn => {
   guideHtml[fn.replace(".md", "")] = renderGuide(fn);
 });
 const robots = fs.readFileSync("./robots.txt", "utf8");
-
-
 const excluded = fs.readFileSync("exclude", "utf8").split("\n").map(x => x.trim()).filter(x => /\d+/.test(x)).map(x => parseInt(x));
-console.log(excluded);
 
 function csvStream(array, columns, map = r => r) {
   return new Readable({
@@ -116,7 +114,6 @@ function renderGuide(fn) {
   console.log(`Rendering guide ${fn}...`);
   benchmark("guideRender");
   let markdown = fs.readFileSync(`./pages/${fn}`, "utf8");
-  markdown = outline.replace("~~~", markdown);
   markdown = markdown.replace(/<!--.*?-->\n?/gs, ""); // Remove comments
   let chapters = markdown.split("\n")
     .filter(x => x.startsWith("##"))
@@ -138,7 +135,12 @@ function renderGuide(fn) {
   markdown = markdown.replace("<?>TOC",
     chapters.join("\n"));
 
-  let html = md.render(markdown);
+  let env = {};
+  let html = md.render(markdown, env);
+  console.log(markdown, env.frontmatter);
+  html = outline.replace("~~~", html);
+  html = html.replace("<?>TITLE", env.frontmatter.title ?? "DeathMarkers Creator Guide");
+  html = html.replace("<?>DESC", env.frontmatter.description ?? "");
   // markdown preview requires directory, running server hosts files on root
   html = html.replace(/src=".*?front\//g, "src=\"");
   // Replace newlines and whitespace between HTML tags
