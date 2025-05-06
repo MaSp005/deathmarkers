@@ -68,3 +68,5 @@ server/node_modules
 **.db
 config.json
 server/exclude
+
+pdns/*.png
