@@ -44,10 +44,29 @@ class DMEditorLayerDummy; struct DMEditorLayer : geode::Modify<DMEditorLayer, Le
 };
 
 
-class DMControlPanel : public FLAlertLayer {
-private:
-	DMEditorLayer* m_editor;
+class DMControlPanel : public CCLayer {
+
+//private:
+	//static DMControlPanel* instance;
+
+protected:
+	DMEditorLayer* m_editor = nullptr;
+	CCSize m_size;
+	cocos2d::extension::CCScale9Sprite* m_bgSprite = nullptr;
+	bool setup(float anchorX, float anchorY, const char* bg);
+
 public:
 	static DMControlPanel* create();
 	
+};
+
+#include <Geode/modify/EditorPauseLayer.hpp>
+class $modify(DMEditorPauseLayer, EditorPauseLayer) {
+
+	struct Fields {
+		CCMenuItemSprite* m_button;
+	};
+
+	bool init(LevelEditorLayer * layer);
+
 };
