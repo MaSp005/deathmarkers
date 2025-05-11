@@ -292,7 +292,7 @@ void DMEditorLayer::updateMarkers(float) {
 }
 
 
-bool DMControlPanel::setup(float anchorX, float anchorY, const char* bg = "GJ_square06.png") {
+bool DMControlPanel::setup(float anchorX, float anchorY, const char* bg = "geode.loader/GE_square01.png") {
 	this->setID(PANEL_ID);
 
 	auto anchor = CCPoint(anchorX, anchorY);
@@ -303,12 +303,13 @@ bool DMControlPanel::setup(float anchorX, float anchorY, const char* bg = "GJ_sq
   m_bgSprite = cocos2d::extension::CCScale9Sprite::create(bg, { 0, 0, 80, 80 });
   m_bgSprite->setContentSize(m_size);
   m_bgSprite->setPosition(m_size / 2);
+	m_bgSprite->setOpacity(128);
 	this->addChild(m_bgSprite);
 
 	cocos2d::CCLabelBMFont* m_title = cocos2d::CCLabelBMFont::create("DeathMarkers Control Panel", "goldFont.fnt");
-	m_title->setAnchorPoint(CCPoint(0.5f, 0.5f));
+	m_title->setAnchorPoint(CCPoint(0.f, 0.5f));
 	m_title->setScale((m_size.width - 20) / m_title->getContentWidth());
-	m_title->setPosition(m_size.width / 2, m_size.height - 1.2f * m_title->getContentHeight() * m_title->getScale());
+	m_title->setPosition(5, m_size.height + 2.78f);
 	this->addChild(m_title);
   //this->setKeypadEnabled(false);
   //this->setTouchEnabled(false);
