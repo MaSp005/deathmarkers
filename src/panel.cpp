@@ -52,3 +52,81 @@ bool DMControlPanel::setup(CCPoint const& anchor) {
 void DMControlPanel::clear() {
   m_drawNode->clear();
 }
+
+
+float mod(float a, float b) {
+  float r = a - static_cast<int>(a / b) * b;
+  return r < 0 ? r + b : r;
+}
+
+CCPoint angleFrom(CCPoint const& center, float angle, float radius) {
+  return center + CCPoint(
+    sin(angle) * radius,
+    cos(angle) * radius
+  );
+}
+
+
+float constexpr circlePointInterval = M_PI / 90;
+
+void DMControlPanel::drawPartialCircle(CCPoint const& center,
+  float from, float to, float radius, ccColor4F const& color) {
+
+  from = mod(from, 2 * M_PI);
+  to = from + mod(to - from, 2 * M_PI);
+  if (from == to) return;
+
+  int const pointCount = static_cast<int>
+    (ceil((to - from) / circlePointInterval));
+  
+  CCPoint verts[static_cast<int>(M_PI * 2 / circlePointInterval) + 2];
+  verts[0] = center;
+  int i = 0;
+  for (; i < pointCount; i++) {
+    verts[i + 1] = angleFrom(center, from + i * circlePointInterval, radius);
+  }
+  verts[++i] = angleFrom(center, to, radius);
+  m_drawNode->drawPolygon(verts, i + 1, color, 0.f, {});
+
+  for (int j = 0; j < i + 1; j++) {
+    log::debug("{}: {}", j, verts[j]);
+  }
+}
+
+void DMControlPanel::drawPieGraph(vector<struct pieSlice> slices) {
+
+  auto center = CCPoint(m_size.height / 2, m_size.height / 2);
+  float radius = center.x * 0.8f;
+
+  if (slices.size() == 0) return;
+  if (slices.size() == 1) {
+    m_drawNode->drawDot(center, radius, slices[0].color);
+    return;
+  }
+
+  float total = 0.f;
+  for (auto slice = slices.begin(); slice < slices.end(); slice++) {
+    if (slice->quantity <= 0) {
+      slices.erase(slice);
+      slice--;
+      continue;
+    }
+    total += slice->quantity;
+  }
+  if (!total) return;
+  
+  float lastAngle = 0.f;
+
+  for (auto& slice : slices) {
+    auto endAngle = lastAngle + static_cast<float>((slice.quantity / total) * 2 * M_PI);
+    drawPartialCircle(
+      center, 
+      lastAngle, 
+      endAngle, 
+      radius, 
+      slice.color
+    );
+    log::debug("{} -> {} ({} / {}) {}", lastAngle, endAngle, slice.quantity, total, slice.color);
+    lastAngle = endAngle;
+  }
+}
