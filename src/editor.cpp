@@ -230,7 +230,8 @@ void DMEditorLayer::startUI() {
 	this->m_fields->m_stackNode->setID("stacks"_spr);
 	this->m_fields->m_stackNode->setZOrder(-2);
 
-	this->m_editorUI->addChild(DMControlPanel::create());
+	this->m_fields->m_panel = DMControlPanel::create();
+	this->m_editorUI->addChild(this->m_fields->m_panel);
 
 	for (auto& deathLoc : this->m_fields->m_deaths) {
 		auto node = deathLoc.createNode();
@@ -241,7 +242,8 @@ void DMEditorLayer::startUI() {
 	if (!this->m_fields->m_darkNode) {
 		auto winSize = CCDirector::sharedDirector()->getWinSize();
 
-		this->m_fields->m_darkNode = CCSprite::createWithSpriteFrameName("lightsquare_01_01_color_001.png");
+		this->m_fields->m_darkNode =
+			CCSprite::createWithSpriteFrameName("lightsquare_01_01_color_001.png");
 		this->m_fields->m_darkNode->setID("darkener"_spr);
 		auto& spriteSize = this->m_fields->m_darkNode->getContentSize();
 		this->m_fields->m_darkNode->setScale(
@@ -251,7 +253,8 @@ void DMEditorLayer::startUI() {
 		this->m_fields->m_darkNode->setPosition(CCPoint(0, 0));
 		this->m_fields->m_darkNode->setAnchorPoint(CCPoint(0, 0));
 		this->m_fields->m_darkNode->setColor({0, 0, 0});
-		this->m_fields->m_darkNode->setOpacity(Mod::get()->getSettingValue<int64_t>("darken-editor"));
+		this->m_fields->m_darkNode->setOpacity(
+			Mod::get()->getSettingValue<int64_t>("darken-editor"));
 		this->m_fields->m_darkNode->setZOrder(-4);
 	}
 
@@ -289,50 +292,6 @@ void DMEditorLayer::updateMarkers(float) {
 	for (auto& deathLoc : this->m_fields->m_deaths) {
 		deathLoc.updateNode();
 	}
-}
-
-
-bool DMControlPanel::setup(float anchorX, float anchorY, const char* bg = "geode.loader/GE_square01.png") {
-	this->setID(PANEL_ID);
-
-	auto anchor = CCPoint(anchorX, anchorY);
-	m_size = CCSize(120, 80);
-	this->setContentSize(m_size);
-	this->setPosition(anchor);
-
-  m_bgSprite = cocos2d::extension::CCScale9Sprite::create(bg, { 0, 0, 80, 80 });
-  m_bgSprite->setContentSize(m_size);
-  m_bgSprite->setPosition(m_size / 2);
-	m_bgSprite->setOpacity(128);
-	this->addChild(m_bgSprite);
-
-	cocos2d::CCLabelBMFont* m_title = cocos2d::CCLabelBMFont::create("DeathMarkers Control Panel", "goldFont.fnt");
-	m_title->setAnchorPoint(CCPoint(0.f, 0.5f));
-	m_title->setScale((m_size.width - 20) / m_title->getContentWidth());
-	m_title->setPosition(5, m_size.height + 2.78f);
-	this->addChild(m_title);
-  //this->setKeypadEnabled(false);
-  //this->setTouchEnabled(false);
-
-	//this->m_editor = static_cast<DMEditorLayer*>(LevelEditorLayer::get());
-  // put stuff in
-
-  return true;
-}
-
-
-DMControlPanel* DMControlPanel::create() {
-	//if (instance) return instance;
-  auto ret = new DMControlPanel();
-  auto winSize = cocos2d::CCDirector::get()->getWinSize();
-  if (ret->setup(winSize.width - 230, winSize.height - 130)) {
-      //ret->autorelease();
-      //return instance = ret;
-      return ret;
-  }
-
-  delete ret;
-  return nullptr;
 }
 
 

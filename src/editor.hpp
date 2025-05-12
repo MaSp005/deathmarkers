@@ -6,10 +6,10 @@
 #include <vector>
 #include "shared.hpp"
 #include "cluster.hpp"
+#include "panel.hpp"
 
 using namespace dm;
 constexpr auto BUTTON_ID = "load-button"_spr;
-constexpr auto PANEL_ID = "panel"_spr;
 
 #include <Geode/modify/LevelEditorLayer.hpp>
 class DMEditorLayerDummy; struct DMEditorLayer : geode::Modify<DMEditorLayer, LevelEditorLayer> {
@@ -20,6 +20,7 @@ class DMEditorLayerDummy; struct DMEditorLayer : geode::Modify<DMEditorLayer, Le
 		CCNode* m_stackNode = nullptr;
 		CCNode* m_dmNode = nullptr;
 		CCNodeRGBA* m_darkNode = nullptr;
+		DMControlPanel* m_panel = nullptr;
 
 		vector<DeathLocation> m_deaths;
 
@@ -43,22 +44,6 @@ class DMEditorLayerDummy; struct DMEditorLayer : geode::Modify<DMEditorLayer, Le
 
 };
 
-
-class DMControlPanel : public CCLayer {
-
-//private:
-	//static DMControlPanel* instance;
-
-protected:
-	DMEditorLayer* m_editor = nullptr;
-	CCSize m_size;
-	cocos2d::extension::CCScale9Sprite* m_bgSprite = nullptr;
-	bool setup(float anchorX, float anchorY, const char* bg);
-
-public:
-	static DMControlPanel* create();
-	
-};
 
 #include <Geode/modify/EditorPauseLayer.hpp>
 class $modify(DMEditorPauseLayer, EditorPauseLayer) {
