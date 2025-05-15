@@ -93,7 +93,7 @@ void DMControlPanel::drawPartialCircle(CCPoint const& center,
   }
 }
 
-void DMControlPanel::drawPieGraph(vector<struct pieSlice> slices) {
+void DMControlPanel::drawPieGraph(vector<struct dataSlice> slices) {
 
   auto center = CCPoint(m_size.height / 2, m_size.height / 2);
   float radius = center.x * 0.8f;
@@ -128,5 +128,35 @@ void DMControlPanel::drawPieGraph(vector<struct pieSlice> slices) {
     );
     log::debug("{} -> {} ({} / {}) {}", lastAngle, endAngle, slice.quantity, total, slice.color);
     lastAngle = endAngle;
+  }
+}
+
+void DMControlPanel::drawBarGraph(vector<struct dataSlice> slices, float y = 30.f, float height = 20.f) {
+
+  float width = this->m_size.width * 0.8f;
+
+  float total = 0.f;
+  for (auto slice = slices.begin(); slice < slices.end(); slice++) {
+    if (slice->quantity <= 0) {
+      slices.erase(slice);
+      slice--;
+      continue;
+    }
+    total += slice->quantity;
+  }
+  if (!total) return;
+
+  float left = this->m_size.width * 0.1f;
+
+  for (auto& slice : slices) {
+    float sliceWidth = slice.quantity / total * width;
+    this->m_drawNode->drawRect(
+      CCRect {
+        left, y,
+        sliceWidth, height
+      },
+      slice.color, 0.f, slice.color
+    );
+    left += sliceWidth;
   }
 }

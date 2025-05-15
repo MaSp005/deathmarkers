@@ -4,7 +4,7 @@
 
 constexpr auto PANEL_ID = "panel"_spr;
 
-struct pieSlice {
+struct dataSlice {
 	float quantity;
 	ccColor4F color;
 	std::string label;
@@ -34,8 +34,8 @@ public:
 
 	void clear();
 	void drawPieGraph(
-		vector<struct pieSlice> slices
+		vector<struct dataSlice> slices
 	);
-
+	void drawBarGraph(vector<struct dataSlice> slices, float y = 30.f, float height = 20.f);
 	
 };
