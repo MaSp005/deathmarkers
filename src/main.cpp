@@ -109,6 +109,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 						this->m_fields->m_deaths.begin(),
 						this->m_fields->m_deaths.end()
 					);
+					this->renderHistogram();
 				}
 
 				this->checkQueue();
