@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This document only concerns the changelog of the **Mod**, not the server.
 
+## [Unreleased]
+
+### Added
+
+- Ability to hide practice mode deaths ([#5](https://github.com/MaSp005/deathmarkers/issues/5))
+
 ## [1.2.1] - 2025-05-04
 
 ### Changed
