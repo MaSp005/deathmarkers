@@ -184,6 +184,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 		req.param("levelid", this->m_fields->m_levelProps.levelId);
 		req.param("platformer", this->m_fields->m_levelProps.platformer ? "true" : "false");
+		req.param("practice", Mod::get()->getSettingValue<bool>("normal-only") ? "false" : "true");
 		req.param("response", "bin");
 		req.userAgent(HTTP_AGENT);
 		req.timeout(HTTP_TIMEOUT);
@@ -530,7 +531,8 @@ class $modify(DMPlayerObject, PlayerObject) {
 			playLayer->getCurrentPercentInt() >= playLayer->m_level->m_normalPercent.value() ||
 			playLayer->m_level->m_normalPercent.value() == 100
 		);
-		auto render = shouldDraw(playLayer->m_fields->m_levelProps) && (!Mod::get()->getSettingValue<bool>("newbest-only") || newBest);
+		auto render = shouldDraw(playLayer->m_fields->m_levelProps) &&
+			(!Mod::get()->getSettingValue<bool>("newbest-only") || newBest);
 
 		// Render Death Markers
 		if (render) {
@@ -551,7 +553,9 @@ class $modify(DMPlayerObject, PlayerObject) {
 
 		// Add own death to current level's list
 		// after rendering because the current death's CCNode is being rendered separately
-		playLayer->m_fields->m_deaths.push_back(deathLoc);
+		if (!Mod::get()->getSettingValue<bool>("normal-only")
+			|| !playLayer->m_fields->m_levelProps.platformer)
+			playLayer->m_fields->m_deaths.push_back(deathLoc);
 
 		if (render) playLayer->renderHistogram();
 

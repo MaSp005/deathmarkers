@@ -33,6 +33,12 @@
 			"description": "Store your deaths locally and only load them instead of the online collection. <cr>The mod does not store deaths locally if this is disabled.</c> This does not affect whether your deaths are submitted to the server.",
 			"default": false
 		},
+		"normal-only": {
+			"type": "bool",
+			"name": "Show only Normal Mode deaths",
+			"description": "When rendering, disregards other's deaths that occurred in practice mode. <co>When using local deaths, this also does not store your deaths if you play in practice mode.</c>",
+			"default": false
+		},
 		"title-conditions": {
 			"type": "title",
 			"name": "Rendering conditions"
