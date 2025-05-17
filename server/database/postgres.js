@@ -16,14 +16,13 @@ try {
 
 module.exports = {
 
-  list: async (levelId, isPlatformer) => {
+  list: async (levelId, isPlatformer, inclPractice) => {
 
     let columns = isPlatformer ? "x,y" : "x,y,percentage";
-    let query = isPlatformer ?
-      `SELECT ${columns} FROM format1 WHERE levelid = $1 UNION
-    SELECT ${columns} FROM format2 WHERE levelid = $1` :
-      `SELECT ${columns} FROM format1 WHERE levelid = $1 AND percentage < 101 UNION
-    SELECT ${columns} FROM format2 WHERE levelid = $1 AND percentage < 101;`;
+    let where = "WHERE levelid = $1"
+      + (isPlatformer ? " AND percentage < 101" : "");
+    let query = `SELECT ${columns} FROM format1 ${where}${inclPractice ? "" : " AND practice = false"} ` +
+      `UNION SELECT ${columns} FROM format2 ${where}${inclPractice ? "" : " AND practice = false"};`;
 
     return {
       deaths: (await db.query({

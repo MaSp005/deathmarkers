@@ -11,7 +11,8 @@ const {
 const BUFFER_SIZE = 500; // # of deaths to push at once
 const BINARY_VERSION = 1; // Incremental
 const alphabet = "ABCDEFGHIJOKLMNOPQRSTUVWXYZabcdefghijoklmnopqrstuvwxyz0123456789";
-const random = l => new Array(l).fill(0).map(_ => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+const random = l => new Array(l).fill(0)
+  .map(_ => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
 
 const benchmark = (() => {
   if (!process.argv.includes("-b")) return () => { };
@@ -44,7 +45,10 @@ fs.readdirSync("./pages").forEach(fn => {
   guideHtml[fn.replace(".md", "")] = renderGuide(fn);
 });
 const robots = fs.readFileSync("./robots.txt", "utf8");
-const excluded = fs.readFileSync("exclude", "utf8").split("\n").map(x => x.trim()).filter(x => /\d+/.test(x)).map(x => parseInt(x));
+const excluded = fs.readFileSync("exclude", "utf8")
+  .split("\n").map(x => x.trim())
+  .filter(x => /\d+/.test(x))
+  .map(x => parseInt(x));
 
 function csvStream(array, columns, map = r => r) {
   return new Readable({
@@ -158,15 +162,17 @@ function createUserIdent(userid, username, levelid) {
 app.get("/list", async (req, res) => {
   if (!req.query.levelid) return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid)) return res.sendStatus(418);
-  if (req.query.platformer != "true" && req.query.platformer != "false") return res.sendStatus(400);
+  if (req.query.platformer != "true" && req.query.platformer != "false")
+    return res.sendStatus(400);
   let levelId = parseInt(req.query.levelid);
   let isPlatformer = req.query.platformer == "true";
+  let inclPractice = req.query.practice != "false";
 
   let accept = req.query.response || "csv";
   if (accept != "csv" && accept != "bin") return res.sendStatus(400);
 
   benchmark("query");
-  let { deaths, columns } = await db.list(levelId, isPlatformer);
+  let { deaths, columns } = await db.list(levelId, isPlatformer, inclPractice);
   benchmark();
 
   res.contentType(accept == "csv" ? "text/csv" : "application/octet-stream");
@@ -221,7 +227,8 @@ app.all("/submit", expr.text({
 
     if (typeof req.body.levelid != "number")
       return res.status(400).send("levelid was not supplied or not numerical");
-    if (excluded.includes(req.body.levelid)) return res.sendStatus(204); // Silently skip everything else
+    // Silently skip ignored levels
+    if (excluded.includes(req.body.levelid)) return res.sendStatus(204);
 
     if (typeof req.body.levelversion != "number") req.body.levelversion = 0;
 
@@ -235,7 +242,8 @@ app.all("/submit", expr.text({
         req.body.playername, req.body.levelid);
     } else {
       if (!/^[0-9a-f]{40}$/i.test(req.body.userident))
-        return res.status(400).send("userident has incorrect length or illegal characters (should be 40 hex characters)");
+        return res.status(400).send("userident has incorrect length or illegal characters " +
+          "(should be 40 hex characters)");
     }
 
     if (typeof req.body.percentage != "number")
@@ -269,7 +277,8 @@ app.all("/submit", expr.text({
     res.sendStatus(204);
   } catch (e) {
     console.warn(e);
-    return res.status(500).send("Error writing to the database. May be due to wrongly formatted input. Try again.");
+    return res.status(500).send("Error writing to the database. May be due to wrongly " +
+      "formatted input. Try again.");
   }
   benchmark();
 });
