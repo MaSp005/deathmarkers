@@ -141,7 +141,6 @@ function renderGuide(fn) {
 
   let env = {};
   let html = md.render(markdown, env);
-  console.log(markdown, env.frontmatter);
   html = outline.replace("~~~", html);
   html = html.replace("<?>TITLE", env.frontmatter.title ?? "DeathMarkers Creator Guide");
   html = html.replace("<?>DESC", env.frontmatter.description ?? "");

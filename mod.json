@@ -141,6 +141,12 @@
 	"dependencies": {
 		"geode.node-ids": ">=1.13.0"
 	},
+	"incompatibilities": {
+		"adam_729.deathmarkers": {
+			"version": "*",
+			"importance": "superseded"
+		}
+	},
 	"tags": [
 		"online",
 		"utility",
