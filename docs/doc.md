@@ -90,6 +90,7 @@ Every request and response body is in the format **JSON** (MIME-Type `applicatio
 Parameter(s):
 - `levelid`: The ID of the level requested.
 - `platformer` (boolean): If `false`, ignores entries with percentage > 100. See [§ Table DEATHS](#table-format1).
+- Optional: `practice` (boolean): If `false`, ignores deaths that occurred in practice mode (default `true`)
 - Optional: `response`: responds using specified data format, One of: `csv` (default), [`bin`](#binary-transmission)
 
 Delivers (`text/csv`):
