@@ -1,14 +1,20 @@
 # Example requests for the API
 # You can use an extension like REST Client to run these directly in VSCode
 
-# Bloodbath example
+# Bloodbath list example
 GET http://localhost:8048/list?levelid=10565740&platformer=false&response=csv HTTP/1.1
 
 ###
+# Bloodbath list example (excl. practice)
+GET http://localhost:8048/list?levelid=10565740&platformer=false&response=csv&practice=false HTTP/1.1
+
+###
+# Bloodbath analysis example
 
 GET http://localhost:8048/analysis?levelid=10565740&response=csv HTTP/1.1
 
 ###
+# Bloodbath submission example (normal)
 
 POST http://localhost:8048/submit HTTP/1.1
 content-type: application/json
@@ -26,8 +32,26 @@ content-type: application/json
 }
 
 ###
+# Bloodbath submission example (practice)
 
+POST http://localhost:8048/submit HTTP/1.1
+content-type: application/json
+
+{
+    "format": 1,
+    "levelid": 10565740,
+    "levelversion": 0,
+    "practice": true,
+    "playername": "RobTop",
+    "userid": 16,
+    "x": 13454.12812,
+    "y": 423.55915,
+    "percentage": 56
+}
+
+###
 # Excluded Level example
+
 GET http://localhost:8048/list?levelid=69069068&platformer=false&response=csv HTTP/1.1
 
 ###
