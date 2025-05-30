@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This document only concerns the changelog of the **Mod**, not the server.
 
+## [1.3.2] - 2025-05-30
+
+### Changed
+
+- Changed the title of the spam notice to include the mod's name to prevent confusion ([#7](https://github.com/MaSp005/deathmarkers/pull/7))
+
 ## [1.3.1] - 2025-05-25
 
 ### Changed
