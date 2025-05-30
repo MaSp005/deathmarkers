@@ -478,7 +478,7 @@ limited, but for your safety, the death backlog has been forcefully emptied.";
 		content += "\n\nIf you are using a VPN, you may be rate limited because you \
 share an IP with others. I strongly advise you to turn it off.";
 		MDPopup::create(
-			"Spam Warning",
+			"Death Markers Spam Notice",
 			content,
 			"Dismiss"
 		)->show();
