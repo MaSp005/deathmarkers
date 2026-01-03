@@ -15,11 +15,12 @@
   },
   "dependencies": {
     "@mdit-vue/plugin-frontmatter": "^3.0.2",
-    "express": "^5.1.0",
-    "express-rate-limit": "^8.1.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
     "markdown-it": "^14.1.0",
     "markdown-it-named-headings": "^1.1.0",
-    "pg-format": "^1.0.4"
+    "pg-format": "^1.0.4",
+    "qs": "^6.14.1"
   },
   "optionalDependencies": {
     "pg": "^8.16.3",
