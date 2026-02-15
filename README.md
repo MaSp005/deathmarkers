@@ -1,10 +1,11 @@
-<p align="center"><img src="./logo.png" width=120></p>
+<p align="center"><img src="./logo.png" width="120" alt="Logo"></p>
 <h1 align="center">DeathMarkers</h1>
 <div align="center">
   
 **Online death collection**, not only for fun Mario Maker-style Death Markers, but also for in-depth analysis of gameplay.
 
 ### » [View Guide](https://deathmarkers.masp005.dev) ⫶ [Install on Geode](https://geode-sdk.org/mods/freakyrobot.deathmarkers) ⫶ [Join the Discord](https://discord.gg/hzDFNaNgCf) «
+
 </div>
 
 ---
@@ -21,10 +22,11 @@ DeathMarkers is installed through [Geode](https://geode-sdk.org/), the mod can b
 - **Track your deaths** in great detail for practice
 
 **Planned Features:**
+
 - Built-in analysis **helper tools**
 - (minimal) Player path tracing
 
-<img src="./previews/preview-1.png" width="800" alt="">
+<img src="./previews/preview-1.png" width="800" alt="Preview image, showing death markers on the third coin route of Stereo Madness">
 
 ## User identification
 

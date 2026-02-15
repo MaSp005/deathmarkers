@@ -14,7 +14,7 @@ constexpr auto BUTTON_ID = "load-button"_spr;
 class $modify(DMEditorLayer, LevelEditorLayer) {
 
 	struct Fields {
-		EventListener<web::WebTask> m_listener;
+		async::TaskHolder<WebResponse> m_listener;
 
 		CCNode* m_stackNode = nullptr;
 		CCNode* m_dmNode = nullptr;
@@ -56,38 +56,22 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 			menuEl->setEnabled(false);
 		}
 
-		// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
-		m_fields->m_listener.bind(
-			[this](web::WebTask::Event* const e) {
-				auto res = e->getValue();
-				if (res) {
-					if (!res->ok()) {
-						log::error("Listing Deaths failed: {}", res->string()
-							.unwrapOr("Body could not be read."));
+		// Build the HTTP Request
+		web::WebRequest req = web::WebRequest();
 
-						FLAlertLayer::create(
-							"DeathMarkers",
-							"Deaths could not be fetched. Please try again later.",
-							"OK"
-						)->show();
-						this->m_fields->m_enabled = false;
-						this->m_fields->m_loaded = false;
-						if (auto button = this->getChildByIDRecursive(BUTTON_ID)) {
-							auto menuEl = static_cast<CCMenuItemSprite*>(button);
-							menuEl->setEnabled(true);
-							menuEl->unselected();
-						}
-					}
-					else {
-						log::debug("Received death list.");
-						parseBinDeathList(res, &this->m_fields->m_deaths);
-						log::debug("Finished parsing.");
-						analyzeData();
-						startUI();
-					}
-				}
-				else if (e->isCancelled()) {
-					log::error("Death Listing Request was cancelled.");
+		req.param("levelid", levelId);
+		req.param("response", "bin");
+		req.userAgent(HTTP_AGENT);
+		req.timeout(HTTP_TIMEOUT);
+
+		this->m_fields->m_listener.spawn(
+			req.get(dm::makeRequestURL("analysis")),
+
+			// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
+			[this](WebResponse res) {
+				if (!res.ok()) {
+					log::error("Listing Deaths failed: {}", res.string()
+						.unwrapOr("Body could not be read."));
 
 					FLAlertLayer::create(
 						"DeathMarkers",
@@ -101,19 +85,16 @@ class $modify(DMEditorLayer, LevelEditorLayer) {
 						menuEl->setEnabled(true);
 						menuEl->unselected();
 					}
-				};
+				}
+				else {
+					log::debug("Received death list.");
+					parseBinDeathList(res, &this->m_fields->m_deaths);
+					log::debug("Finished parsing.");
+					analyzeData();
+					startUI();
+				}
 			}
 		);
-
-		// Build the HTTP Request
-		web::WebRequest req = web::WebRequest();
-
-		req.param("levelid", levelId);
-		req.param("response", "bin");
-		req.userAgent(HTTP_AGENT);
-		req.timeout(HTTP_TIMEOUT);
-
-		this->m_fields->m_listener.setFilter(req.get(dm::makeRequestURL("analysis")));
 
 	}
 

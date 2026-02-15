@@ -4,58 +4,44 @@
 Submitter::Submitter(web::WebRequest request) {
 	request.timeout(dm::HTTP_TIMEOUT);
   this->request = request;
-
-	this->listener.bind(
-		[this](web::WebTask::Event* e) {
-			this->event(e);
-		}
-	);
 }
 
 Submitter::~Submitter() {}
 
-void Submitter::event(web::WebTask::Event* e) {
-	auto res = e->getValue();
-	if (res) {
-		if (res->ok()) {
-			log::debug("Posted Deaths.");
-			drop();
-			return;
-		}
-
-		int code = res->code();
-		auto body = res->string().unwrapOr("Unknown");
-
-		log::error("Posting Deaths failed: {} {}", code, body);
-
-		if (code == 429) {
-			auto timeoutHeader = res->header("Retry-After");
-			auto timeout = timeoutHeader.has_value() ?
-				std::chrono::seconds(atoi(timeoutHeader->c_str())) :
-				RETRY_TIMEOUT;
-
-			log::debug("Hit rate limit, using Retry-After header...");
-			std::thread([this, timeout]() {
-				std::this_thread::sleep_for(timeout);
-				this->submit();
-			}).detach();
-
-		} else if (code >= 400 && code < 500) {
-			log::warn("Dropping submission due to 4xx error response.");
-			drop();
-
-		} else if (code >= 500 && code < 600 || code < 0) { // whatever 6xx responses mean
-			log::debug("Waiting to retry...");
-			std::thread([this]() {
-				std::this_thread::sleep_for(RETRY_TIMEOUT);
-				this->submit();
-			}).detach();
-		}
+void Submitter::event(WebResponse res) {
+	if (res.ok()) {
+		log::debug("Posted Deaths.");
+		drop();
+		return;
 	}
-	else if (e->isCancelled()) {
-		log::error("Posting Death was cancelled. I DONT KNOW WHAT HAPPENED IM JUST GONNA DO NOTHING AND PRAY");
-		// idk when this happens, at least sometimes when the listener gets destroyed?
-		// in that case we dont want to "delete this;" again.
+
+	int code = res.code();
+	auto body = res.string().unwrapOr("Unknown");
+
+	log::error("Posting Deaths failed: {} {}", code, body);
+
+	if (code == 429) {
+		auto timeoutHeader = res.header("Retry-After");
+		auto timeout = timeoutHeader.has_value() ?
+			std::chrono::seconds(atoi(timeoutHeader->c_str())) :
+			RETRY_TIMEOUT;
+
+		log::debug("Hit rate limit, using Retry-After header...");
+		std::thread([this, timeout]() {
+			std::this_thread::sleep_for(timeout);
+			this->submit();
+		}).detach();
+
+	} else if (code >= 400 && code < 500) {
+		log::warn("Dropping submission due to 4xx error response.");
+		drop();
+
+	} else if (code >= 500 && code < 600 || code < 0) { // whatever 6xx responses mean
+		log::debug("Waiting to retry...");
+		std::thread([this]() {
+			std::this_thread::sleep_for(RETRY_TIMEOUT);
+			this->submit();
+		}).detach();
 	}
 }
 
@@ -71,7 +57,12 @@ void Submitter::submit() {
 		return;
 	}
 	retries++;
-	this->listener.setFilter(this->request.get(dm::makeRequestURL("submit")));
+	this->listener.spawn(
+		this->request.get(dm::makeRequestURL("submit")),
+		[this](WebResponse e) {
+			this->event(e);
+		}
+	);
 }
 
 

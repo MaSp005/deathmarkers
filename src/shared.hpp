@@ -5,6 +5,7 @@
 
 using namespace geode::prelude;
 using namespace std;
+using geode::utils::web::WebResponse;
 
 namespace dm {
 
@@ -142,9 +143,9 @@ namespace dm {
 	void storeLocalDeaths(int levelId,
 		vector<unique_ptr<DeathLocationMin>> const& deaths, bool hasPercentage);
 
-	void parseBinDeathList(web::WebResponse* res,
+	void parseBinDeathList(WebResponse res,
 		vector<unique_ptr<DeathLocationMin>>* target, bool hasPercentage);
-	void parseBinDeathList(web::WebResponse* res,
+	void parseBinDeathList(WebResponse res,
 		vector<DeathLocation>* target);
 
 	vector<std::string> split(const std::string& string, const char at);
@@ -162,15 +163,15 @@ namespace dm {
 }
 
 // for whatever fucking reason, listenForClose is protected, so this is a bypass class
-class PopupBypass : public geode::Popup<geode::Mod*> {
+class PopupBypass : public geode::Popup {
 public:
-	// PopupBypass() : geode::Popup<geode::Mod*>() {};
+	// PopupBypass() : geode::Popup() {};
 
-	static geode::Popup<geode::Mod*>::CloseEventFilter listenForCloseOn(geode::Popup<geode::Mod*>* popup) {
+	static geode::Popup::CloseEvent listenForCloseOn(geode::Popup* popup) {
 		return static_cast<PopupBypass*>(popup)->listenForCloseBypass();
 	};
 
-	geode::Popup<geode::Mod*>::CloseEventFilter listenForCloseBypass() {
+	geode::Popup::CloseEvent listenForCloseBypass() {
 		return this->listenForClose();
 	}
 };

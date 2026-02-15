@@ -35,7 +35,7 @@ class $modify(DMPlayLayer, PlayLayer) {
 
 	struct Fields {
 		// WebRequest response listener for death listing
-		EventListener<web::WebTask> m_listener;
+		async::TaskHolder<WebResponse> m_listener;
 
 		// Node holding all marker nodes
 		CCNode* m_dmNode = CCNode::create();
@@ -154,36 +154,6 @@ class $modify(DMPlayLayer, PlayLayer) {
 			return cb(true);
 		}
 
-		// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
-		this->m_fields->m_listener.bind(
-			[this, cb](web::WebTask::Event* const e) {
-				auto res = e->getValue();
-				if (res) {
-					if (!res->ok()) {
-						log::error("Listing Deaths failed: {}",
-								   res->string().unwrapOr("Body could not be read."));
-						cb(false);
-					} else {
-						log::debug("Received death list.");
-						parseBinDeathList(res, &this->m_fields->m_deaths, !this->m_fields->m_levelProps.platformer);
-						sort(
-							this->m_fields->m_deaths.begin(),
-							this->m_fields->m_deaths.end(),
-							LocationComparerPtr{}
-						);
-						log::debug("Finished parsing.");
-						this->m_fields->m_fetched = true;
-
-						cb(true);
-					}
-				}
-				else if (e->isCancelled()) {
-					log::error("Death Listing Request was cancelled.");
-					cb(false);
-				};
-			}
-		);
-
 		// Build the HTTP Request
 		web::WebRequest req = web::WebRequest();
 
@@ -194,7 +164,30 @@ class $modify(DMPlayLayer, PlayLayer) {
 		req.userAgent(HTTP_AGENT);
 		req.timeout(HTTP_TIMEOUT);
 
-		this->m_fields->m_listener.setFilter(req.get(dm::makeRequestURL("list")));
+		this->m_fields->m_listener.spawn(
+			req.get(dm::makeRequestURL("list")),
+			
+			// Parse result JSON and add all as DeathLocationMin instances to playingLevel.deaths
+			[this, cb](WebResponse res) {
+				if (!res.ok()) {
+					log::error("Listing Deaths failed: {}",
+									res.string().unwrapOr("Body could not be read."));
+					cb(false);
+				} else {
+					log::debug("Received death list.");
+					parseBinDeathList(res, &this->m_fields->m_deaths, !this->m_fields->m_levelProps.platformer);
+					sort(
+						this->m_fields->m_deaths.begin(),
+						this->m_fields->m_deaths.end(),
+						LocationComparerPtr{}
+					);
+					log::debug("Finished parsing.");
+					this->m_fields->m_fetched = true;
+
+					cb(true);
+				}
+			}
+		);
 
 	}
 
@@ -618,10 +611,8 @@ class $modify(DMPlayerObject, PlayerObject) {
 #include <Geode/modify/PauseLayer.hpp>
 class $modify(DMPauseLayer, PauseLayer) {
 
-	using CloseEventListener = EventListener<geode::Popup<geode::Mod*>::CloseEventFilter>;
-
 	struct Fields {
-		std::unique_ptr<CloseEventListener> m_listener;
+		geode::comm::ListenerHandle m_listener;
 	};
 
   void customSetup() override {
@@ -640,49 +631,47 @@ class $modify(DMPauseLayer, PauseLayer) {
 				sprite, [this](CCNode*){
 					auto popup = geode::openSettingsPopup(Mod::get(), true);
 
-					this->m_fields->m_listener =
-						std::make_unique<CloseEventListener>(CloseEventListener{
-							PopupBypass::listenForCloseOn(popup)
-						});
+					this->m_fields->m_listener = geode::Popup::CloseEvent(PopupBypass::listenForCloseOn(popup)).listen(
+						[](){
+							log::debug("Hello yes i am here"); // TODO remove
+							auto mod = Mod::get();
 
-					this->m_fields->m_listener->bind([](geode::Popup<geode::Mod*>::CloseEvent* e) {
-						auto mod = Mod::get();
+							auto playLayer = static_cast<DMPlayLayer*>(PlayLayer::get());
+							if (!playLayer->m_fields->m_willEverDraw) return;
 
-						auto playLayer = static_cast<DMPlayLayer*>(PlayLayer::get());
-						if (!playLayer->m_fields->m_willEverDraw) return;
+							auto storeLocalStr = mod->getSettingValue<std::string>("store-local-2");
+							auto useLocal = storeLocalStr == "Always" ? true : storeLocalStr == "Never" ? false :
+								playLayer->m_level->m_stars >= 10;
+							auto normalOnly = mod->getSettingValue<bool>("normal-only");
+							GhostLocation::shouldUse = mod->getSettingValue<bool>("use-ghost-cube");
 
-						auto storeLocalStr = mod->getSettingValue<std::string>("store-local-2");
-						auto useLocal = storeLocalStr == "Always" ? true : storeLocalStr == "Never" ? false :
-							playLayer->m_level->m_stars >= 10;
-						auto normalOnly = mod->getSettingValue<bool>("normal-only");
-						GhostLocation::shouldUse = mod->getSettingValue<bool>("use-ghost-cube");
+							playLayer->checkDraw(PAUSE);
 
-						playLayer->checkDraw(PAUSE);
+							bool useLocalChanged = playLayer->m_fields->m_useLocal != useLocal;
+							bool normalOnlyChanged = playLayer->m_fields->m_normalOnly != normalOnly;
+							if (!useLocalChanged && !normalOnlyChanged) return;
 
-						bool useLocalChanged = playLayer->m_fields->m_useLocal != useLocal;
-						bool normalOnlyChanged = playLayer->m_fields->m_normalOnly != normalOnly;
-						if (!useLocalChanged && !normalOnlyChanged) return;
+							std::string message = "<co>";
+							if (useLocalChanged) message += "\"Use Local Deats\"";
+							if (useLocalChanged && normalOnlyChanged) message += " and ";
+							if (normalOnlyChanged) message += "\"Normal Mode Deaths only\"";
+							message += (useLocalChanged && normalOnlyChanged) ? " have" : " has";
+							message += " changed.</c>\nFor this change to take effect, you need "
+								"to <cl>quit and rejoin the level</c>.";
+							if (useLocalChanged) message +=
+								std::string("\nCurrently, you ") +
+									(playLayer->m_fields->m_useLocal ? "<cj>are</c>" : "are <cr>not</c>")
+									+ " using local deaths.";
+							if (normalOnlyChanged) message +=
+								std::string("\nCurrently, you ") +
+									(playLayer->m_fields->m_normalOnly ? "<cj>only see normal mode</c>" : "see <cj>all</c>")
+									+ " deaths.";
 
-						std::string message = "<co>";
-						if (useLocalChanged) message += "\"Use Local Deats\"";
-						if (useLocalChanged && normalOnlyChanged) message += " and ";
-						if (normalOnlyChanged) message += "\"Normal Mode Deaths only\"";
-						message += (useLocalChanged && normalOnlyChanged) ? " have" : " has";
-						message += " changed.</c>\nFor this change to take effect, you need "
-							"to <cl>quit and rejoin the level</c>.";
-						if (useLocalChanged) message +=
-							std::string("\nCurrently, you ") +
-								(playLayer->m_fields->m_useLocal ? "<cj>are</c>" : "are <cr>not</c>")
-								+ " using local deaths.";
-						if (normalOnlyChanged) message +=
-							std::string("\nCurrently, you ") +
-								(playLayer->m_fields->m_normalOnly ? "<cj>only see normal mode</c>" : "see <cj>all</c>")
-								+ " deaths.";
-
-						FLAlertLayer::create(
-							"Settings changed", message, "OK"
-						)->show();
-					});
+							FLAlertLayer::create(
+								"Settings changed", message, "OK"
+							)->show();
+						}
+					);
 				}
 			);
 

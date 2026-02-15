@@ -469,10 +469,10 @@ void dm::storeLocalDeaths(int levelId,
 };
 
 
-void dm::parseBinDeathList(web::WebResponse* res,
+void dm::parseBinDeathList(WebResponse res,
 	vector<unique_ptr<DeathLocationMin>>* target, bool hasPercentage) {
 
-	auto const body = res->data();
+	auto const body = res.data();
 	int const elementWidth = 4 + 4 + (hasPercentage ? 2 : 0);
 	if (body.size() <= elementWidth) return;
 	uint8_t version = body[0];
@@ -515,10 +515,10 @@ void dm::parseBinDeathList(web::WebResponse* res,
 
 }
 
-void dm::parseBinDeathList(web::WebResponse* res,
+void dm::parseBinDeathList(WebResponse res,
 	vector<DeathLocation>* target) {
 
-	auto const body = res->data();
+	auto const body = res.data();
 	int const elementWidth = 20 + 1 + 1 + 4 + 4 + 2;
 	if (body.size() <= elementWidth) return;
 	uint8_t version = body[0];

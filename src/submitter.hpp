@@ -16,9 +16,9 @@ class Submitter {
 private:  
 	int retries = 0;
   web::WebRequest request;
-  EventListener<web::WebTask> listener;
+  async::TaskHolder<WebResponse> listener;
 
-	void event(web::WebTask::Event* e);
+	void event(WebResponse e);
   void drop();
 
 public:

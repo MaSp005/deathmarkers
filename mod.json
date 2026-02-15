@@ -1,14 +1,14 @@
 {
-	"geode": "4.9.0",
+	"geode": "5.0.0-beta.2",
 	"gd": {
-		"win": "2.2074",
-		"android": "2.2074",
-		"mac": "2.2074",
-		"ios": "2.2074"
+		"win": "2.2081",
+		"android": "2.2081",
+		"mac": "2.2081",
+		"ios": "2.2081"
 	},
 	"id": "freakyrobot.deathmarkers",
 	"name": "DeathMarkers",
-	"version": "v1.5.3",
+	"version": "v1.5.4",
 	"developer": "FreakyRobot",
 	"description": "Online death collection for creators and players",
 	"links": {
@@ -176,7 +176,7 @@
 		]
 	},
 	"dependencies": {
-		"geode.node-ids": ">=1.13.0"
+		"geode.node-ids": ">=1.22.0"
 	},
 	"incompatibilities": {
 		"adam_729.deathmarkers": {
