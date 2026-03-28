@@ -633,7 +633,6 @@ class $modify(DMPauseLayer, PauseLayer) {
 
 					this->m_fields->m_listener = geode::Popup::CloseEvent(PopupBypass::listenForCloseOn(popup)).listen(
 						[](){
-							log::debug("Hello yes i am here"); // TODO remove
 							auto mod = Mod::get();
 
 							auto playLayer = static_cast<DMPlayLayer*>(PlayLayer::get());
