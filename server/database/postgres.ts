@@ -7,14 +7,18 @@ const {
   DATABASE_NAME,
   DATABASE_USER,
   DATABASE_PASSWORD,
+  DATABASE_CONNECTION_STRING,
 } = process.env;
 
-if (!DATABASE_HOST || !DATABASE_NAME || !DATABASE_USER || !DATABASE_PASSWORD) {
+if ((!DATABASE_HOST || !DATABASE_NAME || !DATABASE_USER || !DATABASE_PASSWORD) && !DATABASE_CONNECTION_STRING) {
   console.error("Database connection data not declared in environment");
+  console.log("Add either DATABASE_CONNECTION_STRING or DATABASE_{HOST,NAME,USER,PASSWORD} to the environment.");
   process.exit(1);
 }
 
-const db = new Pool({
+const db = new Pool(DATABASE_CONNECTION_STRING ? {
+  connectionString: DATABASE_CONNECTION_STRING
+} : {
   user: DATABASE_USER,
   database: DATABASE_NAME,
   password: DATABASE_PASSWORD,

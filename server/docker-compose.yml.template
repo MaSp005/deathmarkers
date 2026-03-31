@@ -9,10 +9,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_DRIVER: "postgres"
-      DATABASE_HOST: "postgres"
-      DATABASE_NAME: "deathmarkers"
-      DATABASE_USER: "server"
-      DATABASE_PASSWORD: "example"
+      DATABASE_CONNECTION_STRING: "postgres://server:example@postgres/deathmarkers"
       RATELIMIT_WINDOW: 10000
       RATELIMIT_LIMIT: 3
 
