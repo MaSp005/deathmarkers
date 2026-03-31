@@ -4,8 +4,7 @@
   "description": "Server-side of the Geometry Dash Mod Deathmarkers",
   "main": "index.js",
   "scripts": {
-    "start": "node .",
-    "benchmark": "node . -b"
+    "start": "bun run ."
   },
   "author": "masp005",
   "license": "MIT",
@@ -16,14 +15,19 @@
   "dependencies": {
     "@mdit-vue/plugin-frontmatter": "^3.0.2",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.2.1",
-    "markdown-it": "^14.1.0",
-    "markdown-it-named-headings": "^1.1.0",
+    "express-rate-limit": "^8.3.2",
+    "markdown-it": "^14.1.1",
+    "markdown-it-anchor": "^9.2.0",
     "pg-format": "^1.0.4",
-    "qs": "^6.14.1"
+    "qs": "^6.15.0"
   },
   "optionalDependencies": {
-    "pg": "^8.16.3",
+    "pg": "^8.20.0",
     "terminal-kit": "^3.1.2"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.20.0",
+    "@types/pg-format": "^1.0.5",
+    "@types/express": "^5.0.6"
   }
 }

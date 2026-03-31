@@ -5,3 +5,4 @@ exclude.template
 api-tests.rest
 docker-compose.yml
 Dockerfile
+*.tar
