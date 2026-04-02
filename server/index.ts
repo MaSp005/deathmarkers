@@ -30,10 +30,6 @@ if (!DATABASE_DRIVER || !["postgres", "dummy"].includes(DATABASE_DRIVER)) {
   console.error("This driver is not supported.");
   process.exit(1);
 }
-if (!RATELIMIT_WINDOW || !RATELIMIT_LIMIT) {
-  console.error("RATELIMIT_WINDOW RATELIMIT_LIMIT .");
-  process.exit(1);
-}
 
 const db = await getDriver(DATABASE_DRIVER as Parameters<typeof getDriver>[0]);
 const app = expr();
