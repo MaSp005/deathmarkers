@@ -1,8 +1,9 @@
 node_modules
 **.db
 config.json
-exclude.template
+*.template
 api-tests.rest
 docker-compose.yml
 Dockerfile
 *.tar
+default.vcl

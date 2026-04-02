@@ -17,7 +17,8 @@ if (process.argv.includes("--help") || process.argv.includes("-h")) {
 const {
   DATABASE_DRIVER,
   RATELIMIT_WINDOW,
-  RATELIMIT_LIMIT
+  RATELIMIT_LIMIT,
+  RATELIMIT_SCOPE,
 } = process.env;
 const PORT = 8048;
 const BUFFER_SIZE = 500; // # of deaths to push at once
@@ -40,6 +41,7 @@ const md = MarkdownIt({ html: true, breaks: true })
 app.use(expr.static("front"));
 app.set('trust proxy', 1);
 
+const dummyMiddleware: RequestHandler = (_a, _b, next) => next();
 const rateLimit: RequestHandler =
   (RATELIMIT_WINDOW && RATELIMIT_LIMIT) ?
     (await import("express-rate-limit")).rateLimit({
@@ -47,7 +49,13 @@ const rateLimit: RequestHandler =
       limit: parseInt(RATELIMIT_LIMIT),
       skipFailedRequests: true
     }) :
-    (_a, _b, next) => next();
+    dummyMiddleware;
+
+const rateLimitScope = (RATELIMIT_SCOPE ?? "list,analysis,submit")
+  .split(",").map(s => s.trim());
+function rateLimitFor(path: string) {
+  return rateLimitScope.includes(path) ? rateLimit : dummyMiddleware;
+}
 
 const outline = fs.readFileSync("./outline.html", "utf8");
 const guideHtml: Record<string, string> = {};
@@ -168,7 +176,7 @@ function createUserIdent(userid: string, username: string, levelid: number) {
   return crypto.createHash("sha1").update(source).digest("hex");
 }
 
-app.get("/list", rateLimit, async (req, res) => {
+app.get("/list", rateLimitFor("list"), async (req, res) => {
   if (typeof req.query.levelid != "string")
     return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid))
@@ -191,7 +199,7 @@ app.get("/list", rateLimit, async (req, res) => {
   (accept == "csv" ? csvStream : binaryStream)(deaths, columns).pipe(res);
 });
 
-app.get("/analysis", rateLimit, async (req, res) => {
+app.get("/analysis", rateLimitFor("analysis"), async (req, res) => {
   if (typeof req.query.levelid != "string")
     return res.sendStatus(400);
   if (!/^\d+$/.test(req.query.levelid))
@@ -219,7 +227,7 @@ app.get("/analysis", rateLimit, async (req, res) => {
   (accept == "csv" ? csvStream : binaryStream)(deaths, columns, mapper).pipe(res);
 });
 
-app.all("/submit", rateLimit, expr.text({
+app.all("/submit", rateLimitFor("submit"), expr.text({
   type: _ => true
 }), async (req, res) => {
   try {

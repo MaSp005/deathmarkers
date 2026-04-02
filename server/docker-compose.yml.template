@@ -12,6 +12,21 @@ services:
       DATABASE_CONNECTION_STRING: "postgres://server:example@postgres/deathmarkers"
       RATELIMIT_WINDOW: 10000
       RATELIMIT_LIMIT: 3
+      RATELIMIT_SCOPE: "analysis,submit"
+
+  varnish:
+    image: varnish:8.0.1-alpine
+    container_name: varnish
+    volumes:
+      - "./default.vcl:/etc/varnish/default.vcl"
+    ports:
+      - "8044:80"
+    tmpfs:
+      - /var/lib/varnish/varnishd:exec
+    environment:
+      - VARNISH_SIZE=2G
+    depends_on:
+      - "deathmarkers"
 
   adminer:
     image: adminer
