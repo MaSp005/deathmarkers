@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This document only concerns the changelog of the **Mod**, not the server.
 
+## [1.5.5] - 2026-04-28
+
+### Changed
+
+- Upgrade to Geode v5.6.1
+- Changed the default Server URL to `https://deathmarkers.lol/`
+  - Automatically migrate if old one is still set
+
 ## [1.5.4] - 2026-02-16
 
 ### Changed

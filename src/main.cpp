@@ -719,7 +719,16 @@ $execute {
 
 		settingVersion = 1;
 	}
-	if (settingVersion > 1) settingVersion = 1;
+	if (settingVersion == 1) {
+		// Switch URL if still on old default
+		auto currentUrl = mod->getSettingValue<std::string>("server-url");
+		if (currentUrl == "https://deathmarkers.masp005.dev/") {
+			mod->setSettingValue<std::string>("server-url", "https://deathmarkers.lol/");
+		}
+
+		settingVersion = 2;
+	}
+	if (settingVersion > 2) settingVersion = 2;
 
 	mod->setSavedValue("setting-version", settingVersion);
 
