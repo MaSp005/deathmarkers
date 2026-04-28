@@ -4,7 +4,7 @@
   
 **Online death collection**, not only for fun Mario Maker-style Death Markers, but also for in-depth analysis of gameplay.
 
-### » [View Guide](https://deathmarkers.masp005.dev) ⫶ [Install on Geode](https://geode-sdk.org/mods/freakyrobot.deathmarkers) ⫶ [Join the Discord](https://discord.gg/hzDFNaNgCf) «
+### » [View Guide](https://deathmarkers.lol) ⫶ [Install on Geode](https://geode-sdk.org/mods/freakyrobot.deathmarkers) ⫶ [Join the Discord](https://discord.gg/hzDFNaNgCf) «
 
 [![Mod Version](https://api.geode-sdk.org/v1/mods/freakyrobot.deathmarkers/status_badge?stat=version) ![Downloads](https://api.geode-sdk.org/v1/mods/freakyrobot.deathmarkers/status_badge?stat=downloads) ![GD Version](https://api.geode-sdk.org/v1/mods/freakyrobot.deathmarkers/status_badge?stat=gd_version) ![Geode Version](https://api.geode-sdk.org/v1/mods/freakyrobot.deathmarkers/status_badge?stat=geode_version)](https://geode-sdk.org/mods/freakyrobot.deathmarkers)
 

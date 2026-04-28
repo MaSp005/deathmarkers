@@ -83,7 +83,7 @@ Everyone playing logged in will be uniquely identified. Everyone else is assumed
 
 ## API
 
-**Base URL**: `https://deathmarkers.masp005.dev/`
+**Base URL**: `https://deathmarkers.lol/`
 
 ### GET `/list`
 

@@ -14,7 +14,7 @@
 	"links": {
 		"source": "https://github.com/MaSp005/deathmarkers",
 		"community": "https://discord.gg/hzDFNaNgCf",
-		"homepage": "https://deathmarkers.masp005.dev"
+		"homepage": "https://deathmarkers.lol"
 	},
 	"issues": {
 		"info": "Issues are best reported on <cg>GitHub</c>",
@@ -167,7 +167,7 @@
 			"type": "string",
 			"name": "Server URL",
 			"description": "This controls where your deaths are requested from and sent to. <cr>You should not change this unless you know what you are doing.</c> Should end in /, but will be fixed automatically.",
-			"default": "https://deathmarkers.masp005.dev/"
+			"default": "https://deathmarkers.lol/"
 		}
 	},
 	"resources": {
