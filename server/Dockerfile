@@ -1,15 +1,8 @@
-FROM oven/bun:1-alpine AS base
-WORKDIR /usr/src/app
-
-FROM base AS install
-RUN mkdir --parents /temp/prod
-COPY package.json bun.lock /temp/prod/
-RUN cd /temp/prod && bun install --production --frozen-lockfile
-
-FROM base AS release
-COPY --from=install /temp/prod/node_modules node_modules
+FROM rust:1.97 AS builder
+WORKDIR /usr/src/server
 COPY . .
+RUN cargo install --path .
 
-USER bun
-EXPOSE 8048/tcp
-ENTRYPOINT [ "bun", "run", "start" ]
+FROM scratch
+COPY --from=builder /usr/local/cargo/bin/deathmarkers-server /bin/deathmarkers-server
+CMD ["deathmarkers-server"]

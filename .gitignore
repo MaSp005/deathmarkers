@@ -64,7 +64,7 @@ build-*/
 /cmake-build-*/
 
 # Server dir stuff
-server/node_modules
+server/target
 **.db
 config.json
 server/exclude

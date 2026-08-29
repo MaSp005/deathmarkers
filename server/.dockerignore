@@ -1,9 +1,0 @@
-node_modules
-**.db
-config.json
-*.template
-api-tests.rest
-docker-compose.yml
-Dockerfile
-*.tar
-default.vcl
