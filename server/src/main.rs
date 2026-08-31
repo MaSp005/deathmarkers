@@ -4,9 +4,13 @@ use axum::{
     http::{Response, StatusCode},
     routing::{get, post},
 };
-use std::{collections::HashMap, env};
+use std::{collections::HashMap, env, sync::Arc};
 use tokio::net::TcpListener;
 
+mod query;
+use query::*;
+mod fetch;
+use fetch::*;
 mod params;
 use params::*;
 
@@ -14,11 +18,14 @@ use params::*;
 async fn main() {
     let bind_addr = env::var("LISTEN_ADDRESS").unwrap_or(String::from("0.0.0.0:8048"));
 
+    let fetcher: Arc<dyn Fetcher + Sync + Send> = Arc::new(DatabaseFetcher::new().await);
+
     let app = Router::new()
         .route("/", get(root))
         .route("/list", get(list))
         .route("/analysis", get(analysis))
-        .route("/submit", post(submit));
+        .route("/submit", post(submit))
+        .with_state(fetcher);
 
     let listener = TcpListener::bind(bind_addr)
         .await
@@ -34,38 +41,39 @@ async fn root() -> &'static str {
 }
 
 async fn list(
+    State(fetcher): State<Arc<dyn Fetcher + Sync + Send>>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Response<String> {
-    let params = dbg!(ListParams::parse_from_query(&params));
-    if let Err(msg) = params {
-        let mut response: Response<String> = Response::default();
-        *response.status_mut() = StatusCode::BAD_REQUEST;
-        response.body_mut().push_str(msg.as_str());
-        return response;
-    }
+    match ListParams::parse_from_query(&params) {
+        Err(msg) =>build_err_response(msg),
+        Ok(params) => {
+            fetcher.fetch(params.query());
 
-    let mut response: Response<String> = Response::default();
-    *response.status_mut() = StatusCode::OK;
-    return response;
+            let mut response: Response<String> = Response::default();
+            *response.status_mut() = StatusCode::OK;
+            response
+        }
+    }
 }
 
 async fn analysis(
+    State(fetcher): State<Arc<dyn Fetcher + Sync + Send>>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Response<String> {
-    let params = dbg!(AnalysisParams::parse_from_query(&params));
-    if let Err(msg) = params {
-        let mut response: Response<String> = Response::default();
-        *response.status_mut() = StatusCode::BAD_REQUEST;
-        response.body_mut().push_str(msg.as_str());
-        return response;
-    }
+    match AnalysisParams::parse_from_query(&params) {
+        Err(msg) => build_err_response(msg),
+        Ok(params) => {
+            fetcher.fetch(params.query());
 
-    let mut response: Response<String> = Response::default();
-    *response.status_mut() = StatusCode::OK;
-    return response;
+            let mut response: Response<String> = Response::default();
+            *response.status_mut() = StatusCode::OK;
+            response
+        }
+    }
 }
 
 async fn submit(
+    State(fetcher): State<Arc<dyn Fetcher + Sync + Send>>,
     Query(params): Query<HashMap<String, String>>,
     Json(payload): Json<serde_json::Value>,
 ) -> Response<String> {
@@ -74,4 +82,11 @@ async fn submit(
     let mut response: Response<String> = Response::default();
     *response.status_mut() = StatusCode::CREATED;
     return response;
+}
+
+fn build_err_response(msg: String) -> Response<String> {
+    let mut response = Response::<String>::default();
+    *response.status_mut() = StatusCode::BAD_REQUEST;
+    response.body_mut().push_str(msg.as_str());
+    response
 }
