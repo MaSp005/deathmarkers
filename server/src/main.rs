@@ -1,5 +1,6 @@
 use axum::{
     Router,
+    body::Bytes,
     extract::{Json, Query, State},
     http::{Response, StatusCode},
     routing::{get, post},
@@ -7,12 +8,13 @@ use axum::{
 use std::{collections::HashMap, env, sync::Arc};
 use tokio::net::TcpListener;
 
-mod query;
-use query::*;
+mod data;
 mod fetch;
 use fetch::*;
 mod params;
 use params::*;
+
+use crate::data::AnalysisDeath;
 
 #[tokio::main]
 async fn main() {
@@ -43,15 +45,18 @@ async fn root() -> &'static str {
 async fn list(
     State(fetcher): State<Arc<dyn Fetcher + Sync + Send>>,
     Query(params): Query<HashMap<String, String>>,
-) -> Response<String> {
+) -> Result<Bytes, (StatusCode, String)> {
     match ListParams::parse_from_query(&params) {
-        Err(msg) =>build_err_response(msg),
+        Err(msg) => Err((StatusCode::BAD_REQUEST, msg)),
         Ok(params) => {
-            fetcher.fetch(params.query());
+            // let q = DMQuery::List(params);
+            let data = if params.platformer {
+                fetcher.fetch_list_platformer(params).await
+            } else {
+                fetcher.fetch_list(params).await
+            };
 
-            let mut response: Response<String> = Response::default();
-            *response.status_mut() = StatusCode::OK;
-            response
+            todo!()
         }
     }
 }
@@ -59,15 +64,14 @@ async fn list(
 async fn analysis(
     State(fetcher): State<Arc<dyn Fetcher + Sync + Send>>,
     Query(params): Query<HashMap<String, String>>,
-) -> Response<String> {
+) -> Result<Bytes, (StatusCode, String)> {
     match AnalysisParams::parse_from_query(&params) {
-        Err(msg) => build_err_response(msg),
+        Err(msg) => Err((StatusCode::BAD_REQUEST, msg)),
         Ok(params) => {
-            fetcher.fetch(params.query());
+            // let q = DMQuery::List(params);
+            let data = fetcher.fetch_analysis(params).await;
 
-            let mut response: Response<String> = Response::default();
-            *response.status_mut() = StatusCode::OK;
-            response
+            todo!()
         }
     }
 }
@@ -76,17 +80,15 @@ async fn submit(
     State(fetcher): State<Arc<dyn Fetcher + Sync + Send>>,
     Query(params): Query<HashMap<String, String>>,
     Json(payload): Json<serde_json::Value>,
-) -> Response<String> {
-    dbg!(payload);
-
-    let mut response: Response<String> = Response::default();
-    *response.status_mut() = StatusCode::CREATED;
-    return response;
-}
-
-fn build_err_response(msg: String) -> Response<String> {
-    let mut response = Response::<String>::default();
-    *response.status_mut() = StatusCode::BAD_REQUEST;
-    response.body_mut().push_str(msg.as_str());
-    response
+) -> Result<StatusCode, (StatusCode, &'static str)> {
+    let deaths: Vec<AnalysisDeath> = vec![];
+    let result = fetcher.submit(deaths);
+    if result.await.is_err() {
+        Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Error writing to the database. May be due to wrongly formatted input. Try again.",
+        ))
+    } else {
+        Ok(StatusCode::CREATED)
+    }
 }

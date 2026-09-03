@@ -36,8 +36,24 @@ fn join_errs(a: &Result<impl Debug, String>, b: &Result<impl Debug, String>) -> 
     }
 }
 
+fn get_query(platformer: bool, practice: bool) -> &'static str {
+    match (platformer, practice) {
+        (false, false) => "SELECT x, y FROM format1 WHERE levelid = $1 AND practice = false;",
+        (false, true) => "SELECT x, y FROM format1 WHERE levelid = $1;",
+        (true, false) => {
+            "SELECT x, y, percentage FROM format1 WHERE levelid = $1 AND percentage < 101 AND practice = false;"
+        }
+        (true, true) => {
+            "SELECT x, y, percentage FROM format1 WHERE levelid = $1 AND percentage < 101;"
+        }
+    }
+}
+
+const ANALYSIS_QUERY: &'static str = "SELECT userident,levelversion,practice,x,y,percentage \
+    FROM format1 WHERE levelid = $1;";
+
 #[derive(Debug)]
-enum ResponseType {
+pub enum ResponseType {
     CSV,
     Binary,
 }
@@ -83,6 +99,12 @@ impl ListParams {
             })
         })
     }
+    pub fn query(&self) -> (&'static str, i64) {
+        (
+            get_query(self.platformer, self.practice),
+            self.level_id as i64,
+        )
+    }
 }
 
 #[derive(Debug)]
@@ -101,5 +123,8 @@ impl AnalysisParams {
                 response: response.unwrap(),
             })
         })
+    }
+    pub fn query(&self) -> (&'static str, i64) {
+        (ANALYSIS_QUERY, self.level_id as i64)
     }
 }
