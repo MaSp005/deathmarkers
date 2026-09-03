@@ -1,44 +1,19 @@
-pub struct NormalDeath {
-    x: f32,
-    y: f32,
-    percentage: i16,
-}
-impl NormalDeath {
-    pub fn new(x: f32, y: f32, percentage: i16) -> NormalDeath {
-        NormalDeath { x, y, percentage }
-    }
-}
+pub const SHA1_LENGTH: usize = 20;
 
-pub struct PlatformerDeath {
-    x: f32,
-    y: f32,
-}
-impl PlatformerDeath {
-    pub fn new(x: f32, y: f32) -> PlatformerDeath {
-        PlatformerDeath { x, y }
-    }
-}
-
-pub struct AnalysisDeath {
-    userident: [u8; 20],
-    levelversion: i8,
+pub struct SubmissionDeath {
     practice: bool,
     x: f32,
     y: f32,
     percentage: i16,
 }
-impl AnalysisDeath {
+impl SubmissionDeath {
     pub fn new(
-        userident: [u8; 20],
-        levelversion: i8,
         practice: bool,
         x: f32,
         y: f32,
         percentage: i16,
-    ) -> AnalysisDeath {
-        AnalysisDeath {
-            userident,
-            levelversion,
+    ) -> SubmissionDeath {
+        SubmissionDeath {
             practice,
             x,
             y,
@@ -47,8 +22,9 @@ impl AnalysisDeath {
     }
 }
 
-pub enum Death {
-    Normal(NormalDeath),
-    Platformer(PlatformerDeath),
-    Analysis(AnalysisDeath),
+pub struct SubmissionMetadata {
+    level_id: u32,
+    format: u8,
+    levelversion: u8,
+    userident: [u8; SHA1_LENGTH],
 }

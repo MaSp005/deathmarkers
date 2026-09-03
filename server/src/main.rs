@@ -14,7 +14,7 @@ use fetch::*;
 mod params;
 use params::*;
 
-use crate::data::AnalysisDeath;
+use crate::data::SubmissionDeath;
 
 #[tokio::main]
 async fn main() {
@@ -70,8 +70,13 @@ async fn analysis(
         Ok(params) => {
             // let q = DMQuery::List(params);
             let data = fetcher.fetch_analysis(params).await;
-
-            todo!()
+            match data {
+                Err(_) => Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Retrieving Deaths failed. Try again.".to_owned(),
+                )),
+                Ok(d) => Ok(d),
+            }
         }
     }
 }
@@ -80,13 +85,15 @@ async fn submit(
     State(fetcher): State<Arc<dyn Fetcher + Sync + Send>>,
     Query(params): Query<HashMap<String, String>>,
     Json(payload): Json<serde_json::Value>,
-) -> Result<StatusCode, (StatusCode, &'static str)> {
-    let deaths: Vec<AnalysisDeath> = vec![];
-    let result = fetcher.submit(deaths);
-    if result.await.is_err() {
+) -> Result<StatusCode, (StatusCode, String)> {
+    let deaths =
+        SubmissionPayload::parse(params, payload).map_err(|e| (StatusCode::BAD_REQUEST, e))?;
+    let result = fetcher.submit(deaths).await;
+    if result.is_err() {
         Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            "Error writing to the database. May be due to wrongly formatted input. Try again.",
+            "Error writing to the database. May be due to wrongly formatted input. Try again."
+                .to_owned(),
         ))
     } else {
         Ok(StatusCode::CREATED)

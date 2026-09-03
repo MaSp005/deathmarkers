@@ -1,5 +1,9 @@
 use std::{collections::HashMap, fmt::Debug};
 
+use serde_json::Value;
+
+use crate::data::{SHA1_LENGTH, SubmissionDeath};
+
 fn parse_level_id_from_param(val: Option<&String>) -> Result<u32, String> {
     match val {
         None => Err(String::from("levelid parameter not provided")),
@@ -34,6 +38,14 @@ fn join_errs(a: &Result<impl Debug, String>, b: &Result<impl Debug, String>) -> 
         (true, false) => Err(a.as_ref().unwrap_err().clone()),
         (true, true) => Err(a.as_ref().unwrap_err().clone() + "\n" + &b.as_ref().unwrap_err()),
     }
+}
+
+fn is_sha1_string(s: &str) -> bool {
+    s.len() == SHA1_LENGTH * 2
+        && s.chars().all(|c| match c {
+            '0'..'9' | 'a'..'f' | 'A'..'F' => true,
+            _ => false,
+        })
 }
 
 fn get_query(platformer: bool, practice: bool) -> &'static str {
@@ -126,5 +138,73 @@ impl AnalysisParams {
     }
     pub fn query(&self) -> (&'static str, i64) {
         (ANALYSIS_QUERY, self.level_id as i64)
+    }
+}
+
+pub struct SubmissionPayload {}
+impl SubmissionPayload {
+    pub fn parse(
+        params: HashMap<String, String>,
+        payload: Value,
+    ) -> Result<Vec<SubmissionDeath>, String> {
+        let levelid: Result<u64, String> = match params.get("levelid") {
+            Some(l) => l
+                .parse()
+                .map_err(|_| "levelid incorrectly formatted".to_owned()),
+            None => {
+                let body_lid = payload.get("levelid");
+                if body_lid.is_none() {
+                    Err("levelid not provided as parameter nor in body".to_owned())
+                } else {
+                    match body_lid.unwrap() {
+                        Value::Number(v) => match v.as_u64() {
+                            Some(u) => Ok(u),
+                            None => return Err("levelid must be a positive integer".to_owned()),
+                        },
+                        _ => return Err("levelid must be a positive integer".to_owned()),
+                    }
+                }
+            }
+        };
+        let format: Result<u8, String> = match payload.get("format") {
+            None => return Err("format not provided".to_owned()),
+            Some(f) => match f {
+                Value::Number(v) => match v.as_u64() {
+                    Some(u) => Ok(u as u8),
+                    None => return Err("levelid must be a positive integer".to_owned()),
+                },
+                _ => return Err("levelid must be a positive integer".to_owned()),
+            },
+        };
+        let version: Result<u8, String> = match payload.get("levelversion") {
+            None => Ok(0),
+            Some(v) => match v {
+                Value::Number(v) => match v.as_u64() {
+                    Some(u) => Ok(u as u8),
+                    None => return Err("levelversion must be a positive integer".to_owned()),
+                },
+                _ => return Err("levelversion must be a positive integer".to_owned()),
+            },
+        };
+        let userident: Result<String, String> = match payload.get("userident") {
+            Some(u) => match u {
+                Value::String(s) => {
+                    if is_sha1_string(s) {
+                        Ok(s.to_string())
+                    } else {
+                        Err("userident incorrectly formatted".to_owned())
+                    }
+                }
+                _ => Err("userident must be transmitted as a string".to_owned()),
+            },
+            None => todo!(),
+        };
+
+        let mut errs = join_errs(&levelid, &format);
+        errs = join_errs(&errs, &version);
+        errs = join_errs(&errs, &userident);
+
+        let deaths: Vec<SubmissionDeath> = vec![];
+        errs.and(Ok(deaths))
     }
 }

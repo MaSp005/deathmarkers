@@ -1,5 +1,5 @@
 use crate::{
-    data::AnalysisDeath,
+    data::SubmissionDeath,
     params::{AnalysisParams, ListParams},
 };
 use async_trait::async_trait;
@@ -12,7 +12,7 @@ pub trait Fetcher {
     async fn fetch_list(&self, query: ListParams) -> Result<Bytes, Error>;
     async fn fetch_list_platformer(&self, query: ListParams) -> Result<Bytes, Error>;
     async fn fetch_analysis(&self, query: AnalysisParams) -> Result<Bytes, Error>;
-    async fn submit(&self, deaths: Vec<AnalysisDeath>) -> Result<(), Error>;
+    async fn submit(&self, deaths: Vec<SubmissionDeath>) -> Result<(), Error>;
 }
 
 pub struct DatabaseFetcher {
@@ -60,7 +60,7 @@ impl Fetcher for DatabaseFetcher {
         let (qs, levelid) = q.query();
         todo!()
     }
-    async fn submit(&self, deaths: Vec<AnalysisDeath>) -> Result<(), Error> {
+    async fn submit(&self, deaths: Vec<SubmissionDeath>) -> Result<(), Error> {
         todo!()
     }
 }
