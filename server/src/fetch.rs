@@ -5,7 +5,6 @@ use crate::{
 use async_trait::async_trait;
 use axum::body::Bytes;
 use sqlx::{Error, PgPool, postgres::PgPoolOptions, query};
-use std::env;
 
 #[async_trait]
 pub trait Fetcher {
@@ -19,12 +18,10 @@ pub struct DatabaseFetcher {
     pool: PgPool,
 }
 impl DatabaseFetcher {
-    pub async fn new() -> DatabaseFetcher {
-        let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
+    pub async fn new(url: &String) -> Self {
         println!("Connecting to the database...");
         let pool = PgPoolOptions::new()
-            .connect(&db_url)
+            .connect(&url)
             .await
             .expect("Failed to connect to DB");
         sqlx::migrate!()
@@ -33,7 +30,7 @@ impl DatabaseFetcher {
             .expect("Migrations failed");
         println!("Connected to the database.");
 
-        DatabaseFetcher { pool }
+        Self { pool }
     }
 }
 #[async_trait]

@@ -1,7 +1,5 @@
-use std::{collections::HashMap, fmt::Debug};
-
+use std::{collections::HashMap, fmt::Debug, ops::Deref};
 use serde_json::Value;
-
 use crate::data::{SHA1_LENGTH, SubmissionDeath};
 
 fn parse_level_id_from_param(val: Option<&String>) -> Result<u32, String> {
@@ -28,6 +26,24 @@ fn parse_bool_from_param(
         "true" => Ok(true),
         "false" => Ok(false),
         _other => Err(format!("Invalid {name} parameter")),
+    }
+}
+
+fn submission_from_json(value: impl Deref<Target = Value>) -> Result<SubmissionDeath, String> {
+    let practice = value.get("practice").map(|p| p.as_bool()).flatten();
+    let x = value.get("x").map(|p| p.as_f64()).flatten();
+    let y = value.get("y").map(|p| p.as_f64()).flatten();
+    let percentage = value.get("percentage").map(|p| p.as_u64()).flatten();
+
+    if x.is_some() && y.is_some() && percentage.is_some() {
+        Ok(SubmissionDeath::new(
+            practice.unwrap_or(false),
+            x.unwrap() as f32,
+            y.unwrap() as f32,
+            percentage.unwrap() as i16,
+        ))
+    } else {
+        Err("x, y or percentage not passed correctly.".to_owned())
     }
 }
 
@@ -197,14 +213,48 @@ impl SubmissionPayload {
                 }
                 _ => Err("userident must be transmitted as a string".to_owned()),
             },
-            None => todo!(),
+            None => {
+                let playername = payload.get("playername").map(|p| p.as_str()).flatten();
+                let userid = payload.get("userid").map(|i| i.as_u64()).flatten();
+                if playername.and(userid).is_none() {
+                    Err(
+                        "If userident is not provided, playername and userid must be \
+                            provided as string and positive integer, respectively."
+                            .to_owned(),
+                    )
+                } else {
+                    let (playername, userid) = (playername.unwrap(), userid.unwrap());
+                    todo!()
+                }
+            }
         };
+
+        let deaths: Result<Vec<SubmissionDeath>, String> =
+            if let Some(array) = payload.get("deaths").map(|d| d.as_array()).flatten() {
+                let mut deaths = Vec::with_capacity(array.len());
+                let mut first_err = Ok(());
+                for (i, value) in array.iter().enumerate() {
+                    match submission_from_json(value) {
+                        Ok(d) => {
+                            deaths.push(d);
+                        }
+                        Err(e) => {
+                            first_err = Err(format!("Error in deaths[{i}]: {e}"));
+                            break;
+                        }
+                    }
+                };
+                first_err.and(Ok(deaths))
+            } else {
+                submission_from_json(&payload).map(|d| vec![d])
+            };
 
         let mut errs = join_errs(&levelid, &format);
         errs = join_errs(&errs, &version);
         errs = join_errs(&errs, &userident);
+        errs = join_errs(&errs, &deaths);
+        errs?;
 
-        let deaths: Vec<SubmissionDeath> = vec![];
-        errs.and(Ok(deaths))
+        Ok(deaths.unwrap())
     }
 }

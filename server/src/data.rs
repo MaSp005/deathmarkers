@@ -1,5 +1,6 @@
 pub const SHA1_LENGTH: usize = 20;
 
+#[derive(Debug, Copy, Clone)]
 pub struct SubmissionDeath {
     practice: bool,
     x: f32,
@@ -7,13 +8,8 @@ pub struct SubmissionDeath {
     percentage: i16,
 }
 impl SubmissionDeath {
-    pub fn new(
-        practice: bool,
-        x: f32,
-        y: f32,
-        percentage: i16,
-    ) -> SubmissionDeath {
-        SubmissionDeath {
+    pub fn new(practice: bool, x: f32, y: f32, percentage: i16) -> Self {
+        Self {
             practice,
             x,
             y,

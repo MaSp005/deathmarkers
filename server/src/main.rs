@@ -2,25 +2,26 @@ use axum::{
     Router,
     body::Bytes,
     extract::{Json, Query, State},
-    http::{Response, StatusCode},
+    http::StatusCode,
     routing::{get, post},
 };
+use fetch::*;
+use params::*;
 use std::{collections::HashMap, env, sync::Arc};
 use tokio::net::TcpListener;
 
 mod data;
 mod fetch;
-use fetch::*;
 mod params;
-use params::*;
 
-use crate::data::SubmissionDeath;
+type FetcherArc = Arc<dyn Fetcher + Sync + Send>;
 
 #[tokio::main]
 async fn main() {
     let bind_addr = env::var("LISTEN_ADDRESS").unwrap_or(String::from("0.0.0.0:8048"));
+    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    let fetcher: Arc<dyn Fetcher + Sync + Send> = Arc::new(DatabaseFetcher::new().await);
+    let fetcher: FetcherArc = Arc::new(DatabaseFetcher::new(&db_url).await);
 
     let app = Router::new()
         .route("/", get(root))
@@ -43,7 +44,7 @@ async fn root() -> &'static str {
 }
 
 async fn list(
-    State(fetcher): State<Arc<dyn Fetcher + Sync + Send>>,
+    State(fetcher): State<FetcherArc>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Result<Bytes, (StatusCode, String)> {
     match ListParams::parse_from_query(&params) {
@@ -62,7 +63,7 @@ async fn list(
 }
 
 async fn analysis(
-    State(fetcher): State<Arc<dyn Fetcher + Sync + Send>>,
+    State(fetcher): State<FetcherArc>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Result<Bytes, (StatusCode, String)> {
     match AnalysisParams::parse_from_query(&params) {
@@ -82,7 +83,7 @@ async fn analysis(
 }
 
 async fn submit(
-    State(fetcher): State<Arc<dyn Fetcher + Sync + Send>>,
+    State(fetcher): State<FetcherArc>,
     Query(params): Query<HashMap<String, String>>,
     Json(payload): Json<serde_json::Value>,
 ) -> Result<StatusCode, (StatusCode, String)> {
