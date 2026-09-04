@@ -57,7 +57,12 @@ async fn list(
                 fetcher.fetch_list(params).await
             };
 
-            todo!()
+            data.map_err(|_| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Retrieving Deaths failed. Try again.".to_owned(),
+                )
+            })
         }
     }
 }
@@ -68,17 +73,12 @@ async fn analysis(
 ) -> Result<Bytes, (StatusCode, String)> {
     match AnalysisParams::parse_from_query(&params) {
         Err(msg) => Err((StatusCode::BAD_REQUEST, msg)),
-        Ok(params) => {
-            // let q = DMQuery::List(params);
-            let data = fetcher.fetch_analysis(params).await;
-            match data {
-                Err(_) => Err((
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Retrieving Deaths failed. Try again.".to_owned(),
-                )),
-                Ok(d) => Ok(d),
-            }
-        }
+        Ok(params) => fetcher.fetch_analysis(params).await.map_err(|_| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Retrieving Deaths failed. Try again.".to_owned(),
+            )
+        }),
     }
 }
 
@@ -87,16 +87,16 @@ async fn submit(
     Query(params): Query<HashMap<String, String>>,
     Json(payload): Json<serde_json::Value>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let (metadata, deaths) =
-        SubmissionPayload::parse(params, payload).map_err(|e| (StatusCode::BAD_REQUEST, e))?;
-    let result = fetcher.submit(deaths).await;
-    if result.is_err() {
-        Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Error writing to the database. May be due to wrongly formatted input. Try again."
-                .to_owned(),
-        ))
-    } else {
-        Ok(StatusCode::CREATED)
+    match SubmissionPayload::parse(params, payload) {
+        Err(msg) => Err((StatusCode::BAD_REQUEST, msg)),
+        Ok(SubmissionPayload(metadata, deaths)) => match fetcher.submit(metadata, deaths).await {
+            Err(_) => Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Error writing to the database. May be due to wrongly formatted input. \
+                        Try again."
+                    .to_owned(),
+            )),
+            Ok(_) => Ok(StatusCode::CREATED),
+        },
     }
 }

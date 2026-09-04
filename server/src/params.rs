@@ -168,12 +168,12 @@ impl AnalysisParams {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct SubmissionPayload {}
+pub struct SubmissionPayload(pub SubmissionMetadata, pub Vec<SubmissionDeath>);
 impl SubmissionPayload {
     pub fn parse(
         params: HashMap<String, String>,
         payload: Value,
-    ) -> Result<(SubmissionMetadata, Vec<SubmissionDeath>), String> {
+    ) -> Result<SubmissionPayload, String> {
         let level_id: Result<u64, String> = match params.get("levelid") {
             Some(l) => l
                 .parse()
@@ -215,12 +215,10 @@ impl SubmissionPayload {
         };
         let userident: Result<[u8; SHA1_LENGTH], String> = match payload.get("userident") {
             Some(u) => match u {
-                Value::String(s) => {
-                    match parse_sha1_string(s) {
-                        Some(s) => Ok(s),
-                        None => Err("userident incorrectly formatted".to_owned()),
-                    }
-                }
+                Value::String(s) => match parse_sha1_string(s) {
+                    Some(s) => Ok(s),
+                    None => Err("userident incorrectly formatted".to_owned()),
+                },
                 _ => Err("userident must be transmitted as a string".to_owned()),
             },
             None => {
@@ -264,15 +262,17 @@ impl SubmissionPayload {
         errs = join_errs(&errs, &userident);
         errs = join_errs(&errs, &deaths);
 
-        errs.and(Ok((
-            SubmissionMetadata::new(
-                level_id.unwrap() as u32,
-                format.unwrap(),
-                version.unwrap(),
-                userident.unwrap(),
-            ),
-            deaths.unwrap(),
-        )))
+        errs.and_then(|_| {
+            Ok(SubmissionPayload(
+                SubmissionMetadata::new(
+                    level_id.unwrap() as u32,
+                    format.unwrap(),
+                    version.unwrap(),
+                    userident.unwrap(),
+                ),
+                deaths.unwrap(),
+            ))
+        })
     }
 }
 
@@ -280,6 +280,9 @@ impl SubmissionPayload {
 mod test {
     use super::*;
     use serde_json::json;
+
+    const NULL_SHA1_STRING: &str = "0000000000000000000000000000000000000000";
+    const NULL_SHA1_SLICE: [u8; SHA1_LENGTH] = [0 as u8; SHA1_LENGTH];
 
     #[test]
     fn test_parse_level_id_from_param() {
@@ -398,9 +401,19 @@ mod test {
                 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67
             ])
         );
-        assert_eq!(parse_sha1_string("ghijklmnopqrstuvwxyzghijklmnopqrstuvwxyz"), None);
+        assert_eq!(
+            parse_sha1_string(&String::from(NULL_SHA1_STRING)),
+            Some(NULL_SHA1_SLICE)
+        );
+        assert_eq!(
+            parse_sha1_string("ghijklmnopqrstuvwxyzghijklmnopqrstuvwxyz"),
+            None
+        );
         assert_eq!(parse_sha1_string("123"), None);
-        assert_eq!(parse_sha1_string("0123456789abcdef0123456789abcdef012345678"), None);
+        assert_eq!(
+            parse_sha1_string("0123456789abcdef0123456789abcdef012345678"),
+            None
+        );
     }
 
     #[test]
@@ -438,5 +451,241 @@ mod test {
             Ok(ResponseType::Binary)
         );
         assert!(ResponseType::parse_from_param(Some(&"other".to_owned())).is_err());
+    }
+
+    #[test]
+    fn test_parse_list_params() {
+        assert!(ListParams::parse_from_query(&HashMap::from([])).is_err());
+
+        assert_eq!(
+            ListParams::parse_from_query(&HashMap::from([
+                ("levelid".to_owned(), "1".to_owned()),
+                ("platformer".to_owned(), "true".to_owned()),
+            ])),
+            Ok(ListParams {
+                level_id: 1,
+                platformer: true,
+                practice: true,
+                response: ResponseType::CSV,
+            })
+        );
+
+        assert_eq!(
+            ListParams::parse_from_query(&HashMap::from([
+                ("levelid".to_owned(), "1".to_owned()),
+                ("platformer".to_owned(), "false".to_owned()),
+            ])),
+            Ok(ListParams {
+                level_id: 1,
+                platformer: false,
+                practice: true,
+                response: ResponseType::CSV,
+            })
+        );
+
+        assert_eq!(
+            ListParams::parse_from_query(&HashMap::from([
+                ("levelid".to_owned(), "1".to_owned()),
+                ("platformer".to_owned(), "false".to_owned()),
+                ("response".to_owned(), "csv".to_owned()),
+            ])),
+            Ok(ListParams {
+                level_id: 1,
+                platformer: false,
+                practice: true,
+                response: ResponseType::CSV,
+            })
+        );
+
+        assert_eq!(
+            ListParams::parse_from_query(&HashMap::from([
+                ("levelid".to_owned(), "1".to_owned()),
+                ("platformer".to_owned(), "false".to_owned()),
+                ("response".to_owned(), "bin".to_owned()),
+            ])),
+            Ok(ListParams {
+                level_id: 1,
+                platformer: false,
+                practice: true,
+                response: ResponseType::Binary,
+            })
+        );
+
+        assert_eq!(
+            ListParams::parse_from_query(&HashMap::from([
+                ("levelid".to_owned(), "1".to_owned()),
+                ("platformer".to_owned(), "false".to_owned()),
+                ("practice".to_owned(), "false".to_owned()),
+            ])),
+            Ok(ListParams {
+                level_id: 1,
+                platformer: false,
+                practice: false,
+                response: ResponseType::CSV,
+            })
+        );
+
+        assert!(
+            ListParams::parse_from_query(&HashMap::from([
+                ("levelid".to_owned(), "1".to_owned()),
+                ("platformer".to_owned(), "false".to_owned()),
+                ("response".to_owned(), "bin".to_owned()),
+                ("practice".to_owned(), "gibberish".to_owned()),
+            ]))
+            .is_err()
+        );
+
+        assert!(
+            ListParams::parse_from_query(&HashMap::from([
+                ("levelid".to_owned(), "1".to_owned()),
+                ("platformer".to_owned(), "gibberish".to_owned()),
+            ]))
+            .is_err()
+        );
+
+        assert!(
+            ListParams::parse_from_query(&HashMap::from([
+                ("levelid".to_owned(), "nan".to_owned()),
+                ("platformer".to_owned(), "false".to_owned()),
+            ]))
+            .is_err()
+        );
+
+        assert!(
+            ListParams::parse_from_query(&HashMap::from([
+                ("levelid".to_owned(), "1".to_owned()),
+                ("platformer".to_owned(), "false".to_owned()),
+                ("response".to_owned(), "other".to_owned()),
+            ]))
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn test_parse_analysis_params() {
+        assert_eq!(
+            AnalysisParams::parse_from_query(&HashMap::from([(
+                "levelid".to_owned(),
+                "1".to_owned()
+            ),])),
+            Ok(AnalysisParams {
+                level_id: 1,
+                response: ResponseType::CSV,
+            })
+        );
+
+        assert!(AnalysisParams::parse_from_query(&HashMap::from([])).is_err());
+
+        assert_eq!(
+            AnalysisParams::parse_from_query(&HashMap::from([
+                ("levelid".to_owned(), "1".to_owned()),
+                ("response".to_owned(), "csv".to_owned()),
+            ])),
+            Ok(AnalysisParams {
+                level_id: 1,
+                response: ResponseType::CSV,
+            })
+        );
+
+        assert_eq!(
+            AnalysisParams::parse_from_query(&HashMap::from([
+                ("levelid".to_owned(), "1".to_owned()),
+                ("response".to_owned(), "bin".to_owned()),
+            ])),
+            Ok(AnalysisParams {
+                level_id: 1,
+                response: ResponseType::Binary,
+            })
+        );
+    }
+
+    #[test]
+    fn test_parse_submission() {
+        assert_eq!(
+            SubmissionPayload::parse(
+                HashMap::from([("levelid".to_owned(), "1".to_owned())]),
+                json!({"levelid": 2, "format": 1, "deaths": [], "userident": NULL_SHA1_STRING})
+            ),
+            Ok(SubmissionPayload(
+                SubmissionMetadata::new(1, 1, 0, NULL_SHA1_SLICE),
+                vec![]
+            ))
+        );
+
+        assert_eq!(
+            SubmissionPayload::parse(
+                HashMap::from([]),
+                json!({"levelid": 2, "format": 1, "deaths": [], "userident": NULL_SHA1_STRING})
+            ),
+            Ok(SubmissionPayload(
+                SubmissionMetadata::new(2, 1, 0, NULL_SHA1_SLICE),
+                vec![]
+            ))
+        );
+
+        assert_eq!(
+            SubmissionPayload::parse(
+                HashMap::from([]),
+                json!({"levelid": 2, "format": 1, "deaths": [], "userident": NULL_SHA1_STRING})
+            ),
+            Ok(SubmissionPayload(
+                SubmissionMetadata::new(2, 1, 0, NULL_SHA1_SLICE),
+                vec![]
+            ))
+        );
+
+        assert!(
+            SubmissionPayload::parse(
+                HashMap::from([]),
+                json!({"levelid": 2, "format": 1, "userident": NULL_SHA1_STRING})
+            )
+            .is_err()
+        );
+
+        assert_eq!(
+            SubmissionPayload::parse(
+                HashMap::from([]),
+                json!({"levelid": 2, "format": 1, "userident": NULL_SHA1_STRING, "x": 1.0, "y": 2.0, "percentage": 3})
+            ),
+            Ok(SubmissionPayload(
+                SubmissionMetadata::new(2, 1, 0, NULL_SHA1_SLICE),
+                vec![SubmissionDeath::new(false, 1.0, 2.0, 3)]
+            ))
+        );
+
+        assert!(
+            SubmissionPayload::parse(
+                HashMap::from([]),
+                json!({"levelid": [], "format": [], "deaths": [], "userident": []})
+            )
+            .is_err()
+        );
+
+        assert!(
+            SubmissionPayload::parse(
+                HashMap::from([]),
+                json!({"levelid": [], "format": [], "deaths": [], "userident": []})
+            )
+            .is_err()
+        );
+
+        assert!(
+            SubmissionPayload::parse(
+                HashMap::from([]),
+                json!({"levelid": "", "format": "", "deaths": [], "userident": 1})
+            )
+            .is_err()
+        );
+
+        assert_eq!(
+            SubmissionPayload::parse(
+                HashMap::from([]),
+                json!({"levelid": 2, "format": 1, "userident": NULL_SHA1_STRING, "deaths": [{"x": 1.0, "y": 2.0, "percentage": 3}]})
+            ),
+            Ok(SubmissionPayload(
+                SubmissionMetadata::new(2, 1, 0, NULL_SHA1_SLICE),
+                vec![SubmissionDeath::new(false, 1.0, 2.0, 3)]
+            ))
+        );
     }
 }
