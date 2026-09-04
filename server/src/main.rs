@@ -87,7 +87,7 @@ async fn submit(
     Query(params): Query<HashMap<String, String>>,
     Json(payload): Json<serde_json::Value>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let deaths =
+    let (metadata, deaths) =
         SubmissionPayload::parse(params, payload).map_err(|e| (StatusCode::BAD_REQUEST, e))?;
     let result = fetcher.submit(deaths).await;
     if result.is_err() {

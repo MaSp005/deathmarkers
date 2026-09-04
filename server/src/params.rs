@@ -1,6 +1,6 @@
-use std::{collections::HashMap, fmt::Debug, ops::Deref};
+use crate::data::*;
 use serde_json::Value;
-use crate::data::{SHA1_LENGTH, SubmissionDeath};
+use std::{collections::HashMap, fmt::Debug, ops::Deref};
 
 fn parse_level_id_from_param(val: Option<&String>) -> Result<u32, String> {
     match val {
@@ -56,12 +56,22 @@ fn join_errs(a: &Result<impl Debug, String>, b: &Result<impl Debug, String>) -> 
     }
 }
 
-fn is_sha1_string(s: &str) -> bool {
-    s.len() == SHA1_LENGTH * 2
+fn parse_sha1_string(s: &str) -> Option<[u8; SHA1_LENGTH]> {
+    if s.len() == SHA1_LENGTH * 2
         && s.chars().all(|c| match c {
-            '0'..'9' | 'a'..'f' | 'A'..'F' => true,
+            '0'..='9' | 'a'..='f' | 'A'..='F' => true,
             _ => false,
         })
+    {
+        let mut slice = [0 as u8; 20];
+        for (idx, chunk) in slice.iter_mut().enumerate() {
+            *chunk = u8::from_str_radix(&s[(idx * 2)..(idx * 2 + 2)], 0x10)
+                .expect("ident string should be valid");
+        }
+        Some(slice)
+    } else {
+        None
+    }
 }
 
 fn get_query(platformer: bool, practice: bool) -> &'static str {
@@ -80,7 +90,7 @@ fn get_query(platformer: bool, practice: bool) -> &'static str {
 const ANALYSIS_QUERY: &'static str = "SELECT userident,levelversion,practice,x,y,percentage \
     FROM format1 WHERE levelid = $1;";
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ResponseType {
     CSV,
     Binary,
@@ -100,7 +110,7 @@ impl ResponseType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ListParams {
     pub level_id: u32,
     pub platformer: bool,
@@ -135,7 +145,7 @@ impl ListParams {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct AnalysisParams {
     pub level_id: u32,
     pub response: ResponseType,
@@ -157,13 +167,14 @@ impl AnalysisParams {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct SubmissionPayload {}
 impl SubmissionPayload {
     pub fn parse(
         params: HashMap<String, String>,
         payload: Value,
-    ) -> Result<Vec<SubmissionDeath>, String> {
-        let levelid: Result<u64, String> = match params.get("levelid") {
+    ) -> Result<(SubmissionMetadata, Vec<SubmissionDeath>), String> {
+        let level_id: Result<u64, String> = match params.get("levelid") {
             Some(l) => l
                 .parse()
                 .map_err(|_| "levelid incorrectly formatted".to_owned()),
@@ -202,13 +213,12 @@ impl SubmissionPayload {
                 _ => return Err("levelversion must be a positive integer".to_owned()),
             },
         };
-        let userident: Result<String, String> = match payload.get("userident") {
+        let userident: Result<[u8; SHA1_LENGTH], String> = match payload.get("userident") {
             Some(u) => match u {
                 Value::String(s) => {
-                    if is_sha1_string(s) {
-                        Ok(s.to_string())
-                    } else {
-                        Err("userident incorrectly formatted".to_owned())
+                    match parse_sha1_string(s) {
+                        Some(s) => Ok(s),
+                        None => Err("userident incorrectly formatted".to_owned()),
                     }
                 }
                 _ => Err("userident must be transmitted as a string".to_owned()),
@@ -243,18 +253,190 @@ impl SubmissionPayload {
                             break;
                         }
                     }
-                };
+                }
                 first_err.and(Ok(deaths))
             } else {
                 submission_from_json(&payload).map(|d| vec![d])
             };
 
-        let mut errs = join_errs(&levelid, &format);
+        let mut errs = join_errs(&level_id, &format);
         errs = join_errs(&errs, &version);
         errs = join_errs(&errs, &userident);
         errs = join_errs(&errs, &deaths);
-        errs?;
 
-        Ok(deaths.unwrap())
+        errs.and(Ok((
+            SubmissionMetadata::new(
+                level_id.unwrap() as u32,
+                format.unwrap(),
+                version.unwrap(),
+                userident.unwrap(),
+            ),
+            deaths.unwrap(),
+        )))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_parse_level_id_from_param() {
+        assert!(parse_level_id_from_param(None).is_err());
+        assert!(parse_level_id_from_param(Some(&"".to_owned())).is_err());
+        assert!(parse_level_id_from_param(Some(&"a".to_owned())).is_err());
+        assert!(parse_level_id_from_param(Some(&"-1".to_owned())).is_err());
+        assert!(parse_level_id_from_param(Some(&"1.1".to_owned())).is_err());
+        assert_eq!(parse_level_id_from_param(Some(&"1".to_owned())), Ok(1));
+    }
+
+    #[test]
+    fn test_parse_bool_from_param() {
+        assert!(parse_bool_from_param(None, None, "").is_err());
+        assert_eq!(parse_bool_from_param(None, Some(true), ""), Ok(true));
+        assert_eq!(parse_bool_from_param(None, Some(false), ""), Ok(false));
+        assert!(parse_bool_from_param(Some(&"".to_owned()), None, "").is_err());
+        assert!(parse_bool_from_param(Some(&"".to_owned()), Some(true), "").is_err());
+        assert!(parse_bool_from_param(Some(&"".to_owned()), Some(false), "").is_err());
+        assert!(parse_bool_from_param(Some(&"true or false".to_owned()), None, "").is_err());
+        assert!(parse_bool_from_param(Some(&"true or false".to_owned()), Some(true), "").is_err());
+        assert!(parse_bool_from_param(Some(&"true or false".to_owned()), Some(false), "").is_err());
+        assert!(parse_bool_from_param(Some(&"1".to_owned()), None, "").is_err());
+        assert!(parse_bool_from_param(Some(&"1".to_owned()), Some(true), "").is_err());
+        assert!(parse_bool_from_param(Some(&"1".to_owned()), Some(false), "").is_err());
+        assert!(parse_bool_from_param(Some(&"TRUE".to_owned()), None, "").is_err());
+        assert!(parse_bool_from_param(Some(&"TRUE".to_owned()), Some(true), "").is_err());
+        assert!(parse_bool_from_param(Some(&"TRUE".to_owned()), Some(false), "").is_err());
+        assert_eq!(
+            parse_bool_from_param(Some(&"true".to_owned()), None, ""),
+            Ok(true)
+        );
+        assert_eq!(
+            parse_bool_from_param(Some(&"true".to_owned()), Some(true), ""),
+            Ok(true)
+        );
+        assert_eq!(
+            parse_bool_from_param(Some(&"true".to_owned()), Some(false), ""),
+            Ok(true)
+        );
+        assert_eq!(
+            parse_bool_from_param(Some(&"false".to_owned()), None, ""),
+            Ok(false)
+        );
+        assert_eq!(
+            parse_bool_from_param(Some(&"false".to_owned()), Some(true), ""),
+            Ok(false)
+        );
+        assert_eq!(
+            parse_bool_from_param(Some(&"false".to_owned()), Some(false), ""),
+            Ok(false)
+        );
+    }
+
+    #[test]
+    fn test_submission_from_json() {
+        assert!(submission_from_json(&json!({})).is_err());
+        assert_eq!(
+            submission_from_json(&json!({"x": 1.0, "y": 1.0, "percentage": 5})),
+            Ok(SubmissionDeath::new(false, 1.0, 1.0, 5))
+        );
+        assert_eq!(
+            submission_from_json(&json!({"practice": true, "x": 1.0, "y": 1.0, "percentage": 5})),
+            Ok(SubmissionDeath::new(true, 1.0, 1.0, 5))
+        );
+        assert!(submission_from_json(&json!({"y": 1.0, "percentage": 5})).is_err());
+        assert!(submission_from_json(&json!({"x": 1.0, "percentage": 5})).is_err());
+        assert!(submission_from_json(&json!({"x": 1.0, "y": 1.0})).is_err());
+        assert!(submission_from_json(&json!({"x": 1.0, "y": 1.0, "percentage": -1})).is_err());
+        assert!(submission_from_json(&json!({"x": 1.0, "y": 1.0, "percentage": 1.0})).is_err());
+        assert!(submission_from_json(&json!({"x": "1", "y": "1", "percentage": "1"})).is_err());
+        assert!(submission_from_json(&json!({"x": true, "y": true, "percentage": true})).is_err());
+        assert!(submission_from_json(&json!({"x": [], "y": [], "percentage": []})).is_err());
+        assert!(submission_from_json(&json!({"x": {}, "y": {}, "percentage": {}})).is_err());
+        assert_eq!(
+            submission_from_json(
+                &json!({"something_else": {}, "x": 1.0, "y": 1.0, "percentage": 5})
+            ),
+            Ok(SubmissionDeath::new(false, 1.0, 1.0, 5))
+        );
+    }
+
+    #[test]
+    fn test_join_errs() {
+        assert_eq!(join_errs(&Ok(()), &Ok(())), Ok(()));
+        assert_eq!(
+            join_errs(&Err::<(), String>("a".to_owned()), &Ok(())),
+            Err("a".to_owned())
+        );
+        assert_eq!(
+            join_errs(&Ok(()), &Err::<(), String>("b".to_owned())),
+            Err("b".to_owned())
+        );
+        assert_eq!(
+            join_errs(
+                &Err::<(), String>("a".to_owned()),
+                &Err::<(), String>("b".to_owned())
+            ),
+            Err("a\nb".to_owned())
+        );
+    }
+
+    #[test]
+    fn get_parse_sha1_string() {
+        assert_eq!(
+            parse_sha1_string(&"0123456789abcdef0123456789abcdef01234567".to_owned()),
+            Some([
+                0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
+                0xcd, 0xef, 0x01, 0x23, 0x45, 0x67
+            ])
+        );
+        assert_eq!(
+            parse_sha1_string(&"0123456789ABCDEF0123456789ABCDEF01234567".to_owned()),
+            Some([
+                0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
+                0xcd, 0xef, 0x01, 0x23, 0x45, 0x67
+            ])
+        );
+        assert_eq!(parse_sha1_string("ghijklmnopqrstuvwxyzghijklmnopqrstuvwxyz"), None);
+        assert_eq!(parse_sha1_string("123"), None);
+        assert_eq!(parse_sha1_string("0123456789abcdef0123456789abcdef012345678"), None);
+    }
+
+    #[test]
+    fn test_get_query() {
+        let nopl_nopr = get_query(false, false);
+        let nopl_pr = get_query(false, true);
+        let pl_nopr = get_query(true, false);
+        let pl_pr = get_query(true, true);
+
+        assert_eq!(nopl_nopr.contains("practice = false"), true);
+        assert_eq!(nopl_pr.contains("practice = false"), false);
+        assert_eq!(pl_nopr.contains("practice = false"), true);
+        assert_eq!(pl_pr.contains("practice = false"), false);
+
+        assert_eq!(nopl_nopr.contains("percentage"), false);
+        assert_eq!(nopl_pr.contains("percentage"), false);
+        assert_eq!(pl_nopr.contains("percentage"), true);
+        assert_eq!(pl_pr.contains("percentage"), true);
+
+        assert_eq!(nopl_nopr.contains("percentage < 101"), false);
+        assert_eq!(nopl_pr.contains("percentage < 101"), false);
+        assert_eq!(pl_nopr.contains("percentage < 101"), true);
+        assert_eq!(pl_pr.contains("percentage < 101"), true);
+    }
+
+    #[test]
+    fn test_parse_response_type() {
+        assert_eq!(ResponseType::parse_from_param(None), Ok(ResponseType::CSV));
+        assert_eq!(
+            ResponseType::parse_from_param(Some(&"csv".to_owned())),
+            Ok(ResponseType::CSV)
+        );
+        assert_eq!(
+            ResponseType::parse_from_param(Some(&"bin".to_owned())),
+            Ok(ResponseType::Binary)
+        );
+        assert!(ResponseType::parse_from_param(Some(&"other".to_owned())).is_err());
     }
 }
