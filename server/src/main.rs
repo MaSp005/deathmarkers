@@ -7,8 +7,11 @@ use axum::{
 };
 use fetch::*;
 use params::*;
+use sha1::{Digest, Sha1};
 use std::{collections::HashMap, env, sync::Arc};
 use tokio::net::TcpListener;
+
+use crate::data::SHA1_LENGTH;
 
 mod data;
 mod fetch;
@@ -22,6 +25,8 @@ async fn main() {
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     let fetcher: FetcherArc = Arc::new(DatabaseFetcher::new(&db_url).await);
+
+    assert!(Sha1::output_size() == SHA1_LENGTH);
 
     let app = Router::new()
         .route("/", get(root))

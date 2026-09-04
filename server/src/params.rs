@@ -1,5 +1,6 @@
 use crate::data::*;
 use serde_json::Value;
+use sha1::{Digest, Sha1};
 use std::{collections::HashMap, fmt::Debug, ops::Deref};
 
 fn parse_level_id_from_param(val: Option<&String>) -> Result<u32, String> {
@@ -85,6 +86,16 @@ fn get_query(platformer: bool, practice: bool) -> &'static str {
             "SELECT x, y, percentage FROM format1 WHERE levelid = $1 AND percentage < 101;"
         }
     }
+}
+
+fn make_userident(playername: &str, userid: u64, levelid: u64) -> [u8; SHA1_LENGTH] {
+    let str = format!("{playername}_{userid}_{levelid}");
+    let mut slice = [0 as u8; SHA1_LENGTH];
+    let digest = Sha1::digest(str);
+    for (idx, chunk) in slice.iter_mut().enumerate() {
+        *chunk = digest[idx];
+    }
+    slice
 }
 
 const ANALYSIS_QUERY: &'static str = "SELECT userident,levelversion,practice,x,y,percentage \
@@ -174,7 +185,7 @@ impl SubmissionPayload {
         params: HashMap<String, String>,
         payload: Value,
     ) -> Result<SubmissionPayload, String> {
-        let level_id: Result<u64, String> = match params.get("levelid") {
+        let levelid: Result<u64, String> = match params.get("levelid") {
             Some(l) => l
                 .parse()
                 .map_err(|_| "levelid incorrectly formatted".to_owned()),
@@ -230,9 +241,14 @@ impl SubmissionPayload {
                             provided as string and positive integer, respectively."
                             .to_owned(),
                     )
+                } else if let Ok(levelid) = levelid {
+                    Ok(make_userident(
+                        playername.unwrap(),
+                        userid.unwrap(),
+                        levelid,
+                    ))
                 } else {
-                    let (playername, userid) = (playername.unwrap(), userid.unwrap());
-                    todo!()
+                    Ok([0 as u8; SHA1_LENGTH])
                 }
             }
         };
@@ -257,7 +273,7 @@ impl SubmissionPayload {
                 submission_from_json(&payload).map(|d| vec![d])
             };
 
-        let mut errs = join_errs(&level_id, &format);
+        let mut errs = join_errs(&levelid, &format);
         errs = join_errs(&errs, &version);
         errs = join_errs(&errs, &userident);
         errs = join_errs(&errs, &deaths);
@@ -265,7 +281,7 @@ impl SubmissionPayload {
         errs.and_then(|_| {
             Ok(SubmissionPayload(
                 SubmissionMetadata::new(
-                    level_id.unwrap() as u32,
+                    levelid.unwrap() as u32,
                     format.unwrap(),
                     version.unwrap(),
                     userident.unwrap(),
@@ -437,6 +453,14 @@ mod test {
         assert_eq!(nopl_pr.contains("percentage < 101"), false);
         assert_eq!(pl_nopr.contains("percentage < 101"), true);
         assert_eq!(pl_pr.contains("percentage < 101"), true);
+    }
+
+    #[test]
+    fn test_make_userident() {
+        assert_eq!(
+            make_userident("RobTop", 16, 10565740),
+            parse_sha1_string(&"cba4a35e4ee458178b18d4c8ebb836a518b4df4b".to_owned()).unwrap()
+        )
     }
 
     #[test]
