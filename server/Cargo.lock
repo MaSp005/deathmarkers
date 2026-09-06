@@ -257,6 +257,7 @@ dependencies = [
  "bytes",
  "futures-util",
  "hex",
+ "rand",
  "serde_json",
  "sha1",
  "sqlx",

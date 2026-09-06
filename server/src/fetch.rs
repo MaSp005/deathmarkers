@@ -1,6 +1,6 @@
-use crate::digest::parse_sha1_string;
 use crate::{
     data::{SubmissionDeath, SubmissionMetadata},
+    digest::sha1_digest,
     params::{AnalysisParams, ListParams},
 };
 use async_trait::async_trait;
@@ -83,11 +83,13 @@ impl Fetcher for DatabaseFetcher {
         const ITEM_LENGTH: usize = 20 + 2 + 1 + 4 + 4 + 2;
         let (qs, levelid) = q.query();
         let deaths = query(qs).bind(levelid).fetch_all(&self.pool).await?;
+        let salt = rand::random_iter::<char>().take(10).collect::<String>();
         let mut bytes = BytesMut::with_capacity(deaths.len() * ITEM_LENGTH + 1);
         bytes.put_u8(1);
         for death in deaths {
-            // TODO: salt + hash
-            bytes.put(&parse_sha1_string(death.get(0)).unwrap()[..]); // userident
+            let userident: String = death.get(0);
+            let salted_ui = sha1_digest(&format!("{userident}_{salt}"));
+            bytes.put_slice(&salted_ui); // userident
             bytes.put_u16(death.get::<i16, usize>(1) as u16); // levelversion
             bytes.put_u8(if death.get::<bool, usize>(2) {
                 1u8
