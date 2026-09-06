@@ -179,10 +179,11 @@ impl SubmissionPayload {
             None => return Err("format not provided".to_owned()),
             Some(f) => match f {
                 Value::Number(v) => match v.as_u64() {
-                    Some(u) => Ok(u as u8),
-                    None => return Err("levelid must be a positive integer".to_owned()),
+                    Some(1) => Ok(1),
+                    Some(_) => Err("Only format 1 is supported".to_owned()),
+                    None => return Err("format must be a positive integer".to_owned()),
                 },
-                _ => return Err("levelid must be a positive integer".to_owned()),
+                _ => return Err("format must be a positive integer".to_owned()),
             },
         };
         let version: Result<u8, String> = match payload.get("levelversion") {
@@ -222,6 +223,7 @@ impl SubmissionPayload {
                         levelid,
                     )))
                 } else {
+                    // fallback if levelid is erroneous
                     Ok("".to_owned())
                 }
             }
@@ -259,7 +261,8 @@ impl SubmissionPayload {
                     format.unwrap(),
                     version.unwrap(),
                     userident.unwrap(),
-                ),
+                )
+                .unwrap(),
                 deaths.unwrap(),
             ))
         })
@@ -565,7 +568,7 @@ mod test {
                 json!({"levelid": 2, "format": 1, "deaths": [], "userident": NULL_SHA1_STRING})
             ),
             Ok(SubmissionPayload(
-                SubmissionMetadata::<String>::new(1, 1, 0, NULL_SHA1_STRING.to_owned()),
+                SubmissionMetadata::<String>::new(1, 1, 0, NULL_SHA1_STRING.to_owned()).unwrap(),
                 vec![]
             ))
         );
@@ -576,7 +579,7 @@ mod test {
                 json!({"levelid": 2, "format": 1, "deaths": [], "userident": NULL_SHA1_STRING})
             ),
             Ok(SubmissionPayload(
-                SubmissionMetadata::<String>::new(2, 1, 0, NULL_SHA1_STRING.to_owned()),
+                SubmissionMetadata::<String>::new(2, 1, 0, NULL_SHA1_STRING.to_owned()).unwrap(),
                 vec![]
             ))
         );
@@ -587,7 +590,7 @@ mod test {
                 json!({"levelid": 2, "format": 1, "deaths": [], "userident": NULL_SHA1_STRING})
             ),
             Ok(SubmissionPayload(
-                SubmissionMetadata::<String>::new(2, 1, 0, NULL_SHA1_STRING.to_owned()),
+                SubmissionMetadata::<String>::new(2, 1, 0, NULL_SHA1_STRING.to_owned()).unwrap(),
                 vec![]
             ))
         );
@@ -606,7 +609,7 @@ mod test {
                 json!({"levelid": 2, "format": 1, "userident": NULL_SHA1_STRING, "x": 1.0, "y": 2.0, "percentage": 3})
             ),
             Ok(SubmissionPayload(
-                SubmissionMetadata::<String>::new(2, 1, 0, NULL_SHA1_STRING.to_owned()),
+                SubmissionMetadata::<String>::new(2, 1, 0, NULL_SHA1_STRING.to_owned()).unwrap(),
                 vec![SubmissionDeath::new(false, 1.0, 2.0, 3)]
             ))
         );
@@ -641,7 +644,7 @@ mod test {
                 json!({"levelid": 2, "format": 1, "userident": NULL_SHA1_STRING, "deaths": [{"x": 1.0, "y": 2.0, "percentage": 3}]})
             ),
             Ok(SubmissionPayload(
-                SubmissionMetadata::<String>::new(2, 1, 0, NULL_SHA1_STRING.to_owned()),
+                SubmissionMetadata::<String>::new(2, 1, 0, NULL_SHA1_STRING.to_owned()).unwrap(),
                 vec![SubmissionDeath::new(false, 1.0, 2.0, 3)]
             ))
         );

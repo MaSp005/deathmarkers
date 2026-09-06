@@ -1,4 +1,4 @@
-use hex::{FromHex, ToHex};
+use hex::ToHex;
 use sha1::{Digest, Sha1};
 
 pub const SHA1_LENGTH: usize = 20;
@@ -26,13 +26,6 @@ pub fn is_sha1(s: &str) -> bool {
         })
 }
 
-pub fn parse_sha1_string(s: &str) -> Option<Sha1Result> {
-    match Sha1Result::from_hex(s) {
-        Err(_) => None,
-        Ok(s) => Some(s),
-    }
-}
-
 pub fn stringify_digest(digest: Sha1Result) -> String {
     digest.encode_hex()
 }
@@ -40,6 +33,7 @@ pub fn stringify_digest(digest: Sha1Result) -> String {
 #[cfg(test)]
 mod test {
     use super::*;
+    use hex::FromHex;
 
     const NULL_SHA1_SLICE: Sha1Result = [0 as u8; SHA1_LENGTH];
     const NULL_SHA1_STRING: &str = "0000000000000000000000000000000000000000";
@@ -48,7 +42,7 @@ mod test {
     fn test_make_userident() {
         assert_eq!(
             make_userident("RobTop", 16, 10565740),
-            parse_sha1_string(&"cba4a35e4ee458178b18d4c8ebb836a518b4df4b".to_owned()).unwrap()
+            Sha1Result::from_hex(&"cba4a35e4ee458178b18d4c8ebb836a518b4df4b".to_owned()).unwrap()
         )
     }
 
@@ -60,37 +54,6 @@ mod test {
         assert_eq!(is_sha1("ghijklmnopqrstuvwxyzghijklmnopqrstuvwxyz"), false);
         assert_eq!(is_sha1("123"), false);
         assert_eq!(is_sha1("0123456789abcdef0123456789abcdef012345678"), false);
-    }
-
-    #[test]
-    fn test_parse_sha1_string() {
-        assert_eq!(
-            parse_sha1_string("0123456789abcdef0123456789abcdef01234567"),
-            Some([
-                0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
-                0xcd, 0xef, 0x01, 0x23, 0x45, 0x67
-            ])
-        );
-        assert_eq!(
-            parse_sha1_string("0123456789ABCDEF0123456789ABCDEF01234567"),
-            Some([
-                0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
-                0xcd, 0xef, 0x01, 0x23, 0x45, 0x67
-            ])
-        );
-        assert_eq!(
-            parse_sha1_string(&String::from(NULL_SHA1_STRING)),
-            Some(NULL_SHA1_SLICE)
-        );
-        assert_eq!(
-            parse_sha1_string("ghijklmnopqrstuvwxyzghijklmnopqrstuvwxyz"),
-            None
-        );
-        assert_eq!(parse_sha1_string("123"), None);
-        assert_eq!(
-            parse_sha1_string("0123456789abcdef0123456789abcdef012345678"),
-            None
-        );
     }
 
     #[test]

@@ -6,6 +6,7 @@ use crate::{
 use async_trait::async_trait;
 use bytes::{BufMut, Bytes, BytesMut};
 use sqlx::{Error, PgPool, Row, postgres::PgPoolOptions, query};
+use std::iter::repeat;
 
 #[async_trait]
 pub trait Fetcher {
@@ -108,6 +109,32 @@ impl Fetcher for DatabaseFetcher {
         metadata: SubmissionMetadata<String>,
         deaths: Vec<SubmissionDeath>,
     ) -> Result<(), Error> {
-        todo!()
+        let qs = metadata.get_insert_query();
+
+        let userident: Vec<String> = repeat(metadata.userident.clone())
+            .take(deaths.len())
+            .collect();
+        let levelid: Vec<i32> = repeat(metadata.level_id as i32)
+            .take(deaths.len())
+            .collect();
+        let levelversion: Vec<i16> = repeat(metadata.levelversion as i16)
+            .take(deaths.len())
+            .collect();
+        let practice: Vec<bool> = deaths.iter().map(|d| d.practice).collect();
+        let x: Vec<f64> = deaths.iter().map(|d| d.x as f64).collect();
+        let y: Vec<f64> = deaths.iter().map(|d| d.y as f64).collect();
+        let percentage: Vec<i16> = deaths.iter().map(|d| d.percentage as i16).collect();
+
+        query(qs)
+            .bind(userident)
+            .bind(levelid)
+            .bind(levelversion)
+            .bind(practice)
+            .bind(x)
+            .bind(y)
+            .bind(percentage)
+            .execute(&self.pool)
+            .await
+            .and(Ok(()))
     }
 }

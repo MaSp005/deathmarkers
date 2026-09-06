@@ -1,4 +1,3 @@
-use digest::SHA1_LENGTH;
 use axum::{
     Router,
     body::Bytes,
@@ -6,6 +5,7 @@ use axum::{
     http::StatusCode,
     routing::{get, post},
 };
+use digest::SHA1_LENGTH;
 use fetch::*;
 use params::*;
 use sha1::{Digest, Sha1};
@@ -86,12 +86,15 @@ async fn submit(
     match SubmissionPayload::parse(params, payload) {
         Err(msg) => Err((StatusCode::BAD_REQUEST, msg)),
         Ok(SubmissionPayload(metadata, deaths)) => match fetcher.submit(metadata, deaths).await {
-            Err(_) => Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Error writing to the database. May be due to wrongly formatted input. \
+            Err(e) => {
+                println!("Error during submission: {e}");
+                Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Error writing to the database. May be due to wrongly formatted input. \
                         Try again."
-                    .to_owned(),
-            )),
+                        .to_owned(),
+                ))
+            }
             Ok(_) => Ok(StatusCode::CREATED),
         },
     }
