@@ -54,21 +54,12 @@ async fn list(
 ) -> Result<Bytes, (StatusCode, String)> {
     match ListParams::parse_from_query(&params) {
         Err(msg) => Err((StatusCode::BAD_REQUEST, msg)),
-        Ok(params) => {
-            // let q = DMQuery::List(params);
-            let data = if params.platformer {
-                fetcher.fetch_list_platformer(params).await
-            } else {
-                fetcher.fetch_list(params).await
-            };
-
-            data.map_err(|_| {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Retrieving Deaths failed. Try again.".to_owned(),
-                )
-            })
-        }
+        Ok(params) => fetcher.fetch_list(params).await.map_err(|_| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Retrieving Deaths failed. Try again.".to_owned(),
+            )
+        }),
     }
 }
 

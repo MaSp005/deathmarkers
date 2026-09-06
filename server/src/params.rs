@@ -57,7 +57,7 @@ fn join_errs(a: &Result<impl Debug, String>, b: &Result<impl Debug, String>) -> 
     }
 }
 
-fn parse_sha1_string(s: &str) -> Option<[u8; SHA1_LENGTH]> {
+pub fn parse_sha1_string(s: &str) -> Option<[u8; SHA1_LENGTH]> {
     if s.len() == SHA1_LENGTH * 2
         && s.chars().all(|c| match c {
             '0'..='9' | 'a'..='f' | 'A'..='F' => true,
@@ -77,13 +77,13 @@ fn parse_sha1_string(s: &str) -> Option<[u8; SHA1_LENGTH]> {
 
 fn get_query(platformer: bool, practice: bool) -> &'static str {
     match (platformer, practice) {
-        (false, false) => "SELECT x, y FROM format1 WHERE levelid = $1 AND practice = false;",
-        (false, true) => "SELECT x, y FROM format1 WHERE levelid = $1;",
+        (false, false) => "SELECT x, y, percentage FROM format1 WHERE levelid = $1 AND practice = false;",
+        (false, true) => "SELECT x, y, percentage FROM format1 WHERE levelid = $1;",
         (true, false) => {
-            "SELECT x, y, percentage FROM format1 WHERE levelid = $1 AND percentage < 101 AND practice = false;"
+            "SELECT x, y FROM format1 WHERE levelid = $1 AND percentage < 101 AND practice = false;"
         }
         (true, true) => {
-            "SELECT x, y, percentage FROM format1 WHERE levelid = $1 AND percentage < 101;"
+            "SELECT x, y FROM format1 WHERE levelid = $1 AND percentage < 101;"
         }
     }
 }
@@ -434,23 +434,23 @@ mod test {
 
     #[test]
     fn test_get_query() {
-        let nopl_nopr = get_query(false, false);
-        let nopl_pr = get_query(false, true);
+        let norm_nopr = get_query(false, false);
+        let norm_pr = get_query(false, true);
         let pl_nopr = get_query(true, false);
         let pl_pr = get_query(true, true);
 
-        assert_eq!(nopl_nopr.contains("practice = false"), true);
-        assert_eq!(nopl_pr.contains("practice = false"), false);
+        assert_eq!(norm_nopr.contains("practice = false"), true);
+        assert_eq!(norm_pr.contains("practice = false"), false);
         assert_eq!(pl_nopr.contains("practice = false"), true);
         assert_eq!(pl_pr.contains("practice = false"), false);
 
-        assert_eq!(nopl_nopr.contains("percentage"), false);
-        assert_eq!(nopl_pr.contains("percentage"), false);
-        assert_eq!(pl_nopr.contains("percentage"), true);
-        assert_eq!(pl_pr.contains("percentage"), true);
+        assert_eq!(norm_nopr.contains("percentage FROM"), true);
+        assert_eq!(norm_pr.contains("percentage FROM"), true);
+        assert_eq!(pl_nopr.contains("percentage FROM"), false);
+        assert_eq!(pl_pr.contains("percentage FROM"), false);
 
-        assert_eq!(nopl_nopr.contains("percentage < 101"), false);
-        assert_eq!(nopl_pr.contains("percentage < 101"), false);
+        assert_eq!(norm_nopr.contains("percentage < 101"), false);
+        assert_eq!(norm_pr.contains("percentage < 101"), false);
         assert_eq!(pl_nopr.contains("percentage < 101"), true);
         assert_eq!(pl_pr.contains("percentage < 101"), true);
     }
