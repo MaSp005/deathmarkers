@@ -1,4 +1,4 @@
-pub const SHA1_LENGTH: usize = 20;
+use crate::digest::Sha1Result;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct SubmissionDeath {
@@ -18,15 +18,21 @@ impl SubmissionDeath {
     }
 }
 
+trait Userident {}
+impl Userident for String {}
+impl Userident for Sha1Result {}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct SubmissionMetadata {
+#[allow(private_bounds)]
+pub struct SubmissionMetadata<U: Userident> {
     level_id: u32,
     format: u8,
     levelversion: u8,
-    userident: [u8; SHA1_LENGTH],
+    userident: U,
 }
-impl SubmissionMetadata {
-    pub fn new(level_id: u32, format: u8, levelversion: u8, userident: [u8; SHA1_LENGTH]) -> Self {
+#[allow(private_bounds)]
+impl<U: Userident> SubmissionMetadata<U> {
+    pub fn new(level_id: u32, format: u8, levelversion: u8, userident: U) -> Self {
         Self {
             level_id,
             format,

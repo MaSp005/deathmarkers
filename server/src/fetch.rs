@@ -1,6 +1,7 @@
+use crate::digest::parse_sha1_string;
 use crate::{
     data::{SubmissionDeath, SubmissionMetadata},
-    params::{AnalysisParams, ListParams, parse_sha1_string},
+    params::{AnalysisParams, ListParams},
 };
 use async_trait::async_trait;
 use bytes::{BufMut, Bytes, BytesMut};
@@ -12,7 +13,7 @@ pub trait Fetcher {
     async fn fetch_analysis(&self, query: AnalysisParams) -> Result<Bytes, Error>;
     async fn submit(
         &self,
-        metadata: SubmissionMetadata,
+        metadata: SubmissionMetadata<String>,
         deaths: Vec<SubmissionDeath>,
     ) -> Result<(), Error>;
 }
@@ -37,6 +38,7 @@ impl DatabaseFetcher {
     }
 
     async fn fetch_list_normal(&self, q: ListParams) -> Result<Bytes, Error> {
+        // x, y, percentage
         const ITEM_LENGTH: usize = 4 + 4 + 2;
         assert_eq!(q.platformer, false);
         let (qs, levelid) = q.query();
@@ -52,6 +54,7 @@ impl DatabaseFetcher {
     }
 
     async fn fetch_list_platformer(&self, q: ListParams) -> Result<Bytes, Error> {
+        // x, y
         const ITEM_LENGTH: usize = 4 + 4;
         assert_eq!(q.platformer, true);
         let (qs, levelid) = q.query();
@@ -76,7 +79,7 @@ impl Fetcher for DatabaseFetcher {
     }
 
     async fn fetch_analysis(&self, q: AnalysisParams) -> Result<Bytes, Error> {
-        // userident,levelversion,practice,x,y,percentage
+        // userident, levelversion, practice, x, y, percentage
         const ITEM_LENGTH: usize = 20 + 2 + 1 + 4 + 4 + 2;
         let (qs, levelid) = q.query();
         let deaths = query(qs).bind(levelid).fetch_all(&self.pool).await?;
@@ -86,7 +89,11 @@ impl Fetcher for DatabaseFetcher {
             // TODO: salt + hash
             bytes.put(&parse_sha1_string(death.get(0)).unwrap()[..]); // userident
             bytes.put_u16(death.get::<i16, usize>(1) as u16); // levelversion
-            bytes.put_u8(if death.get::<bool, usize>(2) { 1u8 } else { 0u8 }); // practice
+            bytes.put_u8(if death.get::<bool, usize>(2) {
+                1u8
+            } else {
+                0u8
+            }); // practice
             bytes.put_f32(death.get::<f64, usize>(3) as f32); // x
             bytes.put_f32(death.get::<f64, usize>(4) as f32); // y
             bytes.put_u16(death.get::<i16, usize>(5) as u16); // percentage
@@ -96,7 +103,7 @@ impl Fetcher for DatabaseFetcher {
 
     async fn submit(
         &self,
-        metadata: SubmissionMetadata,
+        metadata: SubmissionMetadata<String>,
         deaths: Vec<SubmissionDeath>,
     ) -> Result<(), Error> {
         todo!()

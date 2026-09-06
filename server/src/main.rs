@@ -1,3 +1,4 @@
+use digest::SHA1_LENGTH;
 use axum::{
     Router,
     body::Bytes,
@@ -11,9 +12,8 @@ use sha1::{Digest, Sha1};
 use std::{collections::HashMap, env, sync::Arc};
 use tokio::net::TcpListener;
 
-use crate::data::SHA1_LENGTH;
-
 mod data;
+mod digest;
 mod fetch;
 mod params;
 

@@ -1,6 +1,5 @@
-use crate::data::*;
+use crate::{data::*, digest::*};
 use serde_json::Value;
-use sha1::{Digest, Sha1};
 use std::{collections::HashMap, fmt::Debug, ops::Deref};
 
 fn parse_level_id_from_param(val: Option<&String>) -> Result<u32, String> {
@@ -57,45 +56,17 @@ fn join_errs(a: &Result<impl Debug, String>, b: &Result<impl Debug, String>) -> 
     }
 }
 
-pub fn parse_sha1_string(s: &str) -> Option<[u8; SHA1_LENGTH]> {
-    if s.len() == SHA1_LENGTH * 2
-        && s.chars().all(|c| match c {
-            '0'..='9' | 'a'..='f' | 'A'..='F' => true,
-            _ => false,
-        })
-    {
-        let mut slice = [0 as u8; 20];
-        for (idx, chunk) in slice.iter_mut().enumerate() {
-            *chunk = u8::from_str_radix(&s[(idx * 2)..(idx * 2 + 2)], 0x10)
-                .expect("ident string should be valid");
-        }
-        Some(slice)
-    } else {
-        None
-    }
-}
-
 fn get_query(platformer: bool, practice: bool) -> &'static str {
     match (platformer, practice) {
-        (false, false) => "SELECT x, y, percentage FROM format1 WHERE levelid = $1 AND practice = false;",
+        (false, false) => {
+            "SELECT x, y, percentage FROM format1 WHERE levelid = $1 AND practice = false;"
+        }
         (false, true) => "SELECT x, y, percentage FROM format1 WHERE levelid = $1;",
         (true, false) => {
             "SELECT x, y FROM format1 WHERE levelid = $1 AND percentage < 101 AND practice = false;"
         }
-        (true, true) => {
-            "SELECT x, y FROM format1 WHERE levelid = $1 AND percentage < 101;"
-        }
+        (true, true) => "SELECT x, y FROM format1 WHERE levelid = $1 AND percentage < 101;",
     }
-}
-
-fn make_userident(playername: &str, userid: u64, levelid: u64) -> [u8; SHA1_LENGTH] {
-    let str = format!("{playername}_{userid}_{levelid}");
-    let mut slice = [0 as u8; SHA1_LENGTH];
-    let digest = Sha1::digest(str);
-    for (idx, chunk) in slice.iter_mut().enumerate() {
-        *chunk = digest[idx];
-    }
-    slice
 }
 
 const ANALYSIS_QUERY: &'static str = "SELECT userident,levelversion,practice,x,y,percentage \
@@ -179,7 +150,7 @@ impl AnalysisParams {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct SubmissionPayload(pub SubmissionMetadata, pub Vec<SubmissionDeath>);
+pub struct SubmissionPayload(pub SubmissionMetadata<String>, pub Vec<SubmissionDeath>);
 impl SubmissionPayload {
     pub fn parse(
         params: HashMap<String, String>,
@@ -224,14 +195,17 @@ impl SubmissionPayload {
                 _ => return Err("levelversion must be a positive integer".to_owned()),
             },
         };
-        let userident: Result<[u8; SHA1_LENGTH], String> = match payload.get("userident") {
-            Some(u) => match u {
-                Value::String(s) => match parse_sha1_string(s) {
-                    Some(s) => Ok(s),
-                    None => Err("userident incorrectly formatted".to_owned()),
-                },
-                _ => Err("userident must be transmitted as a string".to_owned()),
-            },
+        let userident: Result<String, String> = match payload.get("userident") {
+            Some(u) => {
+                if let Some(s) = u.as_str()
+                    && is_sha1(s)
+                {
+                    Ok(String::from(s))
+                } else {
+                    Err("userident incorrectly formatted".to_owned())
+                }
+            }
+
             None => {
                 let playername = payload.get("playername").map(|p| p.as_str()).flatten();
                 let userid = payload.get("userid").map(|i| i.as_u64()).flatten();
@@ -242,13 +216,13 @@ impl SubmissionPayload {
                             .to_owned(),
                     )
                 } else if let Ok(levelid) = levelid {
-                    Ok(make_userident(
+                    Ok(stringify_digest(make_userident(
                         playername.unwrap(),
                         userid.unwrap(),
                         levelid,
-                    ))
+                    )))
                 } else {
-                    Ok([0 as u8; SHA1_LENGTH])
+                    Ok("".to_owned())
                 }
             }
         };
@@ -298,7 +272,6 @@ mod test {
     use serde_json::json;
 
     const NULL_SHA1_STRING: &str = "0000000000000000000000000000000000000000";
-    const NULL_SHA1_SLICE: [u8; SHA1_LENGTH] = [0 as u8; SHA1_LENGTH];
 
     #[test]
     fn test_parse_level_id_from_param() {
@@ -402,37 +375,6 @@ mod test {
     }
 
     #[test]
-    fn get_parse_sha1_string() {
-        assert_eq!(
-            parse_sha1_string(&"0123456789abcdef0123456789abcdef01234567".to_owned()),
-            Some([
-                0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
-                0xcd, 0xef, 0x01, 0x23, 0x45, 0x67
-            ])
-        );
-        assert_eq!(
-            parse_sha1_string(&"0123456789ABCDEF0123456789ABCDEF01234567".to_owned()),
-            Some([
-                0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
-                0xcd, 0xef, 0x01, 0x23, 0x45, 0x67
-            ])
-        );
-        assert_eq!(
-            parse_sha1_string(&String::from(NULL_SHA1_STRING)),
-            Some(NULL_SHA1_SLICE)
-        );
-        assert_eq!(
-            parse_sha1_string("ghijklmnopqrstuvwxyzghijklmnopqrstuvwxyz"),
-            None
-        );
-        assert_eq!(parse_sha1_string("123"), None);
-        assert_eq!(
-            parse_sha1_string("0123456789abcdef0123456789abcdef012345678"),
-            None
-        );
-    }
-
-    #[test]
     fn test_get_query() {
         let norm_nopr = get_query(false, false);
         let norm_pr = get_query(false, true);
@@ -453,14 +395,6 @@ mod test {
         assert_eq!(norm_pr.contains("percentage < 101"), false);
         assert_eq!(pl_nopr.contains("percentage < 101"), true);
         assert_eq!(pl_pr.contains("percentage < 101"), true);
-    }
-
-    #[test]
-    fn test_make_userident() {
-        assert_eq!(
-            make_userident("RobTop", 16, 10565740),
-            parse_sha1_string(&"cba4a35e4ee458178b18d4c8ebb836a518b4df4b".to_owned()).unwrap()
-        )
     }
 
     #[test]
@@ -631,7 +565,7 @@ mod test {
                 json!({"levelid": 2, "format": 1, "deaths": [], "userident": NULL_SHA1_STRING})
             ),
             Ok(SubmissionPayload(
-                SubmissionMetadata::new(1, 1, 0, NULL_SHA1_SLICE),
+                SubmissionMetadata::<String>::new(1, 1, 0, NULL_SHA1_STRING.to_owned()),
                 vec![]
             ))
         );
@@ -642,7 +576,7 @@ mod test {
                 json!({"levelid": 2, "format": 1, "deaths": [], "userident": NULL_SHA1_STRING})
             ),
             Ok(SubmissionPayload(
-                SubmissionMetadata::new(2, 1, 0, NULL_SHA1_SLICE),
+                SubmissionMetadata::<String>::new(2, 1, 0, NULL_SHA1_STRING.to_owned()),
                 vec![]
             ))
         );
@@ -653,7 +587,7 @@ mod test {
                 json!({"levelid": 2, "format": 1, "deaths": [], "userident": NULL_SHA1_STRING})
             ),
             Ok(SubmissionPayload(
-                SubmissionMetadata::new(2, 1, 0, NULL_SHA1_SLICE),
+                SubmissionMetadata::<String>::new(2, 1, 0, NULL_SHA1_STRING.to_owned()),
                 vec![]
             ))
         );
@@ -672,7 +606,7 @@ mod test {
                 json!({"levelid": 2, "format": 1, "userident": NULL_SHA1_STRING, "x": 1.0, "y": 2.0, "percentage": 3})
             ),
             Ok(SubmissionPayload(
-                SubmissionMetadata::new(2, 1, 0, NULL_SHA1_SLICE),
+                SubmissionMetadata::<String>::new(2, 1, 0, NULL_SHA1_STRING.to_owned()),
                 vec![SubmissionDeath::new(false, 1.0, 2.0, 3)]
             ))
         );
@@ -707,7 +641,7 @@ mod test {
                 json!({"levelid": 2, "format": 1, "userident": NULL_SHA1_STRING, "deaths": [{"x": 1.0, "y": 2.0, "percentage": 3}]})
             ),
             Ok(SubmissionPayload(
-                SubmissionMetadata::new(2, 1, 0, NULL_SHA1_SLICE),
+                SubmissionMetadata::<String>::new(2, 1, 0, NULL_SHA1_STRING.to_owned()),
                 vec![SubmissionDeath::new(false, 1.0, 2.0, 3)]
             ))
         );
