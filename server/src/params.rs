@@ -91,6 +91,14 @@ impl ResponseType {
         }
     }
 }
+impl core::fmt::Display for ResponseType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ResponseType::CSV => f.write_str("csv"),
+            ResponseType::Binary => f.write_str("bin"),
+        }
+    }
+}
 
 #[derive(Debug, PartialEq)]
 pub struct ListParams {
@@ -125,6 +133,12 @@ impl ListParams {
             self.level_id as i64,
         )
     }
+    pub fn get_key(&self) -> String {
+        format!(
+            "list_{0}_{1}_{2}_{3}",
+            self.level_id, self.platformer, self.practice, self.response
+        )
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -146,6 +160,9 @@ impl AnalysisParams {
     }
     pub fn query(&self) -> (&'static str, i64) {
         (ANALYSIS_QUERY, self.level_id as i64)
+    }
+    pub fn get_key(&self) -> String {
+        format!("analysis_{0}_{1}", self.level_id, self.response)
     }
 }
 

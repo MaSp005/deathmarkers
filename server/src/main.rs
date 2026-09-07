@@ -62,7 +62,8 @@ async fn list(
 ) -> Result<Bytes, (StatusCode, String)> {
     match ListParams::parse_from_query(&params) {
         Err(msg) => Err((StatusCode::BAD_REQUEST, msg)),
-        Ok(params) => fetcher.fetch_list(params).await.map_err(|_| {
+        Ok(params) => fetcher.fetch_list(params).await.map_err(|e| {
+            println!("Error during list: {e:?}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Retrieving Deaths failed. Try again.".to_owned(),
@@ -77,7 +78,8 @@ async fn analysis(
 ) -> Result<Bytes, (StatusCode, String)> {
     match AnalysisParams::parse_from_query(&params) {
         Err(msg) => Err((StatusCode::BAD_REQUEST, msg)),
-        Ok(params) => fetcher.fetch_analysis(params).await.map_err(|_| {
+        Ok(params) => fetcher.fetch_analysis(params).await.map_err(|e| {
+            println!("Error during analysis: {e:?}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Retrieving Deaths failed. Try again.".to_owned(),
@@ -95,7 +97,7 @@ async fn submit(
         Err(msg) => Err((StatusCode::BAD_REQUEST, msg)),
         Ok(SubmissionPayload(metadata, deaths)) => match fetcher.submit(metadata, deaths).await {
             Err(e) => {
-                println!("Error during submission: {e}");
+                println!("Error during submission: {e:?}");
                 Err((
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "Error writing to the database. May be due to wrongly formatted input. \
