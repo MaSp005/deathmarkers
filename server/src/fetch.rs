@@ -5,6 +5,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use bytes::{BufMut, Bytes, BytesMut};
+use memcache::Client as MemcacheClient;
 use sqlx::{Error, PgPool, Row, postgres::PgPoolOptions, query};
 use std::iter::repeat;
 
@@ -69,6 +70,7 @@ impl DatabaseFetcher {
         Ok(bytes.freeze())
     }
 }
+
 #[async_trait]
 impl Fetcher for DatabaseFetcher {
     async fn fetch_list(&self, q: ListParams) -> Result<Bytes, Error> {
@@ -136,5 +138,41 @@ impl Fetcher for DatabaseFetcher {
             .execute(&self.pool)
             .await
             .and(Ok(()))
+    }
+}
+
+pub struct MemcachedFetcher {
+    memcached: MemcacheClient,
+    upstream: DatabaseFetcher,
+}
+impl MemcachedFetcher {
+    pub fn new(mc_url: String, upstream: DatabaseFetcher) -> Self {
+        println!("Connecting to memcached...");
+        let mc = memcache::connect(vec![mc_url])
+            .expect("Failed to connect to Memcached. Is the URL valid?");
+        println!("Connected to memcached.");
+        Self {
+            memcached: mc,
+            upstream,
+        }
+    }
+}
+
+#[async_trait]
+impl Fetcher for MemcachedFetcher {
+    async fn fetch_list(&self, q: ListParams) -> Result<Bytes, Error> {
+        todo!()
+    }
+
+    async fn fetch_analysis(&self, q: AnalysisParams) -> Result<Bytes, Error> {
+        todo!()
+    }
+
+    async fn submit(
+        &self,
+        metadata: SubmissionMetadata<String>,
+        deaths: Vec<SubmissionDeath>,
+    ) -> Result<(), Error> {
+        self.upstream.submit(metadata, deaths).await
     }
 }

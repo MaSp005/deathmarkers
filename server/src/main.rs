@@ -23,8 +23,16 @@ type FetcherArc = Arc<dyn Fetcher + Sync + Send>;
 async fn main() {
     let bind_addr = env::var("LISTEN_ADDRESS").unwrap_or(String::from("0.0.0.0:8048"));
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let mc_url = env::var("MEMCACHED_URL");
 
-    let fetcher: FetcherArc = Arc::new(DatabaseFetcher::new(&db_url).await);
+    let fetcher: FetcherArc = {
+        let db_fetcher = DatabaseFetcher::new(&db_url).await;
+        if let Ok(mc_url) = mc_url {
+            Arc::new(MemcachedFetcher::new(mc_url, db_fetcher))
+        } else {
+            Arc::new(db_fetcher)
+        }
+    };
 
     assert!(Sha1::output_size() == SHA1_LENGTH);
 
