@@ -76,9 +76,10 @@ fn create_binary_response_analysis(deaths: &Vec<PgRow>, salt: Option<&str>) -> B
 
 pub struct DatabaseFetcher {
     pool: PgPool,
+    salt: bool,
 }
 impl DatabaseFetcher {
-    pub async fn new(url: &String) -> Self {
+    pub async fn new(url: &String, salt: bool) -> Self {
         println!("Connecting to the database...");
         let pool = PgPoolOptions::new()
             .connect(&url)
@@ -87,7 +88,7 @@ impl DatabaseFetcher {
         raw_sql(SCHEMA).execute(&pool).await.expect("Schema failed");
         println!("Connected to the database.");
 
-        Self { pool }
+        Self { pool, salt }
     }
 
     async fn fetch_list_normal(&self, q: ListParams) -> Result<Bytes, sqlx::Error> {
@@ -125,7 +126,10 @@ impl Fetcher for DatabaseFetcher {
             .await
             .map_err(|e| WrappedError::Database(e))?;
         let salt = rand::random_iter::<char>().take(10).collect::<String>();
-        Ok(create_binary_response_analysis(&deaths, Some(&salt)))
+        Ok(create_binary_response_analysis(
+            &deaths,
+            if self.salt { Some(&salt) } else { None },
+        ))
     }
 
     async fn submit(
@@ -292,7 +296,6 @@ impl Fetcher for MemcachedFetcher {
 #[cfg(test)]
 mod test {
     use super::*;
-    use sqlx::postgres::PgRow;
 
     #[test]
     fn test_create_binary_response_empty() {
@@ -321,9 +324,21 @@ mod test {
         assert_eq!(bytes.len(), 1 + 4 + 4 + 2);
         assert_eq!(bytes[0], DATA_FORMAT, "Data Format should be 0x1");
         let death_slice = &bytes[1..];
-        assert_eq!(death_slice[0x0..=0x3], f32::to_le_bytes(5.3), "x as LE float32");
-        assert_eq!(death_slice[0x4..=0x7], f32::to_le_bytes(9.4), "y as LE float32");
-        assert_eq!(death_slice[0x8..=0x9], u16::to_le_bytes(1), "percentage as LE uint16");
+        assert_eq!(
+            death_slice[0x0..=0x3],
+            f32::to_le_bytes(5.3),
+            "x as LE float32"
+        );
+        assert_eq!(
+            death_slice[0x4..=0x7],
+            f32::to_le_bytes(9.4),
+            "y as LE float32"
+        );
+        assert_eq!(
+            death_slice[0x8..=0x9],
+            u16::to_le_bytes(1),
+            "percentage as LE uint16"
+        );
     }
 
     #[sqlx::test]
@@ -339,8 +354,16 @@ mod test {
         assert_eq!(bytes.len(), 1 + 4 + 4);
         assert_eq!(bytes[0], DATA_FORMAT, "Data Format should be 0x1");
         let death_slice = &bytes[1..];
-        assert_eq!(death_slice[0x0..=0x3], f32::to_le_bytes(5.3), "x as LE float32");
-        assert_eq!(death_slice[0x4..=0x7], f32::to_le_bytes(9.4), "y as LE float32");
+        assert_eq!(
+            death_slice[0x0..=0x3],
+            f32::to_le_bytes(5.3),
+            "x as LE float32"
+        );
+        assert_eq!(
+            death_slice[0x4..=0x7],
+            f32::to_le_bytes(9.4),
+            "y as LE float32"
+        );
     }
 
     #[sqlx::test]
@@ -352,11 +375,11 @@ mod test {
             true, \
             5.3::FLOAT, \
             9.4::FLOAT, \
-            1::SMALLINT;"
+            1::SMALLINT;",
         )
-            .fetch_all(&pool)
-            .await
-            .unwrap();
+        .fetch_all(&pool)
+        .await
+        .unwrap();
         let bytes = create_binary_response_analysis(&deaths, None);
         println!("{0:?}", bytes.to_vec());
 
@@ -370,8 +393,20 @@ mod test {
         );
         assert_eq!(death_slice[0x14], 42, "level version as uint8");
         assert_eq!(death_slice[0x15], 1, "practice as bool");
-        assert_eq!(death_slice[0x16..=0x19], f32::to_le_bytes(5.3), "x as LE float32");
-        assert_eq!(death_slice[0x1a..=0x1d], f32::to_le_bytes(9.4), "y as LE float32");
-        assert_eq!(death_slice[0x1e..=0x1f], u16::to_le_bytes(1), "percentage as LE uint16");
+        assert_eq!(
+            death_slice[0x16..=0x19],
+            f32::to_le_bytes(5.3),
+            "x as LE float32"
+        );
+        assert_eq!(
+            death_slice[0x1a..=0x1d],
+            f32::to_le_bytes(9.4),
+            "y as LE float32"
+        );
+        assert_eq!(
+            death_slice[0x1e..=0x1f],
+            u16::to_le_bytes(1),
+            "percentage as LE uint16"
+        );
     }
 }

@@ -24,9 +24,10 @@ async fn main() {
     let bind_addr = env::var("LISTEN_ADDRESS").unwrap_or(String::from("0.0.0.0:8048"));
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mc_url = env::var("MEMCACHED_URL");
+    let no_salt = env::args().any(|arg| arg == "--no-salt");
 
     let fetcher: FetcherArc = {
-        let db_fetcher = DatabaseFetcher::new(&db_url).await;
+        let db_fetcher = DatabaseFetcher::new(&db_url, !no_salt).await;
         if let Ok(mc_url) = mc_url {
             Arc::new(MemcachedFetcher::new(mc_url, db_fetcher))
         } else {
