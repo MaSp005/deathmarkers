@@ -6,7 +6,9 @@ use axum::{
     routing::{get, post},
 };
 use digest::SHA1_LENGTH;
-use fetch::*;
+use fetch::Fetcher;
+use fetch::database::DatabaseFetcher;
+use fetch::memcache::MemcachedFetcher;
 use params::*;
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, env, sync::Arc};
