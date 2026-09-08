@@ -1,10 +1,11 @@
 use crate::{
     data::{SubmissionDeath, SubmissionMetadata},
-    digest::sha1_digest,
+    digest::{Sha1Result, sha1_digest},
     params::{AnalysisParams, ListParams},
 };
 use async_trait::async_trait;
 use bytes::{BufMut, Bytes, BytesMut};
+use hex::FromHex;
 use memcache::{Client as MemcacheClient, FromMemcacheValue, MemcacheError, ToMemcacheValue};
 use sqlx::{
     PgPool, Row,
@@ -27,6 +28,55 @@ pub trait Fetcher {
     ) -> Result<(), WrappedError>;
 }
 
+fn create_binary_response_normal(deaths: &Vec<PgRow>) -> Bytes {
+    const ITEM_LENGTH: usize = 4 + 4 + 2;
+    let mut bytes = BytesMut::with_capacity(deaths.len() * ITEM_LENGTH + 1);
+    bytes.put_u8(1);
+    for death in deaths {
+        bytes.put_f32(death.get::<f64, _>(0) as _); // x
+        bytes.put_f32(death.get::<f64, _>(1) as _); // y
+        bytes.put_u16(death.get::<i16, _>(2) as _); // percentage
+    }
+    bytes.freeze()
+}
+
+fn create_binary_response_platformer(deaths: &Vec<PgRow>) -> Bytes {
+    const ITEM_LENGTH: usize = 4 + 4;
+    let mut bytes = BytesMut::with_capacity(deaths.len() * ITEM_LENGTH + 1);
+    bytes.put_u8(1);
+    for death in deaths {
+        bytes.put_f32(death.get::<f64, _>(0) as _); // x
+        bytes.put_f32(death.get::<f64, _>(1) as _); // y
+    }
+    bytes.freeze()
+}
+
+fn create_binary_response_analysis(deaths: &Vec<PgRow>, salt: Option<&str>) -> Bytes {
+    const ITEM_LENGTH: usize = 20 + 2 + 1 + 4 + 4 + 2;
+
+    let mut bytes = BytesMut::with_capacity(deaths.len() * ITEM_LENGTH + 1);
+    bytes.put_u8(1);
+    for death in deaths {
+        let userident: String = death.get(0);
+        let salted_ui = if let Some(salt) = salt {
+            sha1_digest(&format!("{userident}{salt}"))
+        } else {
+            Sha1Result::from_hex(userident).expect("Stored hash should be valid")
+        };
+        bytes.put_slice(&salted_ui); // userident
+        bytes.put_u16(death.get::<i16, _>(1) as u16); // levelversion
+        bytes.put_u8(if death.get::<bool, _>(2) {
+            1u8
+        } else {
+            0u8
+        }); // practice
+        bytes.put_f32(death.get::<f64, _>(3) as f32); // x
+        bytes.put_f32(death.get::<f64, _>(4) as f32); // y
+        bytes.put_u16(death.get::<i16, _>(5) as u16); // percentage
+    }
+    bytes.freeze()
+}
+
 pub struct DatabaseFetcher {
     pool: PgPool,
 }
@@ -44,34 +94,15 @@ impl DatabaseFetcher {
     }
 
     async fn fetch_list_normal(&self, q: ListParams) -> Result<Bytes, sqlx::Error> {
-        // x, y, percentage
-        const ITEM_LENGTH: usize = 4 + 4 + 2;
-        assert_eq!(q.platformer, false);
         let (qs, levelid) = q.query();
         let deaths = query(qs).bind(levelid).fetch_all(&self.pool).await?;
-        let mut bytes = BytesMut::with_capacity(deaths.len() * ITEM_LENGTH + 1);
-        bytes.put_u8(1);
-        for death in deaths {
-            bytes.put_f32(death.get::<f64, usize>(0) as f32); // x
-            bytes.put_f32(death.get::<f64, usize>(1) as f32); // y
-            bytes.put_u16(death.get::<i16, usize>(2) as u16); // percentage
-        }
-        Ok(bytes.freeze())
+        Ok(create_binary_response_normal(&deaths))
     }
 
     async fn fetch_list_platformer(&self, q: ListParams) -> Result<Bytes, sqlx::Error> {
-        // x, y
-        const ITEM_LENGTH: usize = 4 + 4;
-        assert_eq!(q.platformer, true);
         let (qs, levelid) = q.query();
         let deaths = query(qs).bind(levelid).fetch_all(&self.pool).await?;
-        let mut bytes = BytesMut::with_capacity(deaths.len() * ITEM_LENGTH + 1);
-        bytes.put_u8(1);
-        for death in deaths {
-            bytes.put_f32(death.get::<f64, usize>(0) as f32); // x
-            bytes.put_f32(death.get::<f64, usize>(1) as f32); // y
-        }
-        Ok(bytes.freeze())
+        Ok(create_binary_response_platformer(&deaths))
     }
 }
 
@@ -90,8 +121,6 @@ impl Fetcher for DatabaseFetcher {
     }
 
     async fn fetch_analysis(&self, q: AnalysisParams) -> Result<Bytes, WrappedError> {
-        // userident, levelversion, practice, x, y, percentage
-        const ITEM_LENGTH: usize = 20 + 2 + 1 + 4 + 4 + 2;
         let (qs, levelid) = q.query();
         let deaths = query(qs)
             .bind(levelid)
@@ -99,23 +128,7 @@ impl Fetcher for DatabaseFetcher {
             .await
             .map_err(|e| WrappedError::Database(e))?;
         let salt = rand::random_iter::<char>().take(10).collect::<String>();
-        let mut bytes = BytesMut::with_capacity(deaths.len() * ITEM_LENGTH + 1);
-        bytes.put_u8(1);
-        for death in deaths {
-            let userident: String = death.get(0);
-            let salted_ui = sha1_digest(&format!("{userident}_{salt}"));
-            bytes.put_slice(&salted_ui); // userident
-            bytes.put_u16(death.get::<i16, usize>(1) as u16); // levelversion
-            bytes.put_u8(if death.get::<bool, usize>(2) {
-                1u8
-            } else {
-                0u8
-            }); // practice
-            bytes.put_f32(death.get::<f64, usize>(3) as f32); // x
-            bytes.put_f32(death.get::<f64, usize>(4) as f32); // y
-            bytes.put_u16(death.get::<i16, usize>(5) as u16); // percentage
-        }
-        Ok(bytes.freeze())
+        Ok(create_binary_response_analysis(&deaths, Some(&salt)))
     }
 
     async fn submit(
@@ -238,7 +251,7 @@ impl Fetcher for MemcachedFetcher {
                     .set::<McBytesWrapper>(
                         &key,
                         McBytesWrapper(fetched.clone()),
-                        MEMCACHE_EXPIRATION.as_secs() as u32,
+                        MEMCACHE_EXPIRATION.as_secs() as _,
                     )
                     .map_err(|e| println!("Error setting memcached key {key}: {e}"));
                 Ok(fetched.into())
